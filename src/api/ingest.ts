@@ -110,3 +110,59 @@ export async function pollDocumentStatus(
     poll();
   });
 }
+
+// ── Automated Website Crawl ───────────────────────────────────────────────────
+
+export interface CrawlRegisterPayload {
+  website_url: string;
+  max_pages?: number;
+  max_depth?: number;
+  recrawl_interval_hours?: number;
+}
+
+export interface CrawlRegisterResponse {
+  website_url: string;
+  status: string;
+  max_pages: number;
+  max_depth: number;
+  recrawl_interval_hours: number;
+  message: string;
+}
+
+export interface CrawlStatusResponse {
+  registered: boolean;
+  website_url: string | null;
+  crawl_config: { max_pages: number; max_depth: number; recrawl_interval_hours: number } | null;
+  last_crawled_at: string | null;
+}
+
+/**
+ * POST /api/v1/ingest/crawl
+ * Register a website URL and immediately queue the first full crawl.
+ * After this, the Engine re-crawls automatically every recrawl_interval_hours.
+ */
+export async function registerWebsiteCrawl(
+  payload: CrawlRegisterPayload,
+): Promise<CrawlRegisterResponse> {
+  const { data } = await apiClient.post<CrawlRegisterResponse>(
+    '/api/v1/ingest/crawl',
+    {
+      website_url: payload.website_url,
+      max_pages: payload.max_pages ?? 50,
+      max_depth: payload.max_depth ?? 3,
+      recrawl_interval_hours: payload.recrawl_interval_hours ?? 24,
+    },
+  );
+  return data;
+}
+
+/**
+ * GET /api/v1/ingest/crawl/status
+ * Get the current crawl registration and last crawl time for this tenant.
+ */
+export async function getCrawlStatus(): Promise<CrawlStatusResponse> {
+  const { data } = await apiClient.get<CrawlStatusResponse>(
+    '/api/v1/ingest/crawl/status',
+  );
+  return data;
+}

@@ -2,12 +2,14 @@ import { useState, useCallback, useEffect } from 'react';
 import {
   Key, Plus, Copy, Trash2, Eye, EyeOff,
   CheckCircle2, AlertTriangle, Shield, Code2, Zap,
-  Webhook, Globe, Loader2, RefreshCw, ChevronDown, ChevronUp,
+  Webhook, Globe, Globe2, Loader2, RefreshCw, ChevronDown, ChevronUp,
 } from 'lucide-react';
 import {
   createApiKey, deleteApiKey, listApiKeys,
   registerWebhook, listWebhooks, deleteWebhook, getWebhookLogs,
 } from '../../api/auth';
+import { registerWebsiteCrawl, getCrawlStatus } from '../../api/ingest';
+import type { CrawlStatusResponse } from '../../api/ingest';
 import type {
   ApiKeyResponse, ApiKeyListItem,
   WebhookEndpoint, WebhookEventType, WebhookLogEntry,
@@ -617,6 +619,149 @@ type Tab = 'keys' | 'webhooks';
 
 // ─── Main page ────────────────────────────────────────────────────────────────
 
+// ─── Website Auto-Crawl Section ──────────────────────────────────────────────
+
+function WebsiteCrawlSection() {
+  const [status, setStatus]       = useState<CrawlStatusResponse | null>(null);
+  const [loading, setLoading]     = useState(true);
+  const [saving, setSaving]       = useState(false);
+  const [url, setUrl]             = useState('');
+  const [maxPages, setMaxPages]   = useState(50);
+  const [interval, setInterval_]  = useState(24);
+  const [error, setError]         = useState('');
+  const [success, setSuccess]     = useState('');
+
+  useEffect(() => {
+    getCrawlStatus()
+      .then(s => { setStatus(s); if (s.website_url) setUrl(s.website_url); })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  async function handleRegister() {
+    if (!url.trim()) { setError('Enter your website URL.'); return; }
+    try { new URL(url); } catch { setError('Enter a valid URL (https://…)'); return; }
+    setError(''); setSuccess(''); setSaving(true);
+    try {
+      const res = await registerWebsiteCrawl({
+        website_url: url.trim(),
+        max_pages: maxPages,
+        recrawl_interval_hours: interval,
+      });
+      setSuccess(`Registered! First crawl queued — ${res.max_pages} pages, re-crawls every ${res.recrawl_interval_hours}h automatically.`);
+      setStatus({ registered: true, website_url: res.website_url, crawl_config: { max_pages: res.max_pages, max_depth: 3, recrawl_interval_hours: res.recrawl_interval_hours }, last_crawled_at: null });
+    } catch {
+      setError('Could not register — check your connection and try again.');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div>
+      <div className="flex items-center gap-2 mb-3">
+        <Globe2 size={13} className="text-zinc-400" />
+        <h2 className="text-xs font-mono font-medium text-zinc-500 uppercase tracking-wider">
+          Website Auto-Crawl
+        </h2>
+      </div>
+
+      <div className="bg-zinc-900 border border-zinc-800 p-5">
+        <p className="text-xs text-zinc-500 leading-relaxed mb-4">
+          Register your website URL once. The Engine will automatically crawl every page,
+          chunk and embed the content, detect gaps against live trends, and generate
+          AI-written sections to fill them — then re-crawl on the interval you set.
+          <span className="text-zinc-300 font-medium"> No further action required.</span>
+        </p>
+
+        {loading ? (
+          <div className="flex items-center gap-2 text-zinc-600 py-4">
+            <Loader2 size={13} className="animate-spin" /> Loading…
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {status?.registered && (
+              <div className="bg-zinc-950 border border-zinc-800 px-4 py-3 flex items-start gap-3">
+                <CheckCircle2 size={14} className="text-emerald-400 mt-0.5 flex-shrink-0" />
+                <div className="text-xs text-zinc-400">
+                  <span className="text-zinc-100 font-medium">Active:</span>{' '}
+                  <span className="font-mono text-emerald-400">{status.website_url}</span>
+                  <br />
+                  <span className="text-zinc-600">
+                    Crawl every {status.crawl_config?.recrawl_interval_hours ?? 24}h &nbsp;·&nbsp;
+                    Last crawl: {status.last_crawled_at
+                      ? new Date(status.last_crawled_at).toLocaleString()
+                      : 'Pending first run'}
+                  </span>
+                </div>
+              </div>
+            )}
+
+            <div>
+              <label className="block text-xs font-medium text-zinc-400 mb-1.5">
+                Website URL <span className="text-red-400">*</span>
+              </label>
+              <input
+                type="url"
+                value={url}
+                onChange={e => setUrl(e.target.value)}
+                placeholder="https://yourwebsite.com"
+                className="w-full px-3 py-2 bg-zinc-950 border border-zinc-700 text-zinc-100 text-sm font-mono placeholder-zinc-700 outline-none focus:border-zinc-400 transition-colors"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-medium text-zinc-400 mb-1.5">Max pages per crawl</label>
+                <input
+                  type="number"
+                  min={1} max={200}
+                  value={maxPages}
+                  onChange={e => setMaxPages(Number(e.target.value))}
+                  className="w-full px-3 py-2 bg-zinc-950 border border-zinc-700 text-zinc-100 text-sm font-mono outline-none focus:border-zinc-400 transition-colors"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-zinc-400 mb-1.5">Re-crawl every (hours)</label>
+                <input
+                  type="number"
+                  min={1} max={168}
+                  value={interval}
+                  onChange={e => setInterval_(Number(e.target.value))}
+                  className="w-full px-3 py-2 bg-zinc-950 border border-zinc-700 text-zinc-100 text-sm font-mono outline-none focus:border-zinc-400 transition-colors"
+                />
+              </div>
+            </div>
+
+            {error && (
+              <p className="text-xs text-red-400 flex items-center gap-1.5">
+                <AlertTriangle size={11} /> {error}
+              </p>
+            )}
+            {success && (
+              <p className="text-xs text-emerald-400 flex items-center gap-1.5">
+                <CheckCircle2 size={11} /> {success}
+              </p>
+            )}
+
+            <button
+              onClick={handleRegister}
+              disabled={saving}
+              className="flex items-center gap-1.5 px-4 py-2 bg-zinc-100 text-zinc-900 text-xs font-semibold hover:bg-white transition-colors disabled:opacity-40"
+            >
+              {saving
+                ? <><Loader2 size={12} className="animate-spin" /> Registering…</>
+                : <><Globe2 size={12} /> {status?.registered ? 'Update & Re-crawl' : 'Register & Start Crawl'}</>
+              }
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+
 export default function Credentials() {
   const [tab, setTab]                         = useState<Tab>('keys');
 
@@ -1005,6 +1150,9 @@ response = requests.post(
               </div>
             )}
           </div>
+
+          {/* ── Website Auto-Crawl ── */}
+          <WebsiteCrawlSection />
 
           {/* ── Security notice ── */}
           <div className="border border-amber-900/40 bg-amber-950/20 px-4 py-3 flex gap-3">
