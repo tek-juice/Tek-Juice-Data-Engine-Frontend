@@ -327,7 +327,7 @@ export default function TenantDashboard() {
                 <CartesianGrid stroke="#27272a" strokeDasharray="3 3" vertical={false} />
                 <XAxis dataKey="time" tick={{ fontSize: 10, fill: '#52525b', fontFamily: 'ui-monospace' }} tickLine={false} axisLine={false} interval={5} />
                 <YAxis domain={[0, 100]} tick={{ fontSize: 10, fill: '#52525b', fontFamily: 'ui-monospace' }} tickLine={false} axisLine={false} unit="%" />
-                <Tooltip {...TT} formatter={(v: number) => [`${v}%`]} />
+                <Tooltip {...TT} formatter={(v) => [`${v ?? ""}%`]} />
                 <Legend wrapperStyle={{ fontSize: 11, fontFamily: 'ui-monospace', color: '#71717a', paddingTop: 8 }} />
                 <Line type="monotone" dataKey="seo" name="SEO" stroke="#3b82f6" strokeWidth={1.5} dot={false} />
                 <Line type="monotone" dataKey="geo" name="GEO" stroke="#a78bfa" strokeWidth={1.5} dot={false} />
@@ -388,7 +388,7 @@ export default function TenantDashboard() {
                 <CartesianGrid stroke="#27272a" strokeDasharray="3 3" vertical={false} />
                 <XAxis dataKey="day" tick={{ fontSize: 10, fill: '#52525b', fontFamily: 'ui-monospace' }} tickLine={false} axisLine={false} />
                 <YAxis domain={[0, 100]} tick={{ fontSize: 10, fill: '#52525b', fontFamily: 'ui-monospace' }} tickLine={false} axisLine={false} unit="%" />
-                <Tooltip {...TT} formatter={(v: number) => [`${v}%`]} />
+                <Tooltip {...TT} formatter={(v) => [`${v ?? ""}%`]} />
                 <Legend wrapperStyle={{ fontSize: 11, fontFamily: 'ui-monospace', color: '#71717a', paddingTop: 8 }} />
                 <Area type="monotone" dataKey="coverage_before" name="Before closure" stroke="#71717a" strokeWidth={1.5} fill="url(#tgBefore)" dot={false} />
                 <Area type="monotone" dataKey="coverage_after"  name="After closure"  stroke="#22c55e" strokeWidth={1.5} fill="url(#tgAfter)"  dot={false} />

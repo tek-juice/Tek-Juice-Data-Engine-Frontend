@@ -326,7 +326,7 @@ function GapComparison({ data }: { data: typeof SEED_COVERAGE }) {
             <CartesianGrid stroke="#27272a" strokeDasharray="3 3" vertical={false} />
             <XAxis dataKey="day" tick={{ fontSize: 10, fill: '#52525b', fontFamily: 'ui-monospace' }} tickLine={false} axisLine={false} />
             <YAxis domain={[0, 100]} tick={{ fontSize: 10, fill: '#52525b', fontFamily: 'ui-monospace' }} tickLine={false} axisLine={false} unit="%" />
-            <Tooltip {...TOOLTIP_STYLE} formatter={(v: number) => [`${v}%`]} />
+            <Tooltip {...TOOLTIP_STYLE} formatter={(v) => [`${v ?? ""}%`]} />
             <Area type="monotone" dataKey="before" name="Before" stroke="#71717a" strokeWidth={1.5} fill="url(#gBefore)" dot={false} />
             <Area type="monotone" dataKey="after"  name="After"  stroke="#22c55e" strokeWidth={1.5} fill="url(#gAfter)"  dot={false} />
           </AreaChart>
@@ -356,7 +356,7 @@ function VisibilityTimeline({ data }: { data: typeof SEED_VISIBILITY }) {
             <CartesianGrid stroke="#27272a" strokeDasharray="3 3" vertical={false} />
             <XAxis dataKey="time" tick={{ fontSize: 10, fill: '#52525b', fontFamily: 'ui-monospace' }} tickLine={false} axisLine={false} interval={5} />
             <YAxis domain={[0, 100]} tick={{ fontSize: 10, fill: '#52525b', fontFamily: 'ui-monospace' }} tickLine={false} axisLine={false} unit="%" />
-            <Tooltip {...TOOLTIP_STYLE} formatter={(v: number) => [`${v}%`]} />
+            <Tooltip {...TOOLTIP_STYLE} formatter={(v) => [`${v ?? ""}%`]} />
             <Legend wrapperStyle={{ fontSize: 11, fontFamily: 'ui-monospace', color: '#71717a', paddingTop: 8 }} />
             <Line type="monotone" dataKey="seo" name="SEO"  stroke="#3b82f6" strokeWidth={1.5} dot={false} />
             <Line type="monotone" dataKey="geo" name="GEO"  stroke="#a78bfa" strokeWidth={1.5} dot={false} />

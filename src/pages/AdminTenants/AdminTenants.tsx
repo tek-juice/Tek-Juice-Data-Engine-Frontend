@@ -319,7 +319,7 @@ function TenantDetailPanel({ tenantId, seed, onClose }: {
                   <CartesianGrid stroke="#27272a" strokeDasharray="3 3" vertical={false} />
                   <XAxis dataKey="time" tick={{ fontSize: 9, fill: '#52525b', fontFamily: 'ui-monospace' }} tickLine={false} axisLine={false} interval={5} />
                   <YAxis domain={[0, 100]} tick={{ fontSize: 9, fill: '#52525b', fontFamily: 'ui-monospace' }} tickLine={false} axisLine={false} unit="%" />
-                  <Tooltip {...TT} formatter={(v: number) => [`${v}%`]} />
+                  <Tooltip {...TT} formatter={(v) => [`${v ?? ""}%`]} />
                   <Line type="monotone" dataKey="seo" name="SEO" stroke="#3b82f6" strokeWidth={1.5} dot={false} />
                   <Line type="monotone" dataKey="geo" name="GEO" stroke="#a78bfa" strokeWidth={1.5} dot={false} />
                   <Line type="monotone" dataKey="aeo" name="AEO" stroke="#f59e0b" strokeWidth={1.5} dot={false} />
@@ -345,7 +345,7 @@ function TenantDetailPanel({ tenantId, seed, onClose }: {
                   <CartesianGrid stroke="#27272a" strokeDasharray="3 3" vertical={false} />
                   <XAxis dataKey="day" tick={{ fontSize: 9, fill: '#52525b', fontFamily: 'ui-monospace' }} tickLine={false} axisLine={false} interval={3} />
                   <YAxis domain={[0, 100]} tick={{ fontSize: 9, fill: '#52525b', fontFamily: 'ui-monospace' }} tickLine={false} axisLine={false} unit="%" />
-                  <Tooltip {...TT} formatter={(v: number) => [`${v}%`]} />
+                  <Tooltip {...TT} formatter={(v) => [`${v ?? ""}%`]} />
                   <Area type="monotone" dataKey="coverage_before" name="Before" stroke="#71717a" strokeWidth={1.5} fill="url(#gcBefore)" dot={false} />
                   <Area type="monotone" dataKey="coverage_after"  name="After"  stroke="#22c55e" strokeWidth={1.5} fill="url(#gcAfter)"  dot={false} />
                 </AreaChart>

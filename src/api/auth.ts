@@ -151,10 +151,10 @@ export async function registerWebhook(
  * List all registered webhook endpoints for the tenant.
  */
 export async function listWebhooks(): Promise<WebhookEndpoint[]> {
-  const { data } = await apiClient.get<WebhookEndpoint[]>(
+  const { data } = await apiClient.get<{ webhooks: WebhookEndpoint[]; count: number }>(
     '/api/v1/auth/webhooks',
   );
-  return data;
+  return data.webhooks;
 }
 
 /**
