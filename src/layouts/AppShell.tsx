@@ -1,7 +1,7 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import {
-  LayoutDashboard, Upload, FileText, Search,
+  LayoutDashboard, Search,
   TrendingUp, AlertTriangle, FileEdit, Code2,
   Gauge, Globe, BarChart2, RefreshCw,
   Activity, Settings, Key, LogOut, Zap,
@@ -33,8 +33,7 @@ const NAV: NavGroup[] = [
   {
     heading: 'Content',
     items: [
-      { label: 'Upload',         to: '/upload',          icon: <Upload size={14} /> },
-      { label: 'Documents',      to: '/documents',       icon: <FileText size={14} /> },
+      { label: 'Website Setup',  to: '/website',         icon: <Globe size={14} /> },
       { label: 'Drafts',         to: '/drafts',          icon: <FileEdit size={14} /> },
       { label: 'Search',         to: '/search',          icon: <Search size={14} /> },
     ],

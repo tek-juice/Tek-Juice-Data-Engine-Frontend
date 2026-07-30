@@ -13,7 +13,8 @@ import ProtectedRoute from './routes/ProtectedRoute';
 
 // ── App pages ─────────────────────────────────────────────────────────────────
 import Dashboard   from './pages/Dashboard/Dashboard';
-import Credentials from './pages/Credentials/Credentials';
+import Credentials    from './pages/Credentials/Credentials';
+import WebsiteSetup   from './pages/WebsiteSetup/WebsiteSetup';
 
 // ── Placeholder for pages not yet built ──────────────────────────────────────
 function Placeholder({ name }: { name: string }) {
@@ -56,8 +57,7 @@ function App() {
             <Route path="/analytics"      element={<Placeholder name="Analytics" />} />
 
             {/* Content */}
-            <Route path="/upload"         element={<Placeholder name="Upload" />} />
-            <Route path="/documents"      element={<Placeholder name="Documents" />} />
+            <Route path="/website"        element={<WebsiteSetup />} />
             <Route path="/drafts"         element={<Placeholder name="Drafts" />} />
             <Route path="/search"         element={<Placeholder name="Search" />} />
 
