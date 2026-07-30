@@ -189,6 +189,7 @@ export interface GapWriteResponse {
 }
 
 export interface DraftItem {
+  id?: string;
   topic: string;
   intent: string;
   priority: number;
@@ -198,6 +199,17 @@ export interface DraftItem {
   schema_types: string[];
   authority_signals: string[];
   content_brief: unknown[];
+  // Quality Score fields (added by QS engine)
+  geo_score?: number;
+  aeo_score?: number;
+  composite_score?: number;
+  quality_score?: number;       // 1–10 Google Ads QS equivalent
+  beats_paid_ads?: boolean;     // true if QS >= 8
+  projected_position?: string;  // e.g. "#1–#2 — above most paid ads"
+  model_used?: string;
+  provider_used?: string;
+  status?: DraftStatus;
+  generated_at?: string;
 }
 
 export type DraftStatus = 'draft' | 'embedded' | 'approved' | 'rejected';
@@ -501,4 +513,92 @@ export interface TenantPerformance {
     geo: number;
     aeo: number;
   }>;
+}
+
+// ── Quality Score (Google Ads Ad Rank Engine) ─────────────────────────────────
+
+export interface QualityScoreDimension {
+  name: string;
+  score: number;        // 0–10
+  status: 'Above Average' | 'Average' | 'Below Average';
+  signals: string[];
+  issues: string[];
+  fixes: string[];
+}
+
+export type QualityScoreLabel = 'Perfect' | 'Strong' | 'Average' | 'Below Avg' | 'Poor';
+
+export interface AdBenchmark {
+  ad_position: string;
+  ad_typical_qs: number;
+  beats_this_ad: boolean;
+  qs_gap: number;
+  notes: string;
+}
+
+export interface UpliftStep {
+  from_qs: number;
+  to_qs: number;
+  qs_gain: number;
+  from_pos: number;
+  to_pos: number;
+  ctr_gain: string;
+  milestone: string;
+  action: string;
+}
+
+export interface RankSimulation {
+  estimated_position: number;
+  position_label: string;
+  estimated_ctr: number;
+  paid_ads_beaten: number;
+  beats_all_paid_ads: boolean;
+  ctr_multiplier: number;
+  traffic_multiplier: string;
+  qs_gap_to_position_1: number;
+  target_qs_to_beat_ads: number;
+  ad_benchmarks: AdBenchmark[];
+  uplift_steps: UpliftStep[];
+}
+
+export interface QualityScoreResponse {
+  // Headline
+  quality_score: number;          // 1–10
+  label: QualityScoreLabel;
+  summary: string;
+  beats_paid_ads: boolean;
+  projected_position: string;
+  score_to_next_band: number | null;
+
+  // 3 QS dimensions
+  dimensions: {
+    snippet_attractiveness: QualityScoreDimension;
+    keyword_alignment: QualityScoreDimension;
+    content_experience: QualityScoreDimension;
+  };
+
+  // Actions
+  priority_fixes: string[];
+  quick_wins: string[];
+
+  // Rank simulation vs paid ads
+  rank_simulation: RankSimulation;
+  action_plan: string[];
+
+  // Supporting scores
+  supporting_scores: {
+    citation_readiness: number;
+    aeo_answer_score: number;
+    keyword_coverage: number | null;
+    word_count: number;
+  };
+}
+
+export interface QualityScoreRequest {
+  content: string;
+  title?: string;
+  meta_description?: string;
+  query?: string;
+  target_keywords?: string[];
+  monthly_search_volume?: number;
 }

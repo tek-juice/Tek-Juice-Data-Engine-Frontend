@@ -6,11 +6,13 @@ import {
 } from 'recharts';
 import {
   TrendingUp, AlertTriangle, CheckCircle2,
-  RefreshCw, Eye, Search, Bot, Globe,
+  RefreshCw, Eye, Search, Bot, Globe, Target,
   ChevronUp, ChevronDown, Minus, ArrowRight,
   BarChart2, Shield, Zap, Key, Webhook,
 } from 'lucide-react';
 import { getDashboardOverview, getMetricsThroughput } from '../../api/dashboard';
+import { getQualityScore } from '../../api/gaps';
+import type { QualityScoreResponse } from '../../types';
 import { getRankings } from '../../api/seo';
 
 // ─── Seed data (used while API loads or as fallback) ──────────────────────────
@@ -420,6 +422,9 @@ export default function Dashboard() {
   const [liveGaps, setLiveGaps] = useState(gapData[gapData.length - 1].open);
   const [liveCoverage, setLiveCoverage] = useState(coverageData[coverageData.length - 1].after);
   const [liveRank, setLiveRank] = useState(rankData[0].current);
+  const [liveQS, setLiveQS]   = useState<number | null>(null);
+  const [qsData, setQsData]   = useState<QualityScoreResponse | null>(null);
+  const [qsLoading, setQsLoading] = useState(false);
 
   useEffect(() => {
     const t = setInterval(() => {
@@ -442,11 +447,32 @@ export default function Dashboard() {
         getMetricsThroughput(24, 60),
         getRankings('example.com', 'data pipeline tool', 30),
       ]);
+      // Trigger a sample Quality Score analysis on refresh
+      fetchSampleQualityScore();
       setLastUpdated(new Date());
     } finally {
       setRefreshing(false);
     }
   }, []);
+
+  // Fetch Quality Score for a sample piece of content on mount
+  const fetchSampleQualityScore = useCallback(() => {
+    setQsLoading(true);
+    getQualityScore({
+      content: 'This product helps businesses increase revenue by automating data pipelines. According to Gartner 2024, companies using automated ETL reduce data engineering costs by 40%. Our platform integrates with 50+ data sources and processes over 1 million records per second.\n\n## Key Benefits\n- Real-time data sync\n- No-code pipeline builder\n- SOC2 compliant infrastructure\n- 99.9% uptime SLA',
+      title: rankData[0]?.keyword ?? 'Data Engine Platform',
+      query: rankData[0]?.keyword ?? 'data pipeline tool',
+      target_keywords: rankData.map(r => r.keyword),
+    })
+      .then(res => {
+        setQsData(res);
+        setLiveQS(res.quality_score);
+      })
+      .catch(() => { /* non-critical — keep null */ })
+      .finally(() => setQsLoading(false));
+  }, [rankData]);
+
+  useEffect(() => { fetchSampleQualityScore(); }, [fetchSampleQualityScore]);
 
   const latestGap = gapData[gapData.length - 1];
   const gapSeverity = liveGaps === 0 ? 'None' : liveGaps < 5 ? 'Low' : liveGaps < 12 ? 'Medium' : liveGaps < 20 ? 'High' : 'Critical';
@@ -466,6 +492,99 @@ export default function Dashboard() {
           <StatCard label="Open Gaps"      value={liveGaps}           sub={gapSeverity}                      icon={<AlertTriangle size={15} />} accent={severityColor} />
           <StatCard label="Coverage"       value={`${liveCoverage}%`} delta={+((liveCoverage - 38).toFixed(0))} icon={<CheckCircle2 size={15} />} accent="text-emerald-400" />
           <StatCard label="Top Rank"       value={`#${liveRank}`}     sub={rankData[0].keyword.slice(0, 18) + '…'} icon={<TrendingUp size={15} />} accent="text-zinc-400" />
+        </div>
+
+        {/* ── Quality Score row ── */}
+        <div className="bg-zinc-900 border border-zinc-800 p-4">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Target size={14} className="text-zinc-400" />
+              <h2 className="text-sm font-semibold text-zinc-200">Google Ads Quality Score</h2>
+              <span className="text-xs text-zinc-600">— Ad Rank engine: QS ≥ 8 beats all paid ads</span>
+            </div>
+            {qsLoading && <span className="text-xs font-mono text-zinc-600 animate-pulse">Computing…</span>}
+          </div>
+          {qsData ? (
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+              {/* Headline QS */}
+              <div className={`p-3 border rounded-sm flex flex-col gap-1 ${
+                qsData.beats_paid_ads
+                  ? 'border-emerald-800 bg-emerald-950/30'
+                  : qsData.quality_score >= 6
+                  ? 'border-amber-800 bg-amber-950/20'
+                  : 'border-red-900 bg-red-950/20'
+              }`}>
+                <div className="text-xs text-zinc-500 uppercase font-medium tracking-wide">Quality Score</div>
+                <div className={`text-4xl font-mono font-bold tabular-nums ${
+                  qsData.beats_paid_ads ? 'text-emerald-300' : qsData.quality_score >= 6 ? 'text-amber-300' : 'text-red-400'
+                }`}>{liveQS?.toFixed(1)}<span className="text-sm text-zinc-600">/10</span></div>
+                <div className={`text-xs font-semibold ${qsData.beats_paid_ads ? 'text-emerald-400' : 'text-zinc-400'}`}>
+                  {qsData.label} {qsData.beats_paid_ads ? '✓ Beats paid ads' : ''}
+                </div>
+                <div className="text-xs text-zinc-600 mt-1">{qsData.projected_position}</div>
+              </div>
+              {/* 3 dimensions */}
+              {Object.entries(qsData.dimensions).map(([key, dim]) => (
+                <div key={key} className="border border-zinc-800 p-3 flex flex-col gap-2">
+                  <div className="text-xs text-zinc-500 leading-tight">{dim.name.split('(')[0].trim()}</div>
+                  <div className="flex items-end gap-1.5">
+                    <span className={`text-2xl font-mono font-bold tabular-nums ${
+                      dim.status === 'Above Average' ? 'text-emerald-400' : dim.status === 'Average' ? 'text-amber-400' : 'text-red-400'
+                    }`}>{dim.score.toFixed(1)}</span>
+                    <span className="text-zinc-600 text-sm mb-0.5">/10</span>
+                  </div>
+                  <div className="h-1 bg-zinc-800 rounded-full overflow-hidden">
+                    <div className={`h-full rounded-full ${
+                      dim.status === 'Above Average' ? 'bg-emerald-500' : dim.status === 'Average' ? 'bg-amber-500' : 'bg-red-500'
+                    }`} style={{ width: `${dim.score * 10}%` }} />
+                  </div>
+                  <div className={`text-xs font-mono ${
+                    dim.status === 'Above Average' ? 'text-emerald-500' : dim.status === 'Average' ? 'text-amber-500' : 'text-red-500'
+                  }`}>{dim.status}</div>
+                  {dim.fixes[0] && <div className="text-xs text-zinc-600 leading-tight mt-1 border-t border-zinc-800 pt-1">{dim.fixes[0]}</div>}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-4 gap-3">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="h-28 bg-zinc-800/50 animate-pulse rounded-sm" />
+              ))}
+            </div>
+          )}
+          {qsData && (
+            <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+              {/* Ad benchmarks */}
+              <div>
+                <div className="text-xs font-mono text-zinc-500 mb-2">Paid Ad Benchmarks</div>
+                <div className="space-y-1.5">
+                  {qsData.rank_simulation.ad_benchmarks.map(b => (
+                    <div key={b.ad_position} className="flex items-center gap-2 text-xs font-mono">
+                      <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${b.beats_this_ad ? 'bg-emerald-400' : 'bg-red-400'}`} />
+                      <span className="text-zinc-400 w-36">{b.ad_position}</span>
+                      <span className="text-zinc-600">QS {b.ad_typical_qs}</span>
+                      {b.beats_this_ad
+                        ? <span className="text-emerald-400 ml-auto">BEATS</span>
+                        : <span className="text-red-400 ml-auto">+{b.qs_gap} pts needed</span>
+                      }
+                    </div>
+                  ))}
+                </div>
+              </div>
+              {/* Top action plan */}
+              <div>
+                <div className="text-xs font-mono text-zinc-500 mb-2">Action Plan to #1</div>
+                <div className="space-y-1.5">
+                  {qsData.action_plan.slice(0, 3).map((a, i) => (
+                    <div key={i} className="flex items-start gap-2 text-xs">
+                      <span className="w-4 h-4 rounded-full bg-zinc-800 flex-shrink-0 flex items-center justify-center text-zinc-500 font-mono">{i+1}</span>
+                      <span className="text-zinc-400 leading-tight">{a.slice(0, 110)}{a.length > 110 ? '…' : ''}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* ── Visibility gauges ── */}

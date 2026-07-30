@@ -7,6 +7,8 @@ import type {
   GapWriteResponse,
   DraftItem,
   DraftStatus,
+  QualityScoreRequest,
+  QualityScoreResponse,
 } from '../types';
 
 // ── Gap Detection & Auto-Closure ──────────────────────────────────────────────
@@ -132,6 +134,31 @@ export async function getDrafts(
   const { data } = await apiClient.get<DraftItem[]>(
     `/api/v1/gaps/drafts/${document_id}`,
     { params: { tenant_id, ...(status && { status }) } },
+  );
+  return data;
+}
+
+
+// ── Quality Score — Google Ads Ad Rank Engine ─────────────────────────────────
+
+/**
+ * POST /api/v1/gaps/quality-score
+ * Compute a Google Ads Quality Score equivalent (1–10) for content and
+ * simulate where it ranks vs every paid ad position.
+ *
+ * QS >= 8.0 → beats all paid ads and reaches organic #1.
+ * QS >= 9.5 → captured by Google AI Overviews (above ALL results).
+ *
+ * Returns per-dimension breakdown (Snippet Attractiveness, Keyword Alignment,
+ * Content Experience), ad benchmark comparison, CTR uplift steps, and a
+ * specific action plan to reach #1 above paid ads.
+ */
+export async function getQualityScore(
+  payload: QualityScoreRequest,
+): Promise<QualityScoreResponse> {
+  const { data } = await apiClient.post<QualityScoreResponse>(
+    '/api/v1/gaps/quality-score',
+    payload,
   );
   return data;
 }
