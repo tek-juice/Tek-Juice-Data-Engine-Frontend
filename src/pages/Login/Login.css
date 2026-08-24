@@ -1,0 +1,386 @@
+/* ── Login page ──────────────────────────────────────────────────────────────
+   Colours: brand token system (see globals.css :root)
+   Structure: centred card, light background, no gimmicks
+────────────────────────────────────────────────────────────────────────────── */
+
+.auth-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-bg);
+  padding: 1.5rem;
+}
+
+/* ── Card ────────────────────────────────────────────────────────────────── */
+
+.auth-box {
+  width: 100%;
+  max-width: 400px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 2rem 2rem 1.75rem;
+  box-shadow: var(--shadow-card);
+}
+
+/* ── Brand row ───────────────────────────────────────────────────────────── */
+
+.auth-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1.625rem;
+}
+
+.auth-mark rect {
+  fill: var(--color-primary-dark);
+}
+
+.auth-brand-name {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--color-primary-dark);
+  letter-spacing: -0.01em;
+}
+
+/* ── Heading ─────────────────────────────────────────────────────────────── */
+
+.auth-header {
+  margin-bottom: 1.5rem;
+}
+
+.auth-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--color-text);
+  letter-spacing: -0.015em;
+  margin: 0 0 0.3rem;
+}
+
+.auth-sub {
+  font-size: 0.8125rem;
+  color: var(--color-muted);
+  margin: 0;
+}
+
+/* ── Inline link ─────────────────────────────────────────────────────────── */
+
+.auth-inline-link {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: inherit;
+  font-weight: 500;
+  cursor: pointer;
+  color: var(--color-primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-color: transparent;
+  transition: text-decoration-color 0.12s, color 0.12s;
+}
+
+.auth-inline-link:hover {
+  color: var(--color-primary-dark);
+  text-decoration-color: var(--color-primary);
+}
+
+.auth-inline-link.small {
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--color-muted);
+}
+
+.auth-inline-link.small:hover {
+  color: var(--color-primary);
+  text-decoration-color: var(--color-primary);
+}
+
+/* ── OAuth grid ──────────────────────────────────────────────────────────── */
+
+.auth-oauth {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1.125rem;
+}
+
+.oauth {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.5625rem 0.75rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  min-height: 40px;
+  transition: background 0.12s, border-color 0.12s, color 0.12s, box-shadow 0.12s;
+  font-family: inherit;
+  letter-spacing: 0.005em;
+}
+
+.oauth:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.oauth:hover:not(:disabled) {
+  background: var(--color-bg);
+  border-color: #D1D5DB;
+  color: var(--color-primary-dark);
+}
+
+.oauth:active:not(:disabled) {
+  background: #F1F5F9;
+}
+
+/* Google — subtle blue focus ring on hover */
+.oauth.google:hover:not(:disabled) {
+  border-color: #4285F4;
+  box-shadow: 0 0 0 3px rgba(66,133,244,0.10);
+}
+
+/* GitHub — dark border matching the Octocat palette */
+.oauth.github:hover:not(:disabled) {
+  border-color: #6e7681;
+  box-shadow: 0 0 0 3px rgba(0,0,0,0.06);
+}
+
+/* Builder ID — primary brand tint */
+.oauth.builder {
+  color: var(--color-primary);
+}
+
+.oauth.builder:hover:not(:disabled) {
+  border-color: var(--color-primary);
+  background: var(--color-primary-10);
+  color: var(--color-primary-dark);
+  box-shadow: 0 0 0 3px var(--color-primary-10);
+}
+
+/* ── Divider ─────────────────────────────────────────────────────────────── */
+
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.125rem;
+  font-size: 0.75rem;
+  color: var(--color-muted);
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--color-border);
+}
+
+/* ── Form ────────────────────────────────────────────────────────────────── */
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.auth-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3125rem;
+}
+
+.auth-field label,
+.auth-label-row label {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.auth-label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.auth-field input,
+.auth-pw input {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text);
+  font-size: 0.875rem;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.12s, box-shadow 0.12s;
+  -webkit-appearance: none;
+}
+
+.auth-field input::placeholder,
+.auth-pw input::placeholder {
+  color: #CBD5E1;               /* lighter than --color-muted, placeholder only */
+}
+
+.auth-field input:focus,
+.auth-pw input:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-10);
+}
+
+.auth-field input:disabled,
+.auth-pw input:disabled {
+  background: var(--color-bg);
+  color: var(--color-muted);
+  cursor: not-allowed;
+}
+
+/* ── Password toggle ─────────────────────────────────────────────────────── */
+
+.auth-pw {
+  position: relative;
+}
+
+.auth-pw input {
+  padding-right: 2.25rem;
+}
+
+.auth-pw-eye {
+  position: absolute;
+  right: 0.625rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: var(--color-muted);
+  display: flex;
+  align-items: center;
+  line-height: 1;
+  transition: color 0.12s;
+}
+
+.auth-pw-eye:hover {
+  color: var(--color-primary);
+}
+
+/* ── Error ───────────────────────────────────────────────────────────────── */
+
+.auth-error {
+  font-size: 0.8125rem;
+  color: var(--color-danger);
+  background: var(--color-danger-bg);
+  border: 1px solid var(--color-danger-border);
+  border-radius: var(--radius-md);
+  padding: 0.5625rem 0.75rem;
+  line-height: 1.45;
+  margin: 0;
+}
+
+/* ── Submit ──────────────────────────────────────────────────────────────── */
+
+.auth-submit {
+  width: 100%;
+  margin-top: 0.125rem;
+  padding: 0.5625rem;
+  min-height: 38px;
+  background: var(--color-primary);
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: 500;
+  font-family: inherit;
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  letter-spacing: 0.005em;
+  transition: background 0.12s;
+}
+
+.auth-submit:hover:not(:disabled) {
+  background: var(--color-primary-dark);
+}
+
+.auth-submit:active:not(:disabled) {
+  background: var(--color-primary-dark);
+  opacity: 0.9;
+}
+
+.auth-submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── Spinner ─────────────────────────────────────────────────────────────── */
+
+@keyframes auth-spin { to { transform: rotate(360deg); } }
+
+.auth-spinner {
+  width: 15px;
+  height: 15px;
+  border: 1.5px solid rgba(255,255,255,0.35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: auth-spin 0.55s linear infinite;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+/* ── Terms ───────────────────────────────────────────────────────────────── */
+
+.auth-terms {
+  margin-top: 1rem;
+  font-size: 0.75rem;
+  color: var(--color-muted);
+  line-height: 1.5;
+  text-align: center;
+}
+
+.auth-terms a {
+  color: var(--color-primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-color: transparent;
+  transition: text-decoration-color 0.12s;
+}
+
+.auth-terms a:hover {
+  text-decoration-color: var(--color-primary);
+}
+
+/* ── Mobile ──────────────────────────────────────────────────────────────── */
+
+@media (max-width: 480px) {
+  .auth-page {
+    padding: 0;
+    align-items: flex-start;
+  }
+
+  .auth-box {
+    border: none;
+    border-radius: 0;
+    max-width: 100%;
+    box-shadow: none;
+    padding: 2rem 1.25rem 1.5rem;
+    min-height: 100dvh;
+  }
+}
+
+/* ── Variables (fallback if globals.css tokens are absent) ────────────────── */
+
+:root {
+  --radius-md: 6px;
+  --radius-lg: 10px;
+  --shadow-card: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+}
