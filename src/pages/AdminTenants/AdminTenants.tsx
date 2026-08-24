@@ -82,10 +82,10 @@ function seedTenantPerformance(t: TenantSummary): TenantPerformance {
 // ─── Shared tooltip style ─────────────────────────────────────────────────────
 
 const TT = {
-  contentStyle: { background: '#18181b', border: '1px solid #27272a', borderRadius: 4, fontSize: 11, fontFamily: 'ui-monospace' },
-  itemStyle: { color: '#e4e4e7' },
-  labelStyle: { color: '#71717a', marginBottom: 2 },
-  cursor: { stroke: '#3f3f46', strokeWidth: 1 },
+  contentStyle: { background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 4, fontSize: 11 },
+  itemStyle:    { color: 'var(--text)' },
+  labelStyle:   { color: 'var(--text-3)', marginBottom: 2 },
+  cursor:       { stroke: 'var(--border)', strokeWidth: 1 },
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -104,12 +104,20 @@ function relTime(iso: string | null | undefined) {
 // ─── Status badge ─────────────────────────────────────────────────────────────
 
 function StatusBadge({ status }: { status: TenantSummary['status'] }) {
-  const cls = status === 'active' ? 'text-emerald-400 bg-emerald-400/10 border-emerald-800'
-    : status === 'idle' ? 'text-zinc-500 bg-zinc-800 border-zinc-700'
-    : 'text-red-400 bg-red-400/10 border-red-900';
+  const style = status === 'active'
+    ? { color: 'var(--success)', background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.25)' }
+    : status === 'idle'
+    ? { color: 'var(--text-3)', background: 'var(--surface-2)', border: '1px solid var(--border)' }
+    : { color: 'var(--danger)', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)' };
   return (
-    <span className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs font-mono border rounded-sm ${cls}`}>
-      <span className={`w-1.5 h-1.5 rounded-full ${status === 'active' ? 'bg-emerald-400' : status === 'idle' ? 'bg-zinc-500' : 'bg-red-400'}`} />
+    <span
+      className="inline-flex items-center gap-1 px-2 py-0.5 text-xs rounded-sm"
+      style={{ ...style, fontFamily: 'ui-monospace, monospace' }}
+    >
+      <span
+        className="w-1.5 h-1.5 rounded-full"
+        style={{ background: status === 'active' ? 'var(--success)' : status === 'idle' ? 'var(--text-3)' : 'var(--danger)' }}
+      />
       {status}
     </span>
   );
@@ -118,19 +126,33 @@ function StatusBadge({ status }: { status: TenantSummary['status'] }) {
 // ─── Plan badge ───────────────────────────────────────────────────────────────
 
 function PlanBadge({ plan }: { plan?: string }) {
-  const cls = plan === 'enterprise' ? 'text-violet-300 border-violet-800'
-    : plan === 'pro' ? 'text-sky-300 border-sky-800'
-    : 'text-zinc-500 border-zinc-700';
-  return <span className={`px-1.5 py-0.5 text-xs font-mono border ${cls}`}>{plan ?? 'free'}</span>;
+  const style = plan === 'enterprise'
+    ? { color: '#a78bfa', borderColor: 'rgba(167,139,250,0.3)' }
+    : plan === 'pro'
+    ? { color: 'var(--info)', borderColor: 'rgba(59,130,246,0.3)' }
+    : { color: 'var(--text-3)', borderColor: 'var(--border)' };
+  return (
+    <span
+      className="px-1.5 py-0.5 text-xs border"
+      style={{ ...style, fontFamily: 'ui-monospace, monospace' }}
+    >
+      {plan ?? 'free'}
+    </span>
+  );
 }
 
 // ─── Stat mini card ───────────────────────────────────────────────────────────
 
-function Mini({ label, value, accent = 'text-zinc-100' }: { label: string; value: string | number; accent?: string }) {
+function Mini({ label, value, color }: { label: string; value: string | number; color?: string }) {
   return (
     <div>
-      <div className="text-xs text-zinc-600 mb-0.5">{label}</div>
-      <div className={`text-lg font-mono font-bold tabular-nums ${accent}`}>{value}</div>
+      <div className="text-xs mb-0.5" style={{ color: 'var(--text-3)' }}>{label}</div>
+      <div
+        className="text-lg font-bold tabular-nums"
+        style={{ color: color ?? 'var(--text)', fontFamily: 'ui-monospace, monospace' }}
+      >
+        {value}
+      </div>
     </div>
   );
 }
@@ -140,43 +162,49 @@ function Mini({ label, value, accent = 'text-zinc-100' }: { label: string; value
 function TenantRow({ t, onSelect }: { t: TenantSummary; onSelect: (t: TenantSummary) => void }) {
   return (
     <tr
-      className="border-b border-zinc-900 hover:bg-zinc-800/60 transition-colors cursor-pointer group"
+      className="transition-colors cursor-pointer group"
+      style={{ borderBottom: '1px solid var(--border)' }}
       onClick={() => onSelect(t)}
     >
       <td className="py-3 px-4">
         <div className="flex items-center gap-2.5">
-          <div className="w-7 h-7 bg-zinc-800 border border-zinc-700 flex items-center justify-center flex-shrink-0">
-            <Building2 size={12} className="text-zinc-400" />
+          <div
+            className="w-7 h-7 flex items-center justify-center flex-shrink-0"
+            style={{ background: 'var(--surface-2)', border: '1px solid var(--border)' }}
+          >
+            <Building2 size={12} style={{ color: 'var(--text-2)' }} />
           </div>
           <div>
-            <div className="text-sm font-medium text-zinc-100">{t.name}</div>
-            <div className="text-xs font-mono text-zinc-600 mt-0.5">{t.key_prefix}_••••••••••••</div>
+            <div className="text-sm font-medium" style={{ color: 'var(--text)' }}>{t.name}</div>
+            <div className="text-xs mt-0.5" style={{ color: 'var(--text-3)', fontFamily: 'ui-monospace, monospace' }}>{t.key_prefix}_••••••••••••</div>
           </div>
         </div>
       </td>
       <td className="py-3 px-4"><PlanBadge plan={t.plan} /></td>
       <td className="py-3 px-4"><StatusBadge status={t.status} /></td>
-      <td className="py-3 px-4 text-xs font-mono text-zinc-400 tabular-nums">{fmt(t.api_calls_24h)}<span className="text-zinc-700">/24h</span></td>
-      <td className="py-3 px-4 text-xs font-mono text-zinc-400 tabular-nums">{fmt(t.documents_total)}</td>
+      <td className="py-3 px-4 text-xs tabular-nums" style={{ color: 'var(--text-2)', fontFamily: 'ui-monospace, monospace' }}>
+        {fmt(t.api_calls_24h)}<span style={{ color: 'var(--text-3)' }}>/24h</span>
+      </td>
+      <td className="py-3 px-4 text-xs tabular-nums" style={{ color: 'var(--text-2)', fontFamily: 'ui-monospace, monospace' }}>{fmt(t.documents_total)}</td>
       <td className="py-3 px-4">
         <div className="flex items-center gap-2">
-          <div className="flex-1 h-1 bg-zinc-800 rounded-full overflow-hidden max-w-[60px]">
-            <div className="h-full bg-sky-500 rounded-full" style={{ width: `${t.avg_seo_score}%` }} />
+          <div className="flex-1 h-1 rounded-full overflow-hidden max-w-[60px]" style={{ background: 'var(--surface-3)' }}>
+            <div className="h-full rounded-full" style={{ width: `${t.avg_seo_score}%`, background: 'var(--info)' }} />
           </div>
-          <span className="text-xs font-mono text-zinc-400">{t.avg_seo_score.toFixed(0)}</span>
+          <span className="text-xs tabular-nums" style={{ color: 'var(--text-2)', fontFamily: 'ui-monospace, monospace' }}>{t.avg_seo_score.toFixed(0)}</span>
         </div>
       </td>
       <td className="py-3 px-4">
         <div className="flex items-center gap-2">
-          <div className="flex-1 h-1 bg-zinc-800 rounded-full overflow-hidden max-w-[60px]">
-            <div className="h-full bg-violet-500 rounded-full" style={{ width: `${t.avg_geo_score}%` }} />
+          <div className="flex-1 h-1 rounded-full overflow-hidden max-w-[60px]" style={{ background: 'var(--surface-3)' }}>
+            <div className="h-full rounded-full" style={{ width: `${t.avg_geo_score}%`, background: '#a78bfa' }} />
           </div>
-          <span className="text-xs font-mono text-zinc-400">{t.avg_geo_score.toFixed(0)}</span>
+          <span className="text-xs tabular-nums" style={{ color: 'var(--text-2)', fontFamily: 'ui-monospace, monospace' }}>{t.avg_geo_score.toFixed(0)}</span>
         </div>
       </td>
-      <td className="py-3 px-4 text-xs font-mono text-zinc-600">{relTime(t.last_active)}</td>
+      <td className="py-3 px-4 text-xs" style={{ color: 'var(--text-3)', fontFamily: 'ui-monospace, monospace' }}>{relTime(t.last_active)}</td>
       <td className="py-3 px-4 text-right">
-        <ArrowRight size={13} className="text-zinc-700 group-hover:text-zinc-400 transition-colors ml-auto" />
+        <ArrowRight size={13} className="ml-auto transition-colors" style={{ color: 'var(--text-3)' }} />
       </td>
     </tr>
   );
@@ -207,31 +235,47 @@ function TenantDetailPanel({ tenantId, seed, onClose }: {
       {/* backdrop */}
       <div className="flex-1 bg-black/50" onClick={onClose} />
       {/* panel */}
-      <div className="w-full max-w-2xl bg-zinc-950 border-l border-zinc-800 flex flex-col overflow-hidden">
+      <div
+        className="w-full max-w-2xl flex flex-col overflow-hidden"
+        style={{ background: 'var(--bg)', borderLeft: '1px solid var(--border)' }}
+      >
 
         {/* header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-800 flex-shrink-0">
+        <div
+          className="flex items-center justify-between px-6 py-4 flex-shrink-0"
+          style={{ borderBottom: '1px solid var(--border)' }}
+        >
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-zinc-800 border border-zinc-700 flex items-center justify-center">
-              <Building2 size={14} className="text-zinc-300" />
+            <div
+              className="w-8 h-8 flex items-center justify-center"
+              style={{ background: 'var(--surface-2)', border: '1px solid var(--border)' }}
+            >
+              <Building2 size={14} style={{ color: 'var(--text)' }} />
             </div>
             <div>
-              <h2 className="text-sm font-semibold text-zinc-100">{t.name}</h2>
+              <h2 className="text-sm font-semibold" style={{ color: 'var(--text)' }}>{t.name}</h2>
               <div className="flex items-center gap-2 mt-0.5">
-                <span className="text-xs font-mono text-zinc-600">{t.tenant_id}</span>
+                <span className="text-xs" style={{ color: 'var(--text-3)', fontFamily: 'ui-monospace, monospace' }}>{t.tenant_id}</span>
                 <PlanBadge plan={t.plan} />
                 <StatusBadge status={t.status} />
               </div>
             </div>
           </div>
-          <button onClick={onClose} className="text-zinc-600 hover:text-zinc-300 transition-colors p-1">
+          <button
+            onClick={onClose}
+            className="transition-colors p-1"
+            style={{ color: 'var(--text-3)' }}
+          >
             <X size={16} />
           </button>
         </div>
 
         {loading && (
-          <div className="absolute inset-0 z-10 flex items-center justify-center bg-zinc-950/60">
-            <Loader2 size={18} className="animate-spin text-zinc-500" />
+          <div
+            className="absolute inset-0 z-10 flex items-center justify-center"
+            style={{ background: 'rgba(0,0,0,0.4)' }}
+          >
+            <Loader2 size={18} className="animate-spin" style={{ color: 'var(--text-2)' }} />
           </div>
         )}
 
@@ -239,32 +283,35 @@ function TenantDetailPanel({ tenantId, seed, onClose }: {
 
           {/* ── KPI row ── */}
           <div className="grid grid-cols-4 gap-3">
-            <div className="bg-zinc-900 border border-zinc-800 p-3">
-              <Mini label="API calls / 24h" value={fmt(t.api_calls_24h)} accent="text-sky-300" />
-            </div>
-            <div className="bg-zinc-900 border border-zinc-800 p-3">
-              <Mini label="Docs total" value={fmt(t.documents_total)} />
-            </div>
-            <div className="bg-zinc-900 border border-zinc-800 p-3">
-              <Mini label="Gaps closed" value={fmt(t.gaps_closed)} accent="text-emerald-400" />
-            </div>
-            <div className="bg-zinc-900 border border-zinc-800 p-3">
-              <Mini label="Error rate" value={fmtPct(t.error_rate * 100)} accent={t.error_rate > 0.05 ? 'text-red-400' : 'text-zinc-100'} />
-            </div>
+            {[
+              { label: 'API calls / 24h', value: fmt(t.api_calls_24h),    color: 'var(--info)' },
+              { label: 'Docs total',       value: fmt(t.documents_total),  color: undefined },
+              { label: 'Gaps closed',      value: fmt(t.gaps_closed),      color: 'var(--success)' },
+              { label: 'Error rate',       value: fmtPct(t.error_rate * 100), color: t.error_rate > 0.05 ? 'var(--danger)' : undefined },
+            ].map(c => (
+              <div key={c.label} className="p-3" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+                <Mini label={c.label} value={c.value} color={c.color} />
+              </div>
+            ))}
           </div>
 
           {/* ── Visibility scores ── */}
           <div className="grid grid-cols-3 gap-3">
             {[
-              { label: 'SEO', score: t.avg_seo_score, color: 'bg-sky-500',    icon: <Search size={12} /> },
-              { label: 'GEO', score: t.avg_geo_score, color: 'bg-violet-500', icon: <Globe size={12} /> },
-              { label: 'AEO', score: 30,               color: 'bg-amber-500',  icon: <Bot size={12} /> },
+              { label: 'SEO', score: t.avg_seo_score, barColor: 'var(--info)',   icon: <Search size={12} /> },
+              { label: 'GEO', score: t.avg_geo_score, barColor: '#a78bfa',       icon: <Globe size={12} /> },
+              { label: 'AEO', score: 30,               barColor: 'var(--warning)', icon: <Bot size={12} /> },
             ].map(g => (
-              <div key={g.label} className="bg-zinc-900 border border-zinc-800 p-3">
-                <div className="flex items-center gap-1.5 text-zinc-400 mb-2">{g.icon}<span className="text-xs font-semibold text-zinc-300">{g.label}</span></div>
-                <div className="text-xl font-mono font-bold text-zinc-100 tabular-nums mb-2">{g.score.toFixed(0)}<span className="text-sm text-zinc-600 font-normal">/100</span></div>
-                <div className="h-1.5 bg-zinc-800 rounded-full overflow-hidden">
-                  <div className={`h-full rounded-full ${g.color}`} style={{ width: `${g.score}%` }} />
+              <div key={g.label} className="p-3" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+                <div className="flex items-center gap-1.5 mb-2" style={{ color: 'var(--text-2)' }}>
+                  {g.icon}
+                  <span className="text-xs font-semibold" style={{ color: 'var(--text)' }}>{g.label}</span>
+                </div>
+                <div className="text-xl font-bold tabular-nums mb-2" style={{ color: 'var(--text)', fontFamily: 'ui-monospace, monospace' }}>
+                  {g.score.toFixed(0)}<span className="text-sm font-normal" style={{ color: 'var(--text-3)' }}>/100</span>
+                </div>
+                <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--surface-3)' }}>
+                  <div className="h-full rounded-full" style={{ width: `${g.score}%`, background: g.barColor }} />
                 </div>
               </div>
             ))}
@@ -272,20 +319,20 @@ function TenantDetailPanel({ tenantId, seed, onClose }: {
 
           {/* ── Coverage + drafts ── */}
           <div className="grid grid-cols-3 gap-3">
-            <div className="bg-zinc-900 border border-zinc-800 p-3">
-              <Mini label="Coverage" value={fmtPct(t.coverage_pct)} accent="text-emerald-400" />
-            </div>
-            <div className="bg-zinc-900 border border-zinc-800 p-3">
-              <Mini label="Drafts generated" value={fmt(t.drafts_generated)} />
-            </div>
-            <div className="bg-zinc-900 border border-zinc-800 p-3">
-              <Mini label="Webhooks delivered" value={fmt(t.webhooks_delivered)} />
-            </div>
+            {[
+              { label: 'Coverage',           value: fmtPct(t.coverage_pct),    color: 'var(--success)' },
+              { label: 'Drafts generated',   value: fmt(t.drafts_generated),   color: undefined },
+              { label: 'Webhooks delivered', value: fmt(t.webhooks_delivered), color: undefined },
+            ].map(c => (
+              <div key={c.label} className="p-3" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+                <Mini label={c.label} value={c.value} color={c.color} />
+              </div>
+            ))}
           </div>
 
           {/* ── API call volume chart ── */}
-          <div className="bg-zinc-900 border border-zinc-800 p-4">
-            <h3 className="text-xs font-mono font-medium text-zinc-500 uppercase tracking-wider mb-3">API call volume — 24h</h3>
+          <div className="p-4" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+            <h3 className="text-xs font-medium uppercase tracking-wider mb-3" style={{ color: 'var(--text-3)' }}>API call volume — 24h</h3>
             <div className="h-36">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={perf.usage_timeseries} margin={{ top: 0, right: 0, left: -28, bottom: 0 }}>
@@ -299,11 +346,11 @@ function TenantDetailPanel({ tenantId, seed, onClose }: {
                       <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid stroke="#27272a" strokeDasharray="3 3" vertical={false} />
-                  <XAxis dataKey="hour" tick={{ fontSize: 9, fill: '#52525b', fontFamily: 'ui-monospace' }} tickLine={false} axisLine={false} interval={5} />
-                  <YAxis tick={{ fontSize: 9, fill: '#52525b', fontFamily: 'ui-monospace' }} tickLine={false} axisLine={false} />
+                  <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" vertical={false} />
+                  <XAxis dataKey="hour" tick={{ fontSize: 9, fill: 'var(--text-3)' }} tickLine={false} axisLine={false} interval={5} />
+                  <YAxis tick={{ fontSize: 9, fill: 'var(--text-3)' }} tickLine={false} axisLine={false} />
                   <Tooltip {...TT} />
-                  <Area type="monotone" dataKey="api_calls" name="Calls" stroke="#3b82f6" strokeWidth={1.5} fill="url(#gCalls)" dot={false} />
+                  <Area type="monotone" dataKey="api_calls" name="Calls"  stroke="#3b82f6" strokeWidth={1.5} fill="url(#gCalls)" dot={false} />
                   <Area type="monotone" dataKey="errors"    name="Errors" stroke="#ef4444" strokeWidth={1.5} fill="url(#gErrs)"  dot={false} />
                 </AreaChart>
               </ResponsiveContainer>
@@ -311,15 +358,15 @@ function TenantDetailPanel({ tenantId, seed, onClose }: {
           </div>
 
           {/* ── Visibility timeline ── */}
-          <div className="bg-zinc-900 border border-zinc-800 p-4">
-            <h3 className="text-xs font-mono font-medium text-zinc-500 uppercase tracking-wider mb-3">Visibility scores — 24h</h3>
+          <div className="p-4" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+            <h3 className="text-xs font-medium uppercase tracking-wider mb-3" style={{ color: 'var(--text-3)' }}>Visibility scores — 24h</h3>
             <div className="h-36">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={perf.visibility_history} margin={{ top: 0, right: 0, left: -28, bottom: 0 }}>
-                  <CartesianGrid stroke="#27272a" strokeDasharray="3 3" vertical={false} />
-                  <XAxis dataKey="time" tick={{ fontSize: 9, fill: '#52525b', fontFamily: 'ui-monospace' }} tickLine={false} axisLine={false} interval={5} />
-                  <YAxis domain={[0, 100]} tick={{ fontSize: 9, fill: '#52525b', fontFamily: 'ui-monospace' }} tickLine={false} axisLine={false} unit="%" />
-                  <Tooltip {...TT} formatter={(v) => [`${v ?? ""}%`]} />
+                  <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" vertical={false} />
+                  <XAxis dataKey="time" tick={{ fontSize: 9, fill: 'var(--text-3)' }} tickLine={false} axisLine={false} interval={5} />
+                  <YAxis domain={[0, 100]} tick={{ fontSize: 9, fill: 'var(--text-3)' }} tickLine={false} axisLine={false} unit="%" />
+                  <Tooltip {...TT} formatter={(v) => [`${v ?? ''}%`]} />
                   <Line type="monotone" dataKey="seo" name="SEO" stroke="#3b82f6" strokeWidth={1.5} dot={false} />
                   <Line type="monotone" dataKey="geo" name="GEO" stroke="#a78bfa" strokeWidth={1.5} dot={false} />
                   <Line type="monotone" dataKey="aeo" name="AEO" stroke="#f59e0b" strokeWidth={1.5} dot={false} />
@@ -329,8 +376,8 @@ function TenantDetailPanel({ tenantId, seed, onClose }: {
           </div>
 
           {/* ── Gap history ── */}
-          <div className="bg-zinc-900 border border-zinc-800 p-4">
-            <h3 className="text-xs font-mono font-medium text-zinc-500 uppercase tracking-wider mb-3">Coverage improvement — 14 days</h3>
+          <div className="p-4" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+            <h3 className="text-xs font-medium uppercase tracking-wider mb-3" style={{ color: 'var(--text-3)' }}>Coverage improvement — 14 days</h3>
             <div className="h-32">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={perf.gap_history} margin={{ top: 0, right: 0, left: -28, bottom: 0 }}>
@@ -342,10 +389,10 @@ function TenantDetailPanel({ tenantId, seed, onClose }: {
                       <stop offset="5%" stopColor="#22c55e" stopOpacity={0.2} /><stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid stroke="#27272a" strokeDasharray="3 3" vertical={false} />
-                  <XAxis dataKey="day" tick={{ fontSize: 9, fill: '#52525b', fontFamily: 'ui-monospace' }} tickLine={false} axisLine={false} interval={3} />
-                  <YAxis domain={[0, 100]} tick={{ fontSize: 9, fill: '#52525b', fontFamily: 'ui-monospace' }} tickLine={false} axisLine={false} unit="%" />
-                  <Tooltip {...TT} formatter={(v) => [`${v ?? ""}%`]} />
+                  <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" vertical={false} />
+                  <XAxis dataKey="day" tick={{ fontSize: 9, fill: 'var(--text-3)' }} tickLine={false} axisLine={false} interval={3} />
+                  <YAxis domain={[0, 100]} tick={{ fontSize: 9, fill: 'var(--text-3)' }} tickLine={false} axisLine={false} unit="%" />
+                  <Tooltip {...TT} formatter={(v) => [`${v ?? ''}%`]} />
                   <Area type="monotone" dataKey="coverage_before" name="Before" stroke="#71717a" strokeWidth={1.5} fill="url(#gcBefore)" dot={false} />
                   <Area type="monotone" dataKey="coverage_after"  name="After"  stroke="#22c55e" strokeWidth={1.5} fill="url(#gcAfter)"  dot={false} />
                 </AreaChart>
@@ -354,18 +401,27 @@ function TenantDetailPanel({ tenantId, seed, onClose }: {
           </div>
 
           {/* ── Activity feed ── */}
-          <div className="bg-zinc-900 border border-zinc-800 overflow-hidden">
-            <div className="px-4 py-3 border-b border-zinc-800">
-              <h3 className="text-xs font-mono font-medium text-zinc-500 uppercase tracking-wider">Recent pipeline activity</h3>
+          <div style={{ background: 'var(--surface)', border: '1px solid var(--border)' }} className="overflow-hidden">
+            <div className="px-4 py-3" style={{ borderBottom: '1px solid var(--border)' }}>
+              <h3 className="text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--text-3)' }}>Recent pipeline activity</h3>
             </div>
-            <div className="divide-y divide-zinc-900">
+            <div>
               {perf.recent_activity.slice(0, 10).map((ev, i) => (
-                <div key={i} className="flex items-center gap-3 px-4 py-2.5 hover:bg-zinc-800/40">
-                  <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${ev.status === 'success' ? 'bg-emerald-400' : ev.status === 'error' ? 'bg-red-400' : 'bg-amber-400'}`} />
-                  <span className="text-xs font-mono text-zinc-300 flex-1">{ev.event_type}</span>
-                  <span className="text-xs font-mono text-zinc-600">{ev.service}</span>
-                  {ev.duration_ms && <span className="text-xs font-mono text-zinc-700 tabular-nums">{ev.duration_ms}ms</span>}
-                  <span className="text-xs font-mono text-zinc-700">{relTime(ev.timestamp)}</span>
+                <div
+                  key={i}
+                  className="flex items-center gap-3 px-4 py-2.5"
+                  style={{ borderBottom: '1px solid var(--border)' }}
+                >
+                  <span
+                    className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                    style={{ background: ev.status === 'success' ? 'var(--success)' : ev.status === 'error' ? 'var(--danger)' : 'var(--warning)' }}
+                  />
+                  <span className="text-xs flex-1" style={{ color: 'var(--text)', fontFamily: 'ui-monospace, monospace' }}>{ev.event_type}</span>
+                  <span className="text-xs" style={{ color: 'var(--text-3)', fontFamily: 'ui-monospace, monospace' }}>{ev.service}</span>
+                  {ev.duration_ms && (
+                    <span className="text-xs tabular-nums" style={{ color: 'var(--text-3)', fontFamily: 'ui-monospace, monospace' }}>{ev.duration_ms}ms</span>
+                  )}
+                  <span className="text-xs" style={{ color: 'var(--text-3)', fontFamily: 'ui-monospace, monospace' }}>{relTime(ev.timestamp)}</span>
                 </div>
               ))}
             </div>
@@ -384,16 +440,16 @@ type SortKey = 'name' | 'api_calls_24h' | 'avg_seo_score' | 'avg_geo_score' | 'c
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function AdminTenants() {
-  const [tenants, setTenants]     = useState<TenantSummary[]>(seedTenants());
-  const [loading, setLoading]     = useState(true);
-  const [error, setError]         = useState('');
-  const [search, setSearch]       = useState('');
-  const [filter, setFilter]       = useState<'all' | TenantSummary['status']>('all');
-  const [sortKey, setSortKey]     = useState<SortKey>('api_calls_24h');
-  const [sortAsc, setSortAsc]     = useState(false);
-  const [selected, setSelected]   = useState<TenantSummary | null>(null);
+  const [tenants, setTenants]   = useState<TenantSummary[]>(seedTenants());
+  const [loading, setLoading]   = useState(true);
+  const [error, setError]       = useState('');
+  const [search, setSearch]     = useState('');
+  const [filter, setFilter]     = useState<'all' | TenantSummary['status']>('all');
+  const [sortKey, setSortKey]   = useState<SortKey>('api_calls_24h');
+  const [sortAsc, setSortAsc]   = useState(false);
+  const [selected, setSelected] = useState<TenantSummary | null>(null);
 
-  const fetch = useCallback(() => {
+  const load = useCallback(() => {
     setLoading(true);
     setError('');
     listTenants()
@@ -402,7 +458,7 @@ export default function AdminTenants() {
       .finally(() => setLoading(false));
   }, []);
 
-  useEffect(() => { fetch(); }, [fetch]);
+  useEffect(() => { load(); }, [load]);
 
   function toggleSort(key: SortKey) {
     if (sortKey === key) setSortAsc(v => !v);
@@ -425,7 +481,6 @@ export default function AdminTenants() {
     error:    tenants.filter(t => t.status === 'error').length,
     calls24h: tenants.reduce((s, t) => s + t.api_calls_24h, 0),
     docs:     tenants.reduce((s, t) => s + t.documents_total, 0),
-    gaps:     tenants.reduce((s, t) => s + t.gaps_closed, 0),
   };
 
   function SortHead({ label, col }: { label: string; col: SortKey }) {
@@ -435,9 +490,12 @@ export default function AdminTenants() {
         className="py-2.5 px-4 text-left cursor-pointer select-none group"
         onClick={() => toggleSort(col)}
       >
-        <div className="flex items-center gap-1 text-xs font-medium text-zinc-500 group-hover:text-zinc-300 transition-colors">
+        <div className="flex items-center gap-1 text-xs font-medium transition-colors" style={{ color: 'var(--text-3)' }}>
           {label}
-          {active ? (sortAsc ? <ChevronUp size={10} className="text-zinc-300" /> : <ChevronDown size={10} className="text-zinc-300" />) : <Minus size={10} className="opacity-0 group-hover:opacity-40" />}
+          {active
+            ? (sortAsc ? <ChevronUp size={10} style={{ color: 'var(--text)' }} /> : <ChevronDown size={10} style={{ color: 'var(--text)' }} />)
+            : <Minus size={10} className="opacity-0 group-hover:opacity-40" />
+          }
         </div>
       </th>
     );
@@ -453,23 +511,24 @@ export default function AdminTenants() {
         />
       )}
 
-      <div className="min-h-screen bg-zinc-950 text-zinc-200">
+      <div style={{ background: 'var(--bg)', color: 'var(--text)' }}>
 
         {/* ── Page header ── */}
-        <div className="px-6 py-5 border-b border-zinc-800 flex items-center justify-between">
+        <div className="px-6 py-5 flex items-center justify-between" style={{ borderBottom: '1px solid var(--border)' }}>
           <div>
             <div className="flex items-center gap-2 mb-0.5">
-              <Building2 size={15} className="text-zinc-400" />
-              <h1 className="text-sm font-semibold text-zinc-100">Connected Products</h1>
+              <Building2 size={15} style={{ color: 'var(--text-2)' }} />
+              <h1 className="text-sm font-semibold" style={{ color: 'var(--text)' }}>Connected Products</h1>
             </div>
-            <p className="text-xs text-zinc-500 ml-5">
+            <p className="text-xs ml-5" style={{ color: 'var(--text-3)' }}>
               All companies and products using Data Engine via API key — real-time performance across the platform.
             </p>
           </div>
           <button
-            onClick={fetch}
+            onClick={load}
             disabled={loading}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border border-zinc-700 text-zinc-300 hover:border-zinc-500 hover:text-zinc-100 transition-colors disabled:opacity-40"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-colors disabled:opacity-40"
+            style={{ border: '1px solid var(--border)', color: 'var(--text-2)' }}
           >
             <RefreshCw size={12} className={loading ? 'animate-spin' : ''} /> Refresh
           </button>
@@ -480,19 +539,19 @@ export default function AdminTenants() {
           {/* ── Platform summary row ── */}
           <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
             {[
-              { label: 'Total products',   value: tenants.length,       accent: 'text-zinc-100',     icon: <Building2 size={14} /> },
-              { label: 'Active now',       value: totals.active,        accent: 'text-emerald-400',  icon: <Zap size={14} /> },
-              { label: 'Idle',             value: totals.idle,          accent: 'text-zinc-500',     icon: <Minus size={14} /> },
-              { label: 'In error state',   value: totals.error,         accent: 'text-red-400',      icon: <AlertTriangle size={14} /> },
-              { label: 'API calls / 24h',  value: fmt(totals.calls24h), accent: 'text-sky-400',      icon: <Activity size={14} /> },
-              { label: 'Total docs',       value: fmt(totals.docs),     accent: 'text-zinc-300',     icon: <FileText size={14} /> },
+              { label: 'Total products',  value: tenants.length,       color: 'var(--text)',    icon: <Building2 size={14} /> },
+              { label: 'Active now',      value: totals.active,        color: 'var(--success)', icon: <Zap size={14} /> },
+              { label: 'Idle',            value: totals.idle,          color: 'var(--text-3)',  icon: <Minus size={14} /> },
+              { label: 'In error state',  value: totals.error,         color: 'var(--danger)',  icon: <AlertTriangle size={14} /> },
+              { label: 'API calls / 24h', value: fmt(totals.calls24h), color: 'var(--info)',    icon: <Activity size={14} /> },
+              { label: 'Total docs',      value: fmt(totals.docs),     color: 'var(--text-2)',  icon: <FileText size={14} /> },
             ].map(c => (
-              <div key={c.label} className="bg-zinc-900 border border-zinc-800 p-4 flex flex-col gap-2">
+              <div key={c.label} className="p-4 flex flex-col gap-2" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-zinc-500 uppercase font-medium tracking-wide">{c.label}</span>
-                  <span className="text-zinc-600">{c.icon}</span>
+                  <span className="text-xs uppercase font-medium tracking-wide" style={{ color: 'var(--text-3)' }}>{c.label}</span>
+                  <span style={{ color: 'var(--text-3)' }}>{c.icon}</span>
                 </div>
-                <div className={`text-2xl font-mono font-semibold tabular-nums ${c.accent}`}>{c.value}</div>
+                <div className="text-2xl font-semibold tabular-nums" style={{ color: c.color, fontFamily: 'ui-monospace, monospace' }}>{c.value}</div>
               </div>
             ))}
           </div>
@@ -500,13 +559,19 @@ export default function AdminTenants() {
           {/* ── Filters + search ── */}
           <div className="flex items-center gap-3 flex-wrap">
             <div className="relative flex-1 min-w-48">
-              <Search size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-600" />
+              <Search size={12} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-3)' }} />
               <input
                 type="text"
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 placeholder="Search by name or key prefix…"
-                className="w-full pl-8 pr-3 py-1.5 bg-zinc-900 border border-zinc-700 text-zinc-200 text-xs font-mono placeholder-zinc-700 outline-none focus:border-zinc-500 transition-colors"
+                className="w-full pl-8 pr-3 py-1.5 text-xs outline-none transition-colors"
+                style={{
+                  background: 'var(--surface)',
+                  border: '1px solid var(--border)',
+                  color: 'var(--text)',
+                  fontFamily: 'ui-monospace, monospace',
+                }}
               />
             </div>
             <div className="flex gap-1.5">
@@ -514,9 +579,11 @@ export default function AdminTenants() {
                 <button
                   key={s}
                   onClick={() => setFilter(s)}
-                  className={`px-3 py-1.5 text-xs font-mono border transition-colors ${
-                    filter === s ? 'border-zinc-400 text-zinc-100 bg-zinc-800' : 'border-zinc-700 text-zinc-500 hover:border-zinc-600 hover:text-zinc-300'
-                  }`}
+                  className="px-3 py-1.5 text-xs transition-colors"
+                  style={filter === s
+                    ? { border: '1px solid var(--text-2)', color: 'var(--text)', background: 'var(--surface-2)', fontFamily: 'ui-monospace, monospace' }
+                    : { border: '1px solid var(--border)', color: 'var(--text-3)', fontFamily: 'ui-monospace, monospace' }
+                  }
                 >
                   {s}
                 </button>
@@ -525,40 +592,40 @@ export default function AdminTenants() {
           </div>
 
           {error && (
-            <div className="flex items-center gap-2 text-xs text-amber-400 border border-amber-900/40 bg-amber-950/20 px-4 py-3">
+            <div className="flex items-center gap-2 text-xs px-4 py-3" style={{ color: 'var(--warning)', border: '1px solid rgba(245,158,11,0.25)', background: 'rgba(245,158,11,0.05)' }}>
               <AlertTriangle size={13} /> {error}
             </div>
           )}
 
           {/* ── Main table ── */}
-          <div className="bg-zinc-900 border border-zinc-800 overflow-hidden">
-            <div className="px-4 py-3 border-b border-zinc-800 flex items-center justify-between">
-              <h2 className="text-xs font-mono font-medium text-zinc-500 uppercase tracking-wider">
+          <div style={{ background: 'var(--surface)', border: '1px solid var(--border)' }} className="overflow-hidden">
+            <div className="px-4 py-3 flex items-center justify-between" style={{ borderBottom: '1px solid var(--border)' }}>
+              <h2 className="text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--text-3)' }}>
                 {visible.length} product{visible.length !== 1 ? 's' : ''}
-                {filter !== 'all' && <span className="text-zinc-700 ml-1">· {filter}</span>}
+                {filter !== 'all' && <span className="ml-1" style={{ color: 'var(--border)' }}>· {filter}</span>}
               </h2>
-              <span className="text-xs font-mono text-zinc-700">Click any row to see full performance</span>
+              <span className="text-xs" style={{ color: 'var(--text-3)' }}>Click any row to see full performance</span>
             </div>
 
             {loading && tenants.length === 0 ? (
-              <div className="flex items-center justify-center py-14 gap-2 text-zinc-600">
+              <div className="flex items-center justify-center py-14 gap-2" style={{ color: 'var(--text-3)' }}>
                 <Loader2 size={14} className="animate-spin" /> Loading tenants…
               </div>
             ) : visible.length === 0 ? (
               <div className="flex flex-col items-center gap-2 py-12 text-center">
-                <Building2 size={20} className="text-zinc-700" />
-                <p className="text-xs text-zinc-500">No products match your filter.</p>
+                <Building2 size={20} style={{ color: 'var(--text-3)' }} />
+                <p className="text-xs" style={{ color: 'var(--text-3)' }}>No products match your filter.</p>
               </div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
-                    <tr className="border-b border-zinc-800">
+                    <tr style={{ borderBottom: '1px solid var(--border)' }}>
                       <SortHead label="Product" col="name" />
-                      <th className="py-2.5 px-4 text-left text-xs font-medium text-zinc-500">Plan</th>
-                      <th className="py-2.5 px-4 text-left text-xs font-medium text-zinc-500">Status</th>
+                      <th className="py-2.5 px-4 text-left text-xs font-medium" style={{ color: 'var(--text-3)' }}>Plan</th>
+                      <th className="py-2.5 px-4 text-left text-xs font-medium" style={{ color: 'var(--text-3)' }}>Status</th>
                       <SortHead label="API calls/24h" col="api_calls_24h" />
-                      <th className="py-2.5 px-4 text-left text-xs font-medium text-zinc-500">Docs</th>
+                      <th className="py-2.5 px-4 text-left text-xs font-medium" style={{ color: 'var(--text-3)' }}>Docs</th>
                       <SortHead label="SEO" col="avg_seo_score" />
                       <SortHead label="GEO" col="avg_geo_score" />
                       <SortHead label="Last active" col="last_active" />
@@ -578,18 +645,24 @@ export default function AdminTenants() {
           {/* ── Visibility overview across all products ── */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {[
-              { label: 'Platform avg SEO', value: tenants.length ? (tenants.reduce((s,t)=>s+t.avg_seo_score,0)/tenants.length).toFixed(1) : '—', color: 'bg-sky-500',    accent: 'text-sky-300',    icon: <Search size={14} /> },
-              { label: 'Platform avg GEO', value: tenants.length ? (tenants.reduce((s,t)=>s+t.avg_geo_score,0)/tenants.length).toFixed(1) : '—', color: 'bg-violet-500', accent: 'text-violet-300', icon: <Globe size={14} /> },
-              { label: 'Platform avg coverage', value: tenants.length ? (tenants.reduce((s,t)=>s+t.coverage_pct,0)/tenants.length).toFixed(1)+'%' : '—', color: 'bg-emerald-500', accent: 'text-emerald-300', icon: <Eye size={14} /> },
+              { label: 'Platform avg SEO', value: tenants.length ? (tenants.reduce((s,t)=>s+t.avg_seo_score,0)/tenants.length).toFixed(1) : '—', barColor: 'var(--info)',    textColor: 'var(--info)',    icon: <Search size={14} /> },
+              { label: 'Platform avg GEO', value: tenants.length ? (tenants.reduce((s,t)=>s+t.avg_geo_score,0)/tenants.length).toFixed(1) : '—', barColor: '#a78bfa',        textColor: '#a78bfa',        icon: <Globe size={14} /> },
+              { label: 'Platform avg coverage', value: tenants.length ? (tenants.reduce((s,t)=>s+t.coverage_pct,0)/tenants.length).toFixed(1)+'%' : '—', barColor: 'var(--success)', textColor: 'var(--success)', icon: <Eye size={14} /> },
             ].map(g => (
-              <div key={g.label} className="bg-zinc-900 border border-zinc-800 p-4 flex items-center gap-4">
-                <span className="text-zinc-500">{g.icon}</span>
+              <div key={g.label} className="p-4 flex items-center gap-4" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+                <span style={{ color: 'var(--text-3)' }}>{g.icon}</span>
                 <div className="flex-1">
-                  <div className="text-xs text-zinc-500 mb-1">{g.label}</div>
-                  <div className={`text-2xl font-mono font-bold tabular-nums ${g.accent}`}>{g.value}</div>
+                  <div className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>{g.label}</div>
+                  <div className="text-2xl font-bold tabular-nums" style={{ color: g.textColor, fontFamily: 'ui-monospace, monospace' }}>{g.value}</div>
                 </div>
-                <div className="w-16 h-1.5 bg-zinc-800 rounded-full overflow-hidden">
-                  <div className={`h-full ${g.color} rounded-full`} style={{ width: typeof g.value === 'string' && g.value.endsWith('%') ? g.value : `${g.value}%` }} />
+                <div className="w-16 h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--surface-3)' }}>
+                  <div
+                    className="h-full rounded-full"
+                    style={{
+                      background: g.barColor,
+                      width: typeof g.value === 'string' && g.value.endsWith('%') ? g.value : `${g.value}%`,
+                    }}
+                  />
                 </div>
               </div>
             ))}
@@ -597,11 +670,18 @@ export default function AdminTenants() {
 
           {/* ── Errors callout ── */}
           {totals.error > 0 && (
-            <div className="border border-red-900/40 bg-red-950/20 px-4 py-3 flex items-start gap-3">
-              <AlertTriangle size={14} className="text-red-400 flex-shrink-0 mt-0.5" />
+            <div
+              className="px-4 py-3 flex items-start gap-3"
+              style={{ border: '1px solid var(--danger-border)', background: 'var(--danger-bg)' }}
+            >
+              <AlertTriangle size={14} className="flex-shrink-0 mt-0.5" style={{ color: 'var(--danger)' }} />
               <div>
-                <p className="text-xs font-semibold text-red-300 mb-0.5">{totals.error} product{totals.error > 1 ? 's' : ''} in error state</p>
-                <p className="text-xs text-zinc-500">Click the affected row to inspect pipeline activity and error rates.</p>
+                <p className="text-xs font-semibold mb-0.5" style={{ color: 'var(--danger)' }}>
+                  {totals.error} product{totals.error > 1 ? 's' : ''} in error state
+                </p>
+                <p className="text-xs leading-relaxed" style={{ color: 'var(--text-2)' }}>
+                  Click the affected row to inspect pipeline activity and error rates.
+                </p>
               </div>
             </div>
           )}

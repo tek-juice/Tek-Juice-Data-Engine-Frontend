@@ -78,10 +78,10 @@ export default function Login() {
 
         {/* ── Brand ── */}
         <div className="auth-brand">
-          <svg className="auth-mark" width="32" height="32" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-            <rect width="32" height="32" rx="8" fill="#2C3E50"/>
-            <path d="M9 23L16 9l7 14" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
-            <circle cx="16" cy="19" r="2.5" fill="#4CAF50"/>
+          <svg width="32" height="32" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+            <rect width="32" height="32" rx="7" fill="#F4A825"/>
+            <path d="M9 23L16 9l7 14" stroke="#111111" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+            <circle cx="16" cy="19" r="2.5" fill="#111111"/>
           </svg>
           <span className="auth-brand-name">Data Engine</span>
         </div>

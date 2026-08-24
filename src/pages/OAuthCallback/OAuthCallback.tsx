@@ -4,21 +4,6 @@ import { setTokens } from '../../services/auth.service';
 import { exchangeOAuthCode } from '../../api/auth';
 import type { OAuthProvider } from '../../api/auth';
 
-/**
- * OAuthCallback — /auth/callback
- *
- * Handles two backend callback patterns:
- *
- * Pattern A — backend sends JWT directly (preferred):
- *   /auth/callback?access_token=xxx&refresh_token=yyy&token_type=bearer&expires_in=3600
- *
- * Pattern B — backend sends OAuth code (standard OAuth flow):
- *   /auth/callback?code=xxx&provider=github
- *   → frontend exchanges code for JWT via POST /api/v1/auth/oauth/callback
- *
- * On success → redirects to /dashboard
- * On failure → redirects to /login?error=oauth_failed
- */
 export default function OAuthCallback() {
   const [searchParams] = useSearchParams();
   const navigate       = useNavigate();
@@ -27,7 +12,6 @@ export default function OAuthCallback() {
 
   useEffect(() => {
     async function handle() {
-      // ── Pattern A: backend already resolved tokens ──────────────────────────
       const accessToken  = searchParams.get('access_token');
       const refreshToken = searchParams.get('refresh_token');
       const expiresIn    = searchParams.get('expires_in');
@@ -52,7 +36,6 @@ export default function OAuthCallback() {
         return;
       }
 
-      // ── Pattern B: exchange code for tokens ────────────────────────────────
       const code     = searchParams.get('code');
       const provider = searchParams.get('provider') as OAuthProvider | null;
 
@@ -69,7 +52,6 @@ export default function OAuthCallback() {
         return;
       }
 
-      // ── No recognisable params ─────────────────────────────────────────────
       setDetail('Invalid callback — missing token or code.');
       setStatus('error');
       setTimeout(() => navigate('/login?error=oauth_invalid', { replace: true }), 2500);
@@ -80,18 +62,26 @@ export default function OAuthCallback() {
   }, []);
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-zinc-950 text-zinc-200">
+    <div
+      className="flex items-center justify-center min-h-screen"
+      style={{ background: 'var(--bg)', color: 'var(--text)' }}
+    >
       <div className="text-center space-y-3">
         {status === 'processing' ? (
           <>
-            <div className="w-6 h-6 border-2 border-zinc-700 border-t-zinc-300 rounded-full animate-spin mx-auto" />
-            <p className="text-sm font-mono text-zinc-400">Completing sign-in…</p>
+            <div
+              className="w-6 h-6 rounded-full animate-spin mx-auto"
+              style={{ border: '2px solid var(--border)', borderTopColor: 'var(--text-2)' }}
+            />
+            <p className="text-sm" style={{ color: 'var(--text-3)' }}>Completing sign-in…</p>
           </>
         ) : (
           <>
-            <div className="text-red-400 text-sm font-mono">Authentication failed</div>
-            <div className="text-xs text-zinc-600">{detail}</div>
-            <div className="text-xs text-zinc-700">Redirecting to login…</div>
+            <p className="text-sm font-semibold" style={{ color: 'var(--danger)' }}>
+              Authentication failed
+            </p>
+            <p className="text-xs" style={{ color: 'var(--text-3)' }}>{detail}</p>
+            <p className="text-xs" style={{ color: 'var(--text-3)' }}>Redirecting to login…</p>
           </>
         )}
       </div>

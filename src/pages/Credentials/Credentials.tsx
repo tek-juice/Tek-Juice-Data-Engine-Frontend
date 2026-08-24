@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect } from 'react';
 import {
   Key, Plus, Copy, Trash2, Eye, EyeOff,
   CheckCircle2, AlertTriangle, Shield, Code2, Zap,
-  Webhook, Globe, Globe2, Loader2, RefreshCw, ChevronDown, ChevronUp,
+  Webhook, Globe2, Loader2, ChevronDown, ChevronUp,
 } from 'lucide-react';
 import {
   createApiKey, deleteApiKey, listApiKeys,
@@ -29,13 +29,17 @@ function CodeBlock({ children }: { children: string }) {
     setTimeout(() => setCopied(false), 2000);
   }
   return (
-    <div className="relative group bg-black border border-zinc-800 rounded">
-      <pre className="text-xs font-mono text-zinc-300 px-4 py-3 overflow-x-auto whitespace-pre-wrap leading-relaxed">
+    <div className="relative group rounded" style={{ background: 'var(--bg)', border: '1px solid var(--border)' }}>
+      <pre
+        className="text-xs px-4 py-3 overflow-x-auto whitespace-pre-wrap leading-relaxed"
+        style={{ color: 'var(--text-2)', fontFamily: 'ui-monospace, monospace' }}
+      >
         {children}
       </pre>
       <button
         onClick={copy}
-        className="absolute top-2 right-2 px-2 py-1 text-xs font-mono border border-zinc-700 text-zinc-400 hover:text-zinc-100 hover:border-zinc-500 transition-colors opacity-0 group-hover:opacity-100"
+        className="absolute top-2 right-2 px-2 py-1 text-xs transition-colors opacity-0 group-hover:opacity-100"
+        style={{ border: '1px solid var(--border)', color: 'var(--text-3)' }}
       >
         {copied ? 'Copied!' : 'Copy'}
       </button>
@@ -69,14 +73,14 @@ function CreateKeyModal({ onClose, onCreate }: {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
-      <div className="bg-zinc-900 border border-zinc-700 w-full max-w-md p-6 shadow-2xl">
-        <h2 className="text-sm font-semibold text-zinc-100 mb-1">Create API key</h2>
-        <p className="text-xs text-zinc-500 mb-5">
+      <div className="w-full max-w-md p-6 shadow-2xl" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+        <h2 className="text-sm font-semibold mb-1" style={{ color: 'var(--text)' }}>Create API key</h2>
+        <p className="text-xs mb-5" style={{ color: 'var(--text-3)' }}>
           Give the key a name that describes where it will be used.
-          The raw key is shown <span className="text-amber-400">once only</span> — copy it immediately.
+          The raw key is shown <span style={{ color: 'var(--warning)' }}>once only</span> — copy it immediately.
         </p>
 
-        <label className="block text-xs font-medium text-zinc-400 mb-1.5">Key name</label>
+        <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-2)' }}>Key name</label>
         <input
           type="text"
           value={name}
@@ -84,11 +88,17 @@ function CreateKeyModal({ onClose, onCreate }: {
           onKeyDown={e => e.key === 'Enter' && handleCreate()}
           placeholder="e.g. Production Backend"
           autoFocus
-          className="w-full px-3 py-2 bg-zinc-950 border border-zinc-700 text-zinc-100 text-sm font-mono placeholder-zinc-700 outline-none focus:border-zinc-400 transition-colors"
+          className="w-full px-3 py-2 text-sm outline-none transition-colors"
+          style={{
+            background: 'var(--bg)',
+            border: '1px solid var(--border)',
+            color: 'var(--text)',
+            fontFamily: 'ui-monospace, monospace',
+          }}
         />
 
         {error && (
-          <p className="mt-2 text-xs text-red-400 flex items-center gap-1.5">
+          <p className="mt-2 text-xs flex items-center gap-1.5" style={{ color: 'var(--danger)' }}>
             <AlertTriangle size={11} /> {error}
           </p>
         )}
@@ -96,14 +106,16 @@ function CreateKeyModal({ onClose, onCreate }: {
         <div className="flex items-center gap-2 mt-5 justify-end">
           <button
             onClick={onClose}
-            className="px-3 py-1.5 text-xs font-medium border border-zinc-700 text-zinc-400 hover:border-zinc-500 hover:text-zinc-200 transition-colors"
+            className="px-3 py-1.5 text-xs font-medium transition-colors"
+            style={{ border: '1px solid var(--border)', color: 'var(--text-2)' }}
           >
             Cancel
           </button>
           <button
             onClick={handleCreate}
             disabled={loading}
-            className="px-4 py-1.5 text-xs font-semibold bg-zinc-100 text-zinc-900 hover:bg-white transition-colors disabled:opacity-40"
+            className="px-4 py-1.5 text-xs font-semibold transition-colors disabled:opacity-40"
+            style={{ background: 'var(--text)', color: 'var(--bg)' }}
           >
             {loading ? 'Creating…' : 'Create key'}
           </button>
@@ -133,23 +145,24 @@ function RevealedKeyModal({ apiKey, name, onClose }: {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
-      <div className="bg-zinc-900 border border-zinc-700 w-full max-w-lg p-6 shadow-2xl">
+      <div className="w-full max-w-lg p-6 shadow-2xl" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
         <div className="flex items-center gap-2 mb-1">
-          <CheckCircle2 size={15} className="text-emerald-400" />
-          <h2 className="text-sm font-semibold text-zinc-100">Key created — "{name}"</h2>
+          <CheckCircle2 size={15} style={{ color: 'var(--success)' }} />
+          <h2 className="text-sm font-semibold" style={{ color: 'var(--text)' }}>Key created — "{name}"</h2>
         </div>
-        <p className="text-xs text-amber-400 flex items-center gap-1.5 mb-5">
+        <p className="text-xs flex items-center gap-1.5 mb-5" style={{ color: 'var(--warning)' }}>
           <AlertTriangle size={11} />
           This is the only time the full key will be shown. Copy it now and store it securely.
         </p>
 
-        <div className="bg-black border border-zinc-800 px-4 py-3 flex items-center gap-3 mb-4">
-          <code className="flex-1 text-xs font-mono text-emerald-400 break-all leading-relaxed">
+        <div className="px-4 py-3 flex items-center gap-3 mb-4" style={{ background: 'var(--bg)', border: '1px solid var(--border)' }}>
+          <code className="flex-1 text-xs break-all leading-relaxed" style={{ color: 'var(--success)', fontFamily: 'ui-monospace, monospace' }}>
             {display}
           </code>
           <button
             onClick={() => setVisible(v => !v)}
-            className="text-zinc-600 hover:text-zinc-300 transition-colors flex-shrink-0"
+            className="transition-colors flex-shrink-0"
+            style={{ color: 'var(--text-3)' }}
             aria-label={visible ? 'Hide key' : 'Show key'}
           >
             {visible ? <EyeOff size={14} /> : <Eye size={14} />}
@@ -158,17 +171,17 @@ function RevealedKeyModal({ apiKey, name, onClose }: {
 
         <button
           onClick={copy}
-          className={`w-full flex items-center justify-center gap-2 py-2 text-xs font-semibold border transition-colors ${
-            copied
-              ? 'border-emerald-600 text-emerald-400'
-              : 'border-zinc-600 text-zinc-300 hover:border-zinc-400 hover:text-zinc-100'
-          }`}
+          className="w-full flex items-center justify-center gap-2 py-2 text-xs font-semibold border transition-colors"
+          style={copied
+            ? { borderColor: 'var(--success)', color: 'var(--success)' }
+            : { borderColor: 'var(--border)', color: 'var(--text-2)' }
+          }
         >
           {copied ? <><CheckCircle2 size={12} /> Copied to clipboard</> : <><Copy size={12} /> Copy key</>}
         </button>
 
         <div className="mt-5">
-          <p className="text-xs font-medium text-zinc-400 mb-2 flex items-center gap-1.5">
+          <p className="text-xs font-medium mb-2 flex items-center gap-1.5" style={{ color: 'var(--text-2)' }}>
             <Code2 size={12} /> Add to your product's backend
           </p>
           <CodeBlock>{`# HTTP header (add to every request)
@@ -181,7 +194,8 @@ Authorization: Bearer ${display}`}
 
         <button
           onClick={onClose}
-          className="mt-5 w-full py-2 text-xs font-medium border border-zinc-700 text-zinc-400 hover:border-zinc-500 hover:text-zinc-200 transition-colors"
+          className="mt-5 w-full py-2 text-xs font-medium transition-colors"
+          style={{ border: '1px solid var(--border)', color: 'var(--text-2)' }}
         >
           I've saved my key — close
         </button>
@@ -200,26 +214,28 @@ function RevokeModal({ itemLabel, onConfirm, onClose, loading }: {
 }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
-      <div className="bg-zinc-900 border border-zinc-700 w-full max-w-sm p-6 shadow-2xl">
+      <div className="w-full max-w-sm p-6 shadow-2xl" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
         <div className="flex items-center gap-2 mb-1">
-          <Trash2 size={14} className="text-red-400" />
-          <h2 className="text-sm font-semibold text-zinc-100">Revoke</h2>
+          <Trash2 size={14} style={{ color: 'var(--danger)' }} />
+          <h2 className="text-sm font-semibold" style={{ color: 'var(--text)' }}>Revoke</h2>
         </div>
-        <p className="text-xs text-zinc-400 mt-2 mb-5 leading-relaxed">
-          Revoking <span className="text-zinc-100 font-medium">"{itemLabel}"</span> is permanent.
+        <p className="text-xs mt-2 mb-5 leading-relaxed" style={{ color: 'var(--text-2)' }}>
+          Revoking <span className="font-medium" style={{ color: 'var(--text)' }}>"{itemLabel}"</span> is permanent.
           Any product using it will lose access immediately.
         </p>
         <div className="flex items-center gap-2 justify-end">
           <button
             onClick={onClose}
-            className="px-3 py-1.5 text-xs border border-zinc-700 text-zinc-400 hover:border-zinc-500 hover:text-zinc-200 transition-colors"
+            className="px-3 py-1.5 text-xs transition-colors"
+            style={{ border: '1px solid var(--border)', color: 'var(--text-2)' }}
           >
             Cancel
           </button>
           <button
             onClick={onConfirm}
             disabled={loading}
-            className="px-4 py-1.5 text-xs font-semibold bg-red-600 text-white hover:bg-red-500 transition-colors disabled:opacity-40"
+            className="px-4 py-1.5 text-xs font-semibold text-white transition-colors disabled:opacity-40"
+            style={{ background: 'var(--danger)' }}
           >
             {loading ? 'Revoking…' : 'Revoke'}
           </button>
@@ -244,30 +260,34 @@ function KeyRow({ k, onRevoke }: {
   }
 
   return (
-    <tr className="border-b border-zinc-900 hover:bg-zinc-800/50 transition-colors group">
+    <tr className="group transition-colors" style={{ borderBottom: '1px solid var(--border)' }}>
       <td className="py-3 px-4">
-        <div className="text-sm font-medium text-zinc-100">{k.name}</div>
-        <div className="text-xs text-zinc-600 mt-0.5">Created {k.created_at.slice(0, 10)}</div>
+        <div className="text-sm font-medium" style={{ color: 'var(--text)' }}>{k.name}</div>
+        <div className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>Created {k.created_at.slice(0, 10)}</div>
       </td>
       <td className="py-3 px-4">
         <div className="flex items-center gap-2">
-          <code className="text-xs font-mono text-zinc-400">{maskKey(k.prefix)}</code>
+          <code className="text-xs" style={{ color: 'var(--text-2)', fontFamily: 'ui-monospace, monospace' }}>{maskKey(k.prefix)}</code>
           <button
             onClick={copyPrefix}
-            className="opacity-0 group-hover:opacity-100 text-zinc-600 hover:text-zinc-300 transition-all"
+            className="opacity-0 group-hover:opacity-100 transition-all"
+            style={{ color: 'var(--text-3)' }}
             aria-label="Copy masked key"
           >
-            {copied ? <CheckCircle2 size={12} className="text-emerald-400" /> : <Copy size={12} />}
+            {copied ? <CheckCircle2 size={12} style={{ color: 'var(--success)' }} /> : <Copy size={12} />}
           </button>
         </div>
       </td>
-      <td className="py-3 px-4 text-xs font-mono text-zinc-500 tabular-nums">
+      <td className="py-3 px-4 text-xs tabular-nums" style={{ color: 'var(--text-3)', fontFamily: 'ui-monospace, monospace' }}>
         {k.last_used ?? 'Never'}
       </td>
       <td className="py-3 px-4 text-right">
         <button
           onClick={() => onRevoke(k.key_id, k.name)}
-          className="opacity-0 group-hover:opacity-100 flex items-center gap-1 ml-auto text-xs font-medium text-zinc-600 hover:text-red-400 transition-all"
+          className="opacity-0 group-hover:opacity-100 flex items-center gap-1 ml-auto text-xs font-medium transition-all"
+          style={{ color: 'var(--text-3)' }}
+          onMouseEnter={e => (e.currentTarget.style.color = 'var(--danger)')}
+          onMouseLeave={e => (e.currentTarget.style.color = 'var(--text-3)')}
         >
           <Trash2 size={12} /> Revoke
         </button>
@@ -295,11 +315,11 @@ function RegisterWebhookModal({ onClose, onCreate }: {
   onClose: () => void;
   onCreate: (ep: WebhookEndpoint) => void;
 }) {
-  const [url, setUrl]               = useState('');
-  const [desc, setDesc]             = useState('');
-  const [events, setEvents]         = useState<WebhookEventType[]>(['*']);
-  const [loading, setLoading]       = useState(false);
-  const [error, setError]           = useState('');
+  const [url, setUrl]         = useState('');
+  const [desc, setDesc]       = useState('');
+  const [events, setEvents]   = useState<WebhookEventType[]>(['*']);
+  const [loading, setLoading] = useState(false);
+  const [error, setError]     = useState('');
 
   function toggleEvent(ev: WebhookEventType) {
     if (ev === '*') { setEvents(['*']); return; }
@@ -327,48 +347,64 @@ function RegisterWebhookModal({ onClose, onCreate }: {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
-      <div className="bg-zinc-900 border border-zinc-700 w-full max-w-lg p-6 shadow-2xl">
-        <h2 className="text-sm font-semibold text-zinc-100 mb-1">Register webhook</h2>
-        <p className="text-xs text-zinc-500 mb-5">
-          Data Engine will POST signed events to your URL. The HMAC secret is shown <span className="text-amber-400">once only</span>.
+      <div className="w-full max-w-lg p-6 shadow-2xl" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+        <h2 className="text-sm font-semibold mb-1" style={{ color: 'var(--text)' }}>Register webhook</h2>
+        <p className="text-xs mb-5" style={{ color: 'var(--text-3)' }}>
+          Data Engine will POST signed events to your URL. The HMAC secret is shown <span style={{ color: 'var(--warning)' }}>once only</span>.
         </p>
 
         <div className="space-y-4">
           <div>
-            <label className="block text-xs font-medium text-zinc-400 mb-1.5">Endpoint URL <span className="text-red-400">*</span></label>
+            <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-2)' }}>
+              Endpoint URL <span style={{ color: 'var(--danger)' }}>*</span>
+            </label>
             <input
               type="url"
               value={url}
               onChange={e => setUrl(e.target.value)}
               placeholder="https://yourproduct.com/webhooks/data-engine"
               autoFocus
-              className="w-full px-3 py-2 bg-zinc-950 border border-zinc-700 text-zinc-100 text-sm font-mono placeholder-zinc-700 outline-none focus:border-zinc-400 transition-colors"
+              className="w-full px-3 py-2 text-sm outline-none transition-colors"
+              style={{
+                background: 'var(--bg)',
+                border: '1px solid var(--border)',
+                color: 'var(--text)',
+                fontFamily: 'ui-monospace, monospace',
+              }}
             />
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-zinc-400 mb-1.5">Description <span className="text-zinc-700">(optional)</span></label>
+            <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-2)' }}>
+              Description <span style={{ color: 'var(--text-3)' }}>(optional)</span>
+            </label>
             <input
               type="text"
               value={desc}
               onChange={e => setDesc(e.target.value)}
               placeholder="e.g. Production notification handler"
-              className="w-full px-3 py-2 bg-zinc-950 border border-zinc-700 text-zinc-100 text-sm font-mono placeholder-zinc-700 outline-none focus:border-zinc-400 transition-colors"
+              className="w-full px-3 py-2 text-sm outline-none transition-colors"
+              style={{
+                background: 'var(--bg)',
+                border: '1px solid var(--border)',
+                color: 'var(--text)',
+                fontFamily: 'ui-monospace, monospace',
+              }}
             />
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-zinc-400 mb-2">Events to receive</label>
+            <label className="block text-xs font-medium mb-2" style={{ color: 'var(--text-2)' }}>Events to receive</label>
             <div className="flex flex-wrap gap-2">
               {ALL_EVENTS.map(ev => (
                 <button
                   key={ev}
                   onClick={() => toggleEvent(ev)}
-                  className={`px-2.5 py-1 text-xs font-mono border transition-colors ${
-                    events.includes(ev)
-                      ? 'border-zinc-400 text-zinc-100 bg-zinc-800'
-                      : 'border-zinc-700 text-zinc-500 hover:border-zinc-600 hover:text-zinc-300'
-                  }`}
+                  className="px-2.5 py-1 text-xs transition-colors"
+                  style={events.includes(ev)
+                    ? { border: '1px solid var(--text-2)', color: 'var(--text)', background: 'var(--surface-2)', fontFamily: 'ui-monospace, monospace' }
+                    : { border: '1px solid var(--border)', color: 'var(--text-3)', fontFamily: 'ui-monospace, monospace' }
+                  }
                 >
                   {ev}
                 </button>
@@ -378,7 +414,7 @@ function RegisterWebhookModal({ onClose, onCreate }: {
         </div>
 
         {error && (
-          <p className="mt-3 text-xs text-red-400 flex items-center gap-1.5">
+          <p className="mt-3 text-xs flex items-center gap-1.5" style={{ color: 'var(--danger)' }}>
             <AlertTriangle size={11} /> {error}
           </p>
         )}
@@ -386,14 +422,16 @@ function RegisterWebhookModal({ onClose, onCreate }: {
         <div className="flex items-center gap-2 mt-6 justify-end">
           <button
             onClick={onClose}
-            className="px-3 py-1.5 text-xs font-medium border border-zinc-700 text-zinc-400 hover:border-zinc-500 hover:text-zinc-200 transition-colors"
+            className="px-3 py-1.5 text-xs font-medium transition-colors"
+            style={{ border: '1px solid var(--border)', color: 'var(--text-2)' }}
           >
             Cancel
           </button>
           <button
             onClick={handleRegister}
             disabled={loading}
-            className="px-4 py-1.5 text-xs font-semibold bg-zinc-100 text-zinc-900 hover:bg-white transition-colors disabled:opacity-40"
+            className="px-4 py-1.5 text-xs font-semibold transition-colors disabled:opacity-40"
+            style={{ background: 'var(--text)', color: 'var(--bg)' }}
           >
             {loading ? 'Registering…' : 'Register webhook'}
           </button>
@@ -422,24 +460,25 @@ function RevealedWebhookModal({ endpoint, onClose }: {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
-      <div className="bg-zinc-900 border border-zinc-700 w-full max-w-lg p-6 shadow-2xl">
+      <div className="w-full max-w-lg p-6 shadow-2xl" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
         <div className="flex items-center gap-2 mb-1">
-          <CheckCircle2 size={15} className="text-emerald-400" />
-          <h2 className="text-sm font-semibold text-zinc-100">Webhook registered</h2>
+          <CheckCircle2 size={15} style={{ color: 'var(--success)' }} />
+          <h2 className="text-sm font-semibold" style={{ color: 'var(--text)' }}>Webhook registered</h2>
         </div>
-        <p className="text-xs text-zinc-400 mb-1">{endpoint.url}</p>
-        <p className="text-xs text-amber-400 flex items-center gap-1.5 mb-5">
+        <p className="text-xs mb-1" style={{ color: 'var(--text-2)' }}>{endpoint.url}</p>
+        <p className="text-xs flex items-center gap-1.5 mb-5" style={{ color: 'var(--warning)' }}>
           <AlertTriangle size={11} />
           This HMAC secret is shown once only. Store it to verify incoming webhook signatures.
         </p>
 
-        <div className="bg-black border border-zinc-800 px-4 py-3 flex items-center gap-3 mb-4">
-          <code className="flex-1 text-xs font-mono text-emerald-400 break-all leading-relaxed">
+        <div className="px-4 py-3 flex items-center gap-3 mb-4" style={{ background: 'var(--bg)', border: '1px solid var(--border)' }}>
+          <code className="flex-1 text-xs break-all leading-relaxed" style={{ color: 'var(--success)', fontFamily: 'ui-monospace, monospace' }}>
             {display}
           </code>
           <button
             onClick={() => setVisible(v => !v)}
-            className="text-zinc-600 hover:text-zinc-300 transition-colors flex-shrink-0"
+            className="transition-colors flex-shrink-0"
+            style={{ color: 'var(--text-3)' }}
           >
             {visible ? <EyeOff size={14} /> : <Eye size={14} />}
           </button>
@@ -447,15 +486,17 @@ function RevealedWebhookModal({ endpoint, onClose }: {
 
         <button
           onClick={copy}
-          className={`w-full flex items-center justify-center gap-2 py-2 text-xs font-semibold border transition-colors ${
-            copied ? 'border-emerald-600 text-emerald-400' : 'border-zinc-600 text-zinc-300 hover:border-zinc-400 hover:text-zinc-100'
-          }`}
+          className="w-full flex items-center justify-center gap-2 py-2 text-xs font-semibold border transition-colors"
+          style={copied
+            ? { borderColor: 'var(--success)', color: 'var(--success)' }
+            : { borderColor: 'var(--border)', color: 'var(--text-2)' }
+          }
         >
           {copied ? <><CheckCircle2 size={12} /> Copied</> : <><Copy size={12} /> Copy secret</>}
         </button>
 
         <div className="mt-5">
-          <p className="text-xs font-medium text-zinc-400 mb-2 flex items-center gap-1.5">
+          <p className="text-xs font-medium mb-2 flex items-center gap-1.5" style={{ color: 'var(--text-2)' }}>
             <Code2 size={12} /> Verify signatures in your backend
           </p>
           <CodeBlock>{`import hmac, hashlib
@@ -472,7 +513,8 @@ def verify(payload: bytes, signature: str, secret: str) -> bool:
 
         <button
           onClick={onClose}
-          className="mt-5 w-full py-2 text-xs font-medium border border-zinc-700 text-zinc-400 hover:border-zinc-500 hover:text-zinc-200 transition-colors"
+          className="mt-5 w-full py-2 text-xs font-medium transition-colors"
+          style={{ border: '1px solid var(--border)', color: 'var(--text-2)' }}
         >
           I've saved my secret — close
         </button>
@@ -501,44 +543,45 @@ function WebhookLogsDrawer({ endpoint, onClose }: {
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70" onClick={onClose}>
       <div
-        className="bg-zinc-900 border border-zinc-700 w-full max-w-2xl p-6 shadow-2xl max-h-[70vh] overflow-y-auto"
+        className="w-full max-w-2xl p-6 shadow-2xl max-h-[70vh] overflow-y-auto"
+        style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
         onClick={e => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h2 className="text-sm font-semibold text-zinc-100">Delivery logs</h2>
-            <p className="text-xs text-zinc-500 mt-0.5 font-mono">{endpoint.url}</p>
+            <h2 className="text-sm font-semibold" style={{ color: 'var(--text)' }}>Delivery logs</h2>
+            <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)', fontFamily: 'ui-monospace, monospace' }}>{endpoint.url}</p>
           </div>
-          <button onClick={onClose} className="text-xs text-zinc-600 hover:text-zinc-300">Close</button>
+          <button onClick={onClose} className="text-xs" style={{ color: 'var(--text-3)' }}>Close</button>
         </div>
 
         {loading ? (
-          <div className="flex items-center justify-center py-10 gap-2 text-zinc-600">
+          <div className="flex items-center justify-center py-10 gap-2" style={{ color: 'var(--text-3)' }}>
             <Loader2 size={14} className="animate-spin" /> Loading…
           </div>
         ) : logs.length === 0 ? (
-          <p className="text-xs text-zinc-600 text-center py-8">No delivery attempts yet.</p>
+          <p className="text-xs text-center py-8" style={{ color: 'var(--text-3)' }}>No delivery attempts yet.</p>
         ) : (
           <table className="w-full text-xs">
             <thead>
-              <tr className="border-b border-zinc-800">
-                <th className="py-2 px-3 text-left font-medium text-zinc-500">Event</th>
-                <th className="py-2 px-3 text-left font-medium text-zinc-500">Status</th>
-                <th className="py-2 px-3 text-left font-medium text-zinc-500">Duration</th>
-                <th className="py-2 px-3 text-left font-medium text-zinc-500">Time</th>
+              <tr style={{ borderBottom: '1px solid var(--border)' }}>
+                <th className="py-2 px-3 text-left font-medium" style={{ color: 'var(--text-2)' }}>Event</th>
+                <th className="py-2 px-3 text-left font-medium" style={{ color: 'var(--text-2)' }}>Status</th>
+                <th className="py-2 px-3 text-left font-medium" style={{ color: 'var(--text-2)' }}>Duration</th>
+                <th className="py-2 px-3 text-left font-medium" style={{ color: 'var(--text-2)' }}>Time</th>
               </tr>
             </thead>
             <tbody>
               {logs.map((l, i) => (
-                <tr key={i} className="border-b border-zinc-900 hover:bg-zinc-800/40">
-                  <td className="py-2 px-3 font-mono text-zinc-300">{l.event_type}</td>
+                <tr key={i} style={{ borderBottom: '1px solid var(--border)' }}>
+                  <td className="py-2 px-3" style={{ color: 'var(--text)', fontFamily: 'ui-monospace, monospace' }}>{l.event_type}</td>
                   <td className="py-2 px-3">
-                    <span className={`font-mono ${l.success ? 'text-emerald-400' : 'text-red-400'}`}>
+                    <span style={{ color: l.success ? 'var(--success)' : 'var(--danger)', fontFamily: 'ui-monospace, monospace' }}>
                       {l.status_code} {l.success ? '✓' : '✗'}
                     </span>
                   </td>
-                  <td className="py-2 px-3 text-zinc-500 tabular-nums">{l.duration_ms}ms</td>
-                  <td className="py-2 px-3 text-zinc-600 tabular-nums">{new Date(l.attempted_at).toLocaleString()}</td>
+                  <td className="py-2 px-3 tabular-nums" style={{ color: 'var(--text-2)', fontFamily: 'ui-monospace, monospace' }}>{l.duration_ms}ms</td>
+                  <td className="py-2 px-3 tabular-nums" style={{ color: 'var(--text-3)', fontFamily: 'ui-monospace, monospace' }}>{new Date(l.attempted_at).toLocaleString()}</td>
                 </tr>
               ))}
             </tbody>
@@ -560,36 +603,41 @@ function WebhookRow({ ep, onRevoke, onLogs }: {
 
   return (
     <>
-      <tr className="border-b border-zinc-900 hover:bg-zinc-800/50 transition-colors group">
+      <tr className="group transition-colors" style={{ borderBottom: '1px solid var(--border)' }}>
         <td className="py-3 px-4">
-          <div className="text-sm font-mono text-zinc-100 truncate max-w-xs">{ep.url}</div>
+          <div className="text-sm truncate max-w-xs" style={{ color: 'var(--text)', fontFamily: 'ui-monospace, monospace' }}>{ep.url}</div>
           {ep.description && (
-            <div className="text-xs text-zinc-600 mt-0.5">{ep.description}</div>
+            <div className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>{ep.description}</div>
           )}
         </td>
         <td className="py-3 px-4">
           <button
             onClick={() => setExpanded(v => !v)}
-            className="flex items-center gap-1 text-xs font-mono text-zinc-500 hover:text-zinc-300"
+            className="flex items-center gap-1 text-xs transition-colors"
+            style={{ color: 'var(--text-2)', fontFamily: 'ui-monospace, monospace' }}
           >
             {ep.event_types.includes('*') ? '*' : `${ep.event_types.length} events`}
             {expanded ? <ChevronUp size={11} /> : <ChevronDown size={11} />}
           </button>
         </td>
-        <td className="py-3 px-4 text-xs font-mono text-zinc-600 tabular-nums">
+        <td className="py-3 px-4 text-xs tabular-nums" style={{ color: 'var(--text-3)', fontFamily: 'ui-monospace, monospace' }}>
           {ep.created_at.slice(0, 10)}
         </td>
         <td className="py-3 px-4 text-right">
           <div className="flex items-center gap-3 justify-end opacity-0 group-hover:opacity-100 transition-all">
             <button
               onClick={() => onLogs(ep)}
-              className="text-xs font-medium text-zinc-600 hover:text-zinc-300 transition-colors"
+              className="text-xs font-medium transition-colors"
+              style={{ color: 'var(--text-3)' }}
             >
               Logs
             </button>
             <button
               onClick={() => onRevoke(ep.endpoint_id, ep.url)}
-              className="flex items-center gap-1 text-xs font-medium text-zinc-600 hover:text-red-400 transition-colors"
+              className="flex items-center gap-1 text-xs font-medium transition-colors"
+              style={{ color: 'var(--text-3)' }}
+              onMouseEnter={e => (e.currentTarget.style.color = 'var(--danger)')}
+              onMouseLeave={e => (e.currentTarget.style.color = 'var(--text-3)')}
             >
               <Trash2 size={12} /> Revoke
             </button>
@@ -597,11 +645,15 @@ function WebhookRow({ ep, onRevoke, onLogs }: {
         </td>
       </tr>
       {expanded && (
-        <tr className="border-b border-zinc-900 bg-zinc-900/50">
+        <tr style={{ borderBottom: '1px solid var(--border)', background: 'var(--surface-2)' }}>
           <td colSpan={4} className="px-4 pb-3 pt-1">
             <div className="flex flex-wrap gap-1.5">
               {ep.event_types.map(ev => (
-                <span key={ev} className="px-2 py-0.5 text-xs font-mono border border-zinc-700 text-zinc-400">
+                <span
+                  key={ev}
+                  className="px-2 py-0.5 text-xs"
+                  style={{ border: '1px solid var(--border)', color: 'var(--text-2)', fontFamily: 'ui-monospace, monospace' }}
+                >
                   {ev}
                 </span>
               ))}
@@ -616,8 +668,6 @@ function WebhookRow({ ep, onRevoke, onLogs }: {
 // ─── Tab types ────────────────────────────────────────────────────────────────
 
 type Tab = 'keys' | 'webhooks';
-
-// ─── Main page ────────────────────────────────────────────────────────────────
 
 // ─── Website Auto-Crawl Section ──────────────────────────────────────────────
 
@@ -660,34 +710,34 @@ function WebsiteCrawlSection() {
   return (
     <div>
       <div className="flex items-center gap-2 mb-3">
-        <Globe2 size={13} className="text-zinc-400" />
-        <h2 className="text-xs font-mono font-medium text-zinc-500 uppercase tracking-wider">
+        <Globe2 size={13} style={{ color: 'var(--text-2)' }} />
+        <h2 className="text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--text-3)' }}>
           Website Auto-Crawl
         </h2>
       </div>
 
-      <div className="bg-zinc-900 border border-zinc-800 p-5">
-        <p className="text-xs text-zinc-500 leading-relaxed mb-4">
+      <div className="p-5" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+        <p className="text-xs leading-relaxed mb-4" style={{ color: 'var(--text-2)' }}>
           Register your website URL once. The Engine will automatically crawl every page,
           chunk and embed the content, detect gaps against live trends, and generate
           AI-written sections to fill them — then re-crawl on the interval you set.
-          <span className="text-zinc-300 font-medium"> No further action required.</span>
+          <span className="font-medium" style={{ color: 'var(--text)' }}> No further action required.</span>
         </p>
 
         {loading ? (
-          <div className="flex items-center gap-2 text-zinc-600 py-4">
+          <div className="flex items-center gap-2 py-4" style={{ color: 'var(--text-3)' }}>
             <Loader2 size={13} className="animate-spin" /> Loading…
           </div>
         ) : (
           <div className="space-y-4">
             {status?.registered && (
-              <div className="bg-zinc-950 border border-zinc-800 px-4 py-3 flex items-start gap-3">
-                <CheckCircle2 size={14} className="text-emerald-400 mt-0.5 flex-shrink-0" />
-                <div className="text-xs text-zinc-400">
-                  <span className="text-zinc-100 font-medium">Active:</span>{' '}
-                  <span className="font-mono text-emerald-400">{status.website_url}</span>
+              <div className="px-4 py-3 flex items-start gap-3" style={{ background: 'var(--bg)', border: '1px solid var(--border)' }}>
+                <CheckCircle2 size={14} className="mt-0.5 flex-shrink-0" style={{ color: 'var(--success)' }} />
+                <div className="text-xs" style={{ color: 'var(--text-2)' }}>
+                  <span className="font-medium" style={{ color: 'var(--text)' }}>Active:</span>{' '}
+                  <span style={{ color: 'var(--success)', fontFamily: 'ui-monospace, monospace' }}>{status.website_url}</span>
                   <br />
-                  <span className="text-zinc-600">
+                  <span style={{ color: 'var(--text-3)' }}>
                     Crawl every {status.crawl_config?.recrawl_interval_hours ?? 24}h &nbsp;·&nbsp;
                     Last crawl: {status.last_crawled_at
                       ? new Date(status.last_crawled_at).toLocaleString()
@@ -698,48 +748,66 @@ function WebsiteCrawlSection() {
             )}
 
             <div>
-              <label className="block text-xs font-medium text-zinc-400 mb-1.5">
-                Website URL <span className="text-red-400">*</span>
+              <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-2)' }}>
+                Website URL <span style={{ color: 'var(--danger)' }}>*</span>
               </label>
               <input
                 type="url"
                 value={url}
                 onChange={e => setUrl(e.target.value)}
                 placeholder="https://yourwebsite.com"
-                className="w-full px-3 py-2 bg-zinc-950 border border-zinc-700 text-zinc-100 text-sm font-mono placeholder-zinc-700 outline-none focus:border-zinc-400 transition-colors"
+                className="w-full px-3 py-2 text-sm outline-none transition-colors"
+                style={{
+                  background: 'var(--bg)',
+                  border: '1px solid var(--border)',
+                  color: 'var(--text)',
+                  fontFamily: 'ui-monospace, monospace',
+                }}
               />
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-medium text-zinc-400 mb-1.5">Max pages per crawl</label>
+                <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-2)' }}>Max pages per crawl</label>
                 <input
                   type="number"
                   min={1} max={200}
                   value={maxPages}
                   onChange={e => setMaxPages(Number(e.target.value))}
-                  className="w-full px-3 py-2 bg-zinc-950 border border-zinc-700 text-zinc-100 text-sm font-mono outline-none focus:border-zinc-400 transition-colors"
+                  className="w-full px-3 py-2 text-sm outline-none transition-colors"
+                  style={{
+                    background: 'var(--bg)',
+                    border: '1px solid var(--border)',
+                    color: 'var(--text)',
+                    fontFamily: 'ui-monospace, monospace',
+                  }}
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-zinc-400 mb-1.5">Re-crawl every (hours)</label>
+                <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-2)' }}>Re-crawl every (hours)</label>
                 <input
                   type="number"
                   min={1} max={168}
                   value={interval}
                   onChange={e => setInterval_(Number(e.target.value))}
-                  className="w-full px-3 py-2 bg-zinc-950 border border-zinc-700 text-zinc-100 text-sm font-mono outline-none focus:border-zinc-400 transition-colors"
+                  className="w-full px-3 py-2 text-sm outline-none transition-colors"
+                  style={{
+                    background: 'var(--bg)',
+                    border: '1px solid var(--border)',
+                    color: 'var(--text)',
+                    fontFamily: 'ui-monospace, monospace',
+                  }}
                 />
               </div>
             </div>
 
             {error && (
-              <p className="text-xs text-red-400 flex items-center gap-1.5">
+              <p className="text-xs flex items-center gap-1.5" style={{ color: 'var(--danger)' }}>
                 <AlertTriangle size={11} /> {error}
               </p>
             )}
             {success && (
-              <p className="text-xs text-emerald-400 flex items-center gap-1.5">
+              <p className="text-xs flex items-center gap-1.5" style={{ color: 'var(--success)' }}>
                 <CheckCircle2 size={11} /> {success}
               </p>
             )}
@@ -747,7 +815,8 @@ function WebsiteCrawlSection() {
             <button
               onClick={handleRegister}
               disabled={saving}
-              className="flex items-center gap-1.5 px-4 py-2 bg-zinc-100 text-zinc-900 text-xs font-semibold hover:bg-white transition-colors disabled:opacity-40"
+              className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold transition-colors disabled:opacity-40"
+              style={{ background: 'var(--text)', color: 'var(--bg)' }}
             >
               {saving
                 ? <><Loader2 size={12} className="animate-spin" /> Registering…</>
@@ -761,6 +830,7 @@ function WebsiteCrawlSection() {
   );
 }
 
+// ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function Credentials() {
   const [tab, setTab]                         = useState<Tab>('keys');
@@ -904,22 +974,26 @@ export default function Credentials() {
         <WebhookLogsDrawer endpoint={logsWebhook} onClose={() => setLogsWebhook(null)} />
       )}
 
-      <div className="min-h-screen bg-zinc-950 text-zinc-200">
+      <div style={{ background: 'var(--bg)', color: 'var(--text)' }}>
 
         {/* ── Page header ── */}
-        <div className="px-6 py-5 border-b border-zinc-800 flex items-center justify-between">
+        <div
+          className="px-6 py-5 flex items-center justify-between"
+          style={{ borderBottom: '1px solid var(--border)' }}
+        >
           <div>
             <div className="flex items-center gap-2 mb-0.5">
-              <Key size={15} className="text-zinc-400" />
-              <h1 className="text-sm font-semibold text-zinc-100">API Credentials</h1>
+              <Key size={15} style={{ color: 'var(--text-2)' }} />
+              <h1 className="text-sm font-semibold" style={{ color: 'var(--text)' }}>API Credentials</h1>
             </div>
-            <p className="text-xs text-zinc-500 ml-5">
+            <p className="text-xs ml-5" style={{ color: 'var(--text-3)' }}>
               Generate API keys and configure webhooks to integrate Data Engine into your product.
             </p>
           </div>
           <button
             onClick={() => tab === 'keys' ? setShowCreate(true) : setShowRegister(true)}
-            className="flex items-center gap-1.5 px-4 py-2 bg-zinc-100 text-zinc-900 text-xs font-semibold hover:bg-white transition-colors"
+            className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold transition-colors"
+            style={{ background: 'var(--text)', color: 'var(--bg)' }}
           >
             <Plus size={13} /> {tab === 'keys' ? 'New API Key' : 'Register Webhook'}
           </button>
@@ -928,10 +1002,10 @@ export default function Credentials() {
         <div className="px-6 py-6 space-y-8 max-w-4xl">
 
           {/* ── How it works ── */}
-          <div className="bg-zinc-900 border border-zinc-800 p-5">
+          <div className="p-5" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
             <div className="flex items-center gap-2 mb-3">
-              <Shield size={14} className="text-zinc-400" />
-              <h2 className="text-sm font-semibold text-zinc-200">How it works</h2>
+              <Shield size={14} style={{ color: 'var(--text-2)' }} />
+              <h2 className="text-sm font-semibold" style={{ color: 'var(--text)' }}>How it works</h2>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {[
@@ -940,10 +1014,13 @@ export default function Credentials() {
                 { step: '03', icon: <Zap size={14} />, title: 'Boost visibility', desc: 'Data Engine runs gap detection, GEO/SEO scoring, and AI-powered drafts against your content automatically.' },
               ].map(({ step, icon, title, desc }) => (
                 <div key={step} className="flex gap-3">
-                  <span className="text-xs font-mono text-zinc-700 mt-0.5 flex-shrink-0">{step}</span>
+                  <span className="text-xs mt-0.5 flex-shrink-0" style={{ color: 'var(--text-3)', fontFamily: 'ui-monospace, monospace' }}>{step}</span>
                   <div>
-                    <div className="flex items-center gap-1.5 mb-1 text-zinc-400">{icon}<span className="text-xs font-semibold text-zinc-200">{title}</span></div>
-                    <p className="text-xs text-zinc-500 leading-relaxed">{desc}</p>
+                    <div className="flex items-center gap-1.5 mb-1" style={{ color: 'var(--text-2)' }}>
+                      {icon}
+                      <span className="text-xs font-semibold" style={{ color: 'var(--text)' }}>{title}</span>
+                    </div>
+                    <p className="text-xs leading-relaxed" style={{ color: 'var(--text-3)' }}>{desc}</p>
                   </div>
                 </div>
               ))}
@@ -952,7 +1029,7 @@ export default function Credentials() {
 
           {/* ── Integration snippet ── */}
           <div>
-            <h2 className="text-xs font-mono font-medium text-zinc-500 uppercase tracking-wider mb-3">Integration snippet</h2>
+            <h2 className="text-xs font-medium uppercase tracking-wider mb-3" style={{ color: 'var(--text-3)' }}>Integration snippet</h2>
             <CodeBlock>{`# Python example — call from your product's backend
 import requests
 
@@ -974,7 +1051,7 @@ response = requests.post(
 
           {/* ── Tabs ── */}
           <div>
-            <div className="flex border-b border-zinc-800 mb-6">
+            <div className="flex mb-6" style={{ borderBottom: '1px solid var(--border)' }}>
               {([
                 { id: 'keys',     label: 'API Keys',  icon: <Key size={12} />,     count: keys.length },
                 { id: 'webhooks', label: 'Webhooks',  icon: <Webhook size={12} />, count: webhooks.length },
@@ -982,14 +1059,14 @@ response = requests.post(
                 <button
                   key={t.id}
                   onClick={() => setTab(t.id)}
-                  className={`flex items-center gap-1.5 px-4 py-2.5 text-xs font-medium border-b-2 transition-colors -mb-px ${
-                    tab === t.id
-                      ? 'border-zinc-200 text-zinc-100'
-                      : 'border-transparent text-zinc-500 hover:text-zinc-300'
-                  }`}
+                  className="flex items-center gap-1.5 px-4 py-2.5 text-xs font-medium border-b-2 transition-colors -mb-px"
+                  style={tab === t.id
+                    ? { borderBottomColor: 'var(--text)', color: 'var(--text)' }
+                    : { borderBottomColor: 'transparent', color: 'var(--text-3)' }
+                  }
                 >
                   {t.icon} {t.label}
-                  <span className={`ml-1 text-xs font-mono ${tab === t.id ? 'text-zinc-500' : 'text-zinc-700'}`}>
+                  <span className="ml-1 text-xs" style={{ color: 'var(--text-3)', fontFamily: 'ui-monospace, monospace' }}>
                     ({t.count})
                   </span>
                 </button>
@@ -999,55 +1076,35 @@ response = requests.post(
             {/* ── API Keys panel ── */}
             {tab === 'keys' && (
               <div>
-                <div className="flex items-center justify-between mb-3">
-                  <h2 className="text-xs font-mono font-medium text-zinc-500 uppercase tracking-wider">
-                    Active keys <span className="text-zinc-700 ml-1">({keys.length})</span>
-                  </h2>
-                  <button
-                    onClick={fetchKeys}
-                    className="text-zinc-600 hover:text-zinc-300 transition-colors"
-                    aria-label="Refresh"
-                  >
-                    <RefreshCw size={13} />
-                  </button>
-                </div>
-
                 {keysLoading ? (
-                  <div className="flex items-center justify-center py-14 gap-2 text-zinc-600">
-                    <Loader2 size={14} className="animate-spin" /> Loading keys…
+                  <div className="flex items-center justify-center py-10 gap-2" style={{ color: 'var(--text-3)' }}>
+                    <Loader2 size={14} className="animate-spin" /> Loading…
                   </div>
                 ) : keysError ? (
-                  <div className="bg-zinc-900 border border-zinc-800 border-dashed py-10 flex flex-col items-center gap-3 text-center">
-                    <AlertTriangle size={18} className="text-amber-600" />
-                    <p className="text-xs text-zinc-500">{keysError}</p>
-                    <button
-                      onClick={fetchKeys}
-                      className="text-xs text-zinc-400 hover:text-zinc-200 underline"
-                    >
-                      Try again
-                    </button>
-                  </div>
+                  <p className="text-xs flex items-center gap-1.5" style={{ color: 'var(--warning)' }}>
+                    <AlertTriangle size={12} /> {keysError}
+                  </p>
                 ) : keys.length === 0 ? (
-                  <div className="bg-zinc-900 border border-zinc-800 border-dashed py-12 flex flex-col items-center gap-3 text-center">
-                    <Key size={20} className="text-zinc-700" />
-                    <p className="text-sm text-zinc-500">No API keys yet.</p>
-                    <p className="text-xs text-zinc-600 max-w-xs">Create your first key to start integrating Data Engine into your product.</p>
+                  <div className="text-center py-12">
+                    <Key size={20} className="mx-auto mb-2" style={{ color: 'var(--text-3)' }} />
+                    <p className="text-sm font-medium" style={{ color: 'var(--text-2)' }}>No API keys yet</p>
+                    <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>Create your first key to start integrating.</p>
                     <button
                       onClick={() => setShowCreate(true)}
-                      className="mt-2 flex items-center gap-1.5 px-4 py-2 border border-zinc-700 text-zinc-300 text-xs font-medium hover:border-zinc-500 hover:text-zinc-100 transition-colors"
+                      className="mt-4 flex items-center gap-1.5 px-4 py-2 text-xs font-semibold mx-auto transition-colors"
+                      style={{ background: 'var(--text)', color: 'var(--bg)' }}
                     >
-                      <Plus size={12} /> Create first key
+                      <Plus size={13} /> Create first key
                     </button>
                   </div>
                 ) : (
-                  <div className="bg-zinc-900 border border-zinc-800 overflow-hidden">
+                  <div style={{ border: '1px solid var(--border)' }}>
                     <table className="w-full">
                       <thead>
-                        <tr className="border-b border-zinc-800">
-                          <th className="py-2.5 px-4 text-left text-xs font-medium text-zinc-500">Name</th>
-                          <th className="py-2.5 px-4 text-left text-xs font-medium text-zinc-500">Key</th>
-                          <th className="py-2.5 px-4 text-left text-xs font-medium text-zinc-500">Last used</th>
-                          <th className="py-2.5 px-4" />
+                        <tr style={{ borderBottom: '1px solid var(--border)' }}>
+                          {['Name', 'Key', 'Last used', ''].map(h => (
+                            <th key={h} className="py-2.5 px-4 text-left text-xs font-medium" style={{ color: 'var(--text-3)' }}>{h}</th>
+                          ))}
                         </tr>
                       </thead>
                       <tbody>
@@ -1068,57 +1125,35 @@ response = requests.post(
             {/* ── Webhooks panel ── */}
             {tab === 'webhooks' && (
               <div>
-                <div className="flex items-center justify-between mb-3">
-                  <h2 className="text-xs font-mono font-medium text-zinc-500 uppercase tracking-wider">
-                    Registered endpoints <span className="text-zinc-700 ml-1">({webhooks.length})</span>
-                  </h2>
-                  <button
-                    onClick={fetchWebhooks}
-                    className="text-zinc-600 hover:text-zinc-300 transition-colors"
-                    aria-label="Refresh"
-                  >
-                    <RefreshCw size={13} />
-                  </button>
-                </div>
-
                 {webhooksLoading ? (
-                  <div className="flex items-center justify-center py-14 gap-2 text-zinc-600">
-                    <Loader2 size={14} className="animate-spin" /> Loading webhooks…
+                  <div className="flex items-center justify-center py-10 gap-2" style={{ color: 'var(--text-3)' }}>
+                    <Loader2 size={14} className="animate-spin" /> Loading…
                   </div>
                 ) : webhooksError ? (
-                  <div className="bg-zinc-900 border border-zinc-800 border-dashed py-10 flex flex-col items-center gap-3 text-center">
-                    <AlertTriangle size={18} className="text-amber-600" />
-                    <p className="text-xs text-zinc-500">{webhooksError}</p>
-                    <button
-                      onClick={fetchWebhooks}
-                      className="text-xs text-zinc-400 hover:text-zinc-200 underline"
-                    >
-                      Try again
-                    </button>
-                  </div>
+                  <p className="text-xs flex items-center gap-1.5" style={{ color: 'var(--warning)' }}>
+                    <AlertTriangle size={12} /> {webhooksError}
+                  </p>
                 ) : webhooks.length === 0 ? (
-                  <div className="bg-zinc-900 border border-zinc-800 border-dashed py-12 flex flex-col items-center gap-3 text-center">
-                    <Globe size={20} className="text-zinc-700" />
-                    <p className="text-sm text-zinc-500">No webhooks registered.</p>
-                    <p className="text-xs text-zinc-600 max-w-xs">
-                      Register an endpoint so Data Engine can push visibility events directly to your product.
-                    </p>
+                  <div className="text-center py-12">
+                    <Webhook size={20} className="mx-auto mb-2" style={{ color: 'var(--text-3)' }} />
+                    <p className="text-sm font-medium" style={{ color: 'var(--text-2)' }}>No webhooks registered</p>
+                    <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>Register a webhook to get push notifications when Data Engine completes work.</p>
                     <button
                       onClick={() => setShowRegister(true)}
-                      className="mt-2 flex items-center gap-1.5 px-4 py-2 border border-zinc-700 text-zinc-300 text-xs font-medium hover:border-zinc-500 hover:text-zinc-100 transition-colors"
+                      className="mt-4 flex items-center gap-1.5 px-4 py-2 text-xs font-semibold mx-auto transition-colors"
+                      style={{ background: 'var(--text)', color: 'var(--bg)' }}
                     >
-                      <Plus size={12} /> Register first webhook
+                      <Plus size={13} /> Register first webhook
                     </button>
                   </div>
                 ) : (
-                  <div className="bg-zinc-900 border border-zinc-800 overflow-hidden">
+                  <div style={{ border: '1px solid var(--border)' }}>
                     <table className="w-full">
                       <thead>
-                        <tr className="border-b border-zinc-800">
-                          <th className="py-2.5 px-4 text-left text-xs font-medium text-zinc-500">URL</th>
-                          <th className="py-2.5 px-4 text-left text-xs font-medium text-zinc-500">Events</th>
-                          <th className="py-2.5 px-4 text-left text-xs font-medium text-zinc-500">Created</th>
-                          <th className="py-2.5 px-4" />
+                        <tr style={{ borderBottom: '1px solid var(--border)' }}>
+                          {['URL', 'Events', 'Created', ''].map(h => (
+                            <th key={h} className="py-2.5 px-4 text-left text-xs font-medium" style={{ color: 'var(--text-3)' }}>{h}</th>
+                          ))}
                         </tr>
                       </thead>
                       <tbody>
@@ -1127,45 +1162,19 @@ response = requests.post(
                             key={ep.endpoint_id}
                             ep={ep}
                             onRevoke={(id, url) => setRevokeWebhook({ id, url })}
-                            onLogs={ep => setLogsWebhook(ep)}
+                            onLogs={setLogsWebhook}
                           />
                         ))}
                       </tbody>
                     </table>
                   </div>
                 )}
-
-                {/* Webhook event reference */}
-                <div className="mt-6 bg-zinc-900 border border-zinc-800 p-4">
-                  <p className="text-xs font-medium text-zinc-400 mb-3">Available event types</p>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                    {ALL_EVENTS.filter(e => e !== '*').map(ev => (
-                      <div key={ev} className="text-xs font-mono text-zinc-500 border border-zinc-800 px-2 py-1">
-                        {ev}
-                      </div>
-                    ))}
-                  </div>
-                  <p className="text-xs text-zinc-600 mt-2">Use <code className="font-mono">*</code> to subscribe to all events.</p>
-                </div>
               </div>
             )}
           </div>
 
-          {/* ── Website Auto-Crawl ── */}
+          {/* ── Website Auto-Crawl section ── */}
           <WebsiteCrawlSection />
-
-          {/* ── Security notice ── */}
-          <div className="border border-amber-900/40 bg-amber-950/20 px-4 py-3 flex gap-3">
-            <AlertTriangle size={14} className="text-amber-500 flex-shrink-0 mt-0.5" />
-            <div>
-              <p className="text-xs font-semibold text-amber-400 mb-0.5">Keep credentials secret</p>
-              <p className="text-xs text-zinc-500 leading-relaxed">
-                API keys and webhook secrets grant full access to your tenant's data.
-                Never expose them in client-side code, public repos, or logs.
-                Revoke and rotate immediately if compromised. Use one key per environment.
-              </p>
-            </div>
-          </div>
 
         </div>
       </div>

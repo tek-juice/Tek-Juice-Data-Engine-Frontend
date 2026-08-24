@@ -31,6 +31,7 @@ export interface ApiKeyListItem {
   key_id: string;
   prefix: string;
   name: string;
+  is_active?: boolean;
   created_at: string;
   last_used?: string | null;
 }
@@ -46,11 +47,12 @@ export type WebhookEventType =
   | '*';
 
 export interface WebhookEndpoint {
-  endpoint_id: string;
+  endpoint_id: string;  // normalised from backend 'id'
   url: string;
   event_types: WebhookEventType[];
   description?: string;
-  secret?: string; // Only returned on creation
+  is_active?: boolean;
+  secret?: string;      // Only returned on creation
   created_at: string;
 }
 
@@ -386,10 +388,22 @@ export interface SyncRun {
 // ── Dashboard ─────────────────────────────────────────────────────────────────
 
 export interface DashboardOverview {
-  document_count: number;
-  avg_gap_score: number;
-  coverage_percentage: number;
-  recent_activity: ActivityLogEntry[];
+  // Fields returned by the backend analytics_router /overview endpoint
+  documents_completed: number;
+  documents_failed: number;
+  documents_queued: number;
+  total_chunks: number;
+  total_embeddings: number;
+  gap_analyses_run: number;
+  schemas_generated: number;
+  trends_today: number;
+  // Optional fields present when the engine has processed content
+  avg_seo_score?: number;
+  avg_geo_score?: number;
+  avg_aeo_score?: number;
+  avg_gap_score?: number;
+  coverage_percentage?: number;
+  open_gaps?: number;
   [key: string]: unknown;
 }
 
@@ -403,9 +417,12 @@ export interface GapComparisonPoint {
 export interface ActivityLogEntry {
   event_type: string;
   service: string;
-  tenant_id: string;
-  timestamp: string;
-  payload: Record<string, unknown>;
+  status?: string;
+  duration_ms?: number;
+  payload?: Record<string, unknown>;
+  // Backend returns created_at; timestamp kept for WS compat
+  created_at?: string;
+  timestamp?: string;
 }
 
 export interface MetricsSummary {
@@ -416,7 +433,9 @@ export interface MetricsSummary {
 }
 
 export interface ThroughputPoint {
-  timestamp: string;
+  // Backend may return interval_start; timestamp kept for telemetry compat
+  interval_start?: string;
+  timestamp?: string;
   count: number;
 }
 

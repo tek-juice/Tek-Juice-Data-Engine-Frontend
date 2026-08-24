@@ -97,10 +97,18 @@ export async function exchangeOAuthCode(
  * List all API keys for the current tenant (prefix + metadata, never raw key).
  */
 export async function listApiKeys(): Promise<import('../types').ApiKeyListItem[]> {
-  const { data } = await apiClient.get<import('../types').ApiKeyListItem[]>(
-    '/api/v1/auth/api-keys',
-  );
-  return data;
+  const { data } = await apiClient.get<{
+    api_keys: Array<{ id: string; key_prefix: string; name: string; is_active: boolean; created_at: string }>;
+    count: number;
+  }>('/api/v1/auth/api-keys');
+  // Normalise backend field names to the ApiKeyListItem shape the UI expects
+  return (data.api_keys ?? []).map(k => ({
+    key_id:     k.id,
+    prefix:     k.key_prefix,
+    name:       k.name,
+    is_active:  k.is_active,
+    created_at: k.created_at,
+  }));
 }
 
 /**
@@ -151,10 +159,19 @@ export async function registerWebhook(
  * List all registered webhook endpoints for the tenant.
  */
 export async function listWebhooks(): Promise<WebhookEndpoint[]> {
-  const { data } = await apiClient.get<{ webhooks: WebhookEndpoint[]; count: number }>(
-    '/api/v1/auth/webhooks',
-  );
-  return data.webhooks;
+  const { data } = await apiClient.get<{
+    webhooks: Array<{ id: string; url: string; event_types: string[]; description?: string; is_active?: boolean; created_at: string }>;
+    count: number;
+  }>('/api/v1/auth/webhooks');
+  // Normalise backend 'id' → 'endpoint_id'
+  return (data.webhooks ?? []).map(w => ({
+    endpoint_id: w.id,
+    url:         w.url,
+    event_types: w.event_types as WebhookEventType[],
+    description: w.description,
+    is_active:   w.is_active,
+    created_at:  w.created_at,
+  }));
 }
 
 /**

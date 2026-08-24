@@ -47,11 +47,12 @@ export async function getGapComparison(
 export async function getDashboardDocuments(
   params?: PaginatedQuery & { status?: DocumentStatus },
 ): Promise<DocumentListItem[]> {
-  const { data } = await apiClient.get<DocumentListItem[]>(
+  const { data } = await apiClient.get<{ items: DocumentListItem[] } | DocumentListItem[]>(
     '/api/v1/dashboard/documents',
     { params: { page: 1, page_size: 20, ...params } },
   );
-  return data;
+  // Backend returns a paginated envelope { items, total, page, page_size }
+  return Array.isArray(data) ? data : (data as { items: DocumentListItem[] }).items ?? [];
 }
 
 /**

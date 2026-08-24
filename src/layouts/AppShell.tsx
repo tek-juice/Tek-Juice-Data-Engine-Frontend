@@ -1,97 +1,87 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import {
-  LayoutDashboard, Search,
-  TrendingUp, AlertTriangle, FileEdit, Code2,
-  Gauge, Globe, BarChart2, RefreshCw,
-  Activity, Settings, Key, LogOut, Zap,
-  ChevronDown, User, Building2, LineChart,
+  Settings, LogOut,
+  ChevronDown, User,
+  Sun, Moon,
 } from 'lucide-react';
 import { logout, getCurrentUserId } from '../services/auth.service';
+import { useTheme } from '../contexts/ThemeContext';
 
-// ─── Nav structure ────────────────────────────────────────────────────────────
+// ─── Navigation structure ─────────────────────────────────────────────────────
 
-interface NavItem {
-  label: string;
-  to: string;
-  icon: React.ReactNode;
-}
-
-interface NavGroup {
-  heading: string;
-  items: NavItem[];
-}
+interface NavItem  { label: string; to: string; }
+interface NavGroup { heading: string; items: NavItem[]; }
 
 const NAV: NavGroup[] = [
   {
     heading: 'Overview',
     items: [
-      { label: 'Dashboard',      to: '/dashboard',       icon: <LayoutDashboard size={14} /> },
-      { label: 'Analytics',      to: '/analytics',       icon: <BarChart2 size={14} /> },
+      { label: 'Dashboard',       to: '/dashboard' },
+      { label: 'Analytics',       to: '/analytics' },
     ],
   },
   {
     heading: 'Content',
     items: [
-      { label: 'Website Setup',  to: '/website',         icon: <Globe size={14} /> },
-      { label: 'Drafts',         to: '/drafts',          icon: <FileEdit size={14} /> },
-      { label: 'Search',         to: '/search',          icon: <Search size={14} /> },
+      { label: 'Website Setup',   to: '/website' },
+      { label: 'Drafts',          to: '/drafts' },
+      { label: 'Search',          to: '/search' },
     ],
   },
   {
     heading: 'Intelligence',
     items: [
-      { label: 'Gap Detection',  to: '/gaps',            icon: <AlertTriangle size={14} /> },
-      { label: 'Trends',         to: '/trends',          icon: <TrendingUp size={14} /> },
-      { label: 'Schema Factory', to: '/schema-factory',  icon: <Code2 size={14} /> },
+      { label: 'Gap Detection',   to: '/gaps' },
+      { label: 'Trends',          to: '/trends' },
+      { label: 'Schema Factory',  to: '/schema-factory' },
     ],
   },
   {
     heading: 'Visibility',
     items: [
-      { label: 'SEO',            to: '/seo',             icon: <Gauge size={14} /> },
-      { label: 'GEO',            to: '/geo',             icon: <Globe size={14} /> },
+      { label: 'SEO',             to: '/seo' },
+      { label: 'GEO',             to: '/geo' },
     ],
   },
   {
     heading: 'System',
     items: [
-      { label: 'Sync',           to: '/sync',            icon: <RefreshCw size={14} /> },
-      { label: 'Telemetry',      to: '/telemetry',       icon: <Activity size={14} /> },
+      { label: 'Sync',            to: '/sync' },
+      { label: 'Telemetry',       to: '/telemetry' },
     ],
   },
   {
     heading: 'Access',
     items: [
-      { label: 'API Credentials', to: '/credentials',   icon: <Key size={14} /> },
-      { label: 'Settings',        to: '/settings',      icon: <Settings size={14} /> },
+      { label: 'API Credentials', to: '/credentials' },
+      { label: 'Settings',        to: '/settings' },
     ],
   },
   {
     heading: 'Performance',
     items: [
-      { label: 'My Performance',      to: '/my-performance', icon: <LineChart size={14} /> },
-      { label: 'All Products',        to: '/admin/tenants',  icon: <Building2 size={14} /> },
+      { label: 'My Performance',  to: '/my-performance' },
+      { label: 'All Products',    to: '/admin/tenants' },
     ],
   },
 ];
 
-// ─── Nav link style ───────────────────────────────────────────────────────────
+// ─── Nav link ─────────────────────────────────────────────────────────────────
 
 function SideLink({ item }: { item: NavItem }) {
   return (
     <NavLink
       to={item.to}
       className={({ isActive }) =>
-        `flex items-center gap-2.5 px-3 py-1.5 text-xs rounded-sm transition-colors w-full ${
+        `block px-3 py-2 rounded-md text-[15px] font-semibold transition-colors w-full ${
           isActive
-            ? 'bg-zinc-800 text-zinc-100'
-            : 'text-zinc-500 hover:text-zinc-200 hover:bg-zinc-900'
+            ? 'bg-[var(--brand-10)] text-[var(--brand)]'
+            : 'text-[var(--text-2)] hover:text-[var(--text)] hover:bg-[var(--surface-2)]'
         }`
       }
     >
-      <span className="flex-shrink-0">{item.icon}</span>
-      <span>{item.label}</span>
+      {item.label}
     </NavLink>
   );
 }
@@ -99,10 +89,11 @@ function SideLink({ item }: { item: NavItem }) {
 // ─── User menu ────────────────────────────────────────────────────────────────
 
 function UserMenu() {
-  const navigate   = useNavigate();
+  const navigate    = useNavigate();
   const [open, setOpen] = useState(false);
-  const userId     = getCurrentUserId();
+  const userId      = getCurrentUserId();
   const displayName = userId ?? 'Account';
+  const initial     = displayName.charAt(0).toUpperCase();
 
   function handleLogout() {
     logout();
@@ -113,40 +104,73 @@ function UserMenu() {
     <div className="relative">
       <button
         onClick={() => setOpen(v => !v)}
-        className="flex items-center gap-2 w-full px-3 py-2 hover:bg-zinc-800 transition-colors"
+        className="flex items-center gap-2.5 w-full px-3 py-2.5 transition-colors"
+        style={{ borderTop: '1px solid var(--border)' }}
+        onMouseEnter={e => (e.currentTarget.style.background = 'var(--surface-2)')}
+        onMouseLeave={e => (e.currentTarget.style.background = '')}
       >
-        <div className="w-6 h-6 bg-zinc-700 flex items-center justify-center flex-shrink-0">
-          <User size={12} className="text-zinc-300" />
+        <div
+          className="w-7 h-7 rounded flex items-center justify-center flex-shrink-0 text-sm font-bold"
+          style={{ background: 'var(--brand)', color: '#111' }}
+        >
+          {initial}
         </div>
-        <span className="text-xs text-zinc-300 font-medium truncate flex-1 text-left">{displayName}</span>
-        <ChevronDown size={11} className={`text-zinc-600 transition-transform flex-shrink-0 ${open ? 'rotate-180' : ''}`} />
+        <span
+          className="text-sm font-semibold truncate flex-1 text-left"
+          style={{ color: 'var(--text)' }}
+        >
+          {displayName}
+        </span>
+        <ChevronDown
+          size={13}
+          className={`transition-transform flex-shrink-0 ${open ? 'rotate-180' : ''}`}
+          style={{ color: 'var(--text-3)' }}
+        />
       </button>
 
       {open && (
         <>
-          {/* backdrop */}
           <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-          <div className="absolute bottom-full left-0 right-0 z-20 bg-zinc-900 border border-zinc-700 shadow-xl mb-1">
+          <div
+            className="absolute bottom-full left-0 right-0 z-20 mb-px overflow-hidden"
+            style={{
+              background: 'var(--surface)',
+              border: '1px solid var(--border)',
+              boxShadow: 'var(--shadow-md)',
+            }}
+          >
             <NavLink
               to="/profile"
               onClick={() => setOpen(false)}
-              className="flex items-center gap-2 px-3 py-2 text-xs text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-colors"
+              className="flex items-center gap-2.5 px-4 py-2.5 text-sm font-medium transition-colors"
+              style={{ color: 'var(--text-2)' }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'var(--surface-2)'; e.currentTarget.style.color = 'var(--text)'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = ''; e.currentTarget.style.color = 'var(--text-2)'; }}
             >
-              <User size={12} /> Profile
+              <User size={14} />
+              Profile
             </NavLink>
             <NavLink
               to="/settings"
               onClick={() => setOpen(false)}
-              className="flex items-center gap-2 px-3 py-2 text-xs text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-colors"
+              className="flex items-center gap-2.5 px-4 py-2.5 text-sm font-medium transition-colors"
+              style={{ color: 'var(--text-2)' }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'var(--surface-2)'; e.currentTarget.style.color = 'var(--text)'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = ''; e.currentTarget.style.color = 'var(--text-2)'; }}
             >
-              <Settings size={12} /> Settings
+              <Settings size={14} />
+              Settings
             </NavLink>
-            <div className="border-t border-zinc-800 my-0.5" />
+            <div style={{ borderTop: '1px solid var(--border)' }} />
             <button
               onClick={handleLogout}
-              className="flex items-center gap-2 w-full px-3 py-2 text-xs text-red-400 hover:text-red-300 hover:bg-zinc-800 transition-colors"
+              className="flex items-center gap-2.5 w-full px-4 py-2.5 text-sm font-medium transition-colors"
+              style={{ color: 'var(--danger)' }}
+              onMouseEnter={e => (e.currentTarget.style.background = 'var(--surface-2)')}
+              onMouseLeave={e => (e.currentTarget.style.background = '')}
             >
-              <LogOut size={12} /> Sign out
+              <LogOut size={14} />
+              Sign out
             </button>
           </div>
         </>
@@ -158,31 +182,54 @@ function UserMenu() {
 // ─── App Shell ────────────────────────────────────────────────────────────────
 
 export default function AppShell() {
+  const { theme, toggle } = useTheme();
+
   return (
-    <div className="flex h-screen bg-zinc-950 text-zinc-200 overflow-hidden">
-
+    <div
+      className="flex h-screen overflow-hidden"
+      style={{ background: 'var(--bg)', color: 'var(--text)' }}
+    >
       {/* ── Sidebar ── */}
-      <aside className="w-52 flex-shrink-0 flex flex-col border-r border-zinc-800 bg-zinc-950 overflow-hidden">
+      <aside
+        className="w-60 flex-shrink-0 flex flex-col overflow-hidden"
+        style={{ background: 'var(--surface)', borderRight: '1px solid var(--border)' }}
+      >
 
-        {/* Wordmark */}
-        <div className="flex items-center gap-2 px-4 h-12 border-b border-zinc-800 flex-shrink-0">
-          <div className="w-6 h-6 bg-zinc-100 flex items-center justify-center flex-shrink-0">
-            <Zap size={12} className="text-zinc-900" />
+        {/* Brand header */}
+        <div
+          className="flex items-center gap-3 px-4 h-14 flex-shrink-0"
+          style={{ borderBottom: '1px solid var(--border)' }}
+        >
+          <div
+            className="w-7 h-7 flex items-center justify-center flex-shrink-0 rounded"
+            style={{ background: 'var(--brand)' }}
+          >
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+              <path d="M2 12L7 2l5 10" stroke="#111" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              <circle cx="7" cy="8.5" r="1.6" fill="#111" />
+            </svg>
           </div>
-          <div>
-            <div className="text-xs font-semibold text-zinc-100 leading-tight">Data Engine</div>
-            <div className="text-xs text-zinc-600 leading-tight">Analytics</div>
+          <div className="min-w-0">
+            <div className="text-[15px] font-bold leading-tight" style={{ color: 'var(--text)' }}>
+              Data Engine
+            </div>
+            <div className="text-xs leading-tight" style={{ color: 'var(--text-3)' }}>
+              by TekJuice
+            </div>
           </div>
         </div>
 
-        {/* Nav */}
-        <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-4">
+        {/* Navigation */}
+        <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-5">
           {NAV.map(group => (
             <div key={group.heading}>
-              <div className="px-3 mb-1 text-xs font-mono font-medium text-zinc-700 uppercase tracking-wider">
+              <p
+                className="px-3 mb-1.5 text-xs font-bold uppercase tracking-wider"
+                style={{ color: 'var(--text-3)' }}
+              >
                 {group.heading}
-              </div>
-              <div className="space-y-0.5">
+              </p>
+              <div className="space-y-px">
                 {group.items.map(item => (
                   <SideLink key={item.to} item={item} />
                 ))}
@@ -191,15 +238,30 @@ export default function AppShell() {
           ))}
         </nav>
 
-        {/* User menu pinned to bottom */}
-        <div className="border-t border-zinc-800 flex-shrink-0">
+        {/* Footer */}
+        <div className="flex-shrink-0" style={{ borderTop: '1px solid var(--border)' }}>
+          <div className="flex items-center justify-between px-4 py-2.5">
+            <span className="text-xs font-medium" style={{ color: 'var(--text-3)' }}>
+              {theme === 'dark' ? 'Dark' : 'Light'} mode
+            </span>
+            <button
+              onClick={toggle}
+              className="flex items-center justify-center w-7 h-7 rounded transition-colors"
+              style={{ background: 'var(--surface-2)', color: 'var(--text-2)' }}
+              aria-label="Toggle theme"
+              onMouseEnter={e => (e.currentTarget.style.background = 'var(--surface-3)')}
+              onMouseLeave={e => (e.currentTarget.style.background = 'var(--surface-2)')}
+            >
+              {theme === 'dark' ? <Sun size={13} /> : <Moon size={13} />}
+            </button>
+          </div>
           <UserMenu />
         </div>
 
       </aside>
 
-      {/* ── Page content ── */}
-      <main className="flex-1 overflow-y-auto">
+      {/* ── Main content ── */}
+      <main className="flex-1 overflow-y-auto" style={{ background: 'var(--bg)' }}>
         <Outlet />
       </main>
 
