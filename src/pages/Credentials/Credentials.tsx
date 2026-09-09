@@ -11,6 +11,7 @@ import {
 import { registerWebsiteCrawl, getCrawlStatus } from '../../api/ingest';
 import type { CrawlStatusResponse } from '../../api/ingest';
 import type {
+import { copyToClipboard } from '../../utils/clipboard';
   ApiKeyResponse, ApiKeyListItem,
   WebhookEndpoint, WebhookEventType, WebhookLogEntry,
 } from '../../types';
@@ -24,7 +25,7 @@ function maskKey(prefix: string) {
 function CodeBlock({ children }: { children: string }) {
   const [copied, setCopied] = useState(false);
   function copy() {
-    void navigator.clipboard.writeText(children);
+    void copyToClipboard(children);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   }
@@ -136,7 +137,7 @@ function RevealedKeyModal({ apiKey, name, onClose }: {
   const [visible, setVisible] = useState(false);
 
   function copy() {
-    void navigator.clipboard.writeText(apiKey);
+    void copyToClipboard(apiKey);
     setCopied(true);
     setTimeout(() => setCopied(false), 2500);
   }
@@ -254,7 +255,7 @@ function KeyRow({ k, onRevoke }: {
   const [copied, setCopied] = useState(false);
 
   function copyPrefix() {
-    void navigator.clipboard.writeText(maskKey(k.prefix));
+    void copyToClipboard(maskKey(k.prefix));
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   }
@@ -453,7 +454,7 @@ function RevealedWebhookModal({ endpoint, onClose }: {
   const display = visible ? secret : secret.slice(0, 8) + '•'.repeat(24);
 
   function copy() {
-    void navigator.clipboard.writeText(secret);
+    void copyToClipboard(secret);
     setCopied(true);
     setTimeout(() => setCopied(false), 2500);
   }
