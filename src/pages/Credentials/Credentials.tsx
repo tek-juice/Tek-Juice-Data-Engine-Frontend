@@ -1035,7 +1035,7 @@ export default function Credentials() {
 import requests
 
 response = requests.post(
-    "http://localhost:8000/api/v1/ingest/upload",
+    "http://54.86.109.228:9600/api/v1/ingest/upload",
     headers={"X-API-Key": "YOUR_API_KEY"},
     files={"file": open("content.md", "rb")},
     data={"source_type": "markdown"},
