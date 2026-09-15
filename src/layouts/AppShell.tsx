@@ -1,5 +1,5 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Settings, LogOut,
   ChevronDown, User,
@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { logout, getCurrentUserId } from '../services/auth.service';
 import { useTheme } from '../contexts/ThemeContext';
+import { getHealth } from '../api/health';
 
 // ─── Navigation structure ─────────────────────────────────────────────────────
 
@@ -179,6 +180,51 @@ function UserMenu() {
   );
 }
 
+// ─── Health dot ───────────────────────────────────────────────────────────────
+
+type HealthState = 'ok' | 'degraded' | 'down' | 'unknown';
+
+function HealthDot() {
+  const [health, setHealth] = useState<HealthState>('unknown');
+
+  useEffect(() => {
+    function check() {
+      getHealth()
+        .then(h => setHealth(h.status as HealthState))
+        .catch(() => setHealth('down'));
+    }
+    check();
+    const t = setInterval(check, 60_000);
+    return () => clearInterval(t);
+  }, []);
+
+  const dotColor =
+    health === 'ok'       ? 'var(--brand)'  :
+    health === 'degraded' ? '#f59e0b'        :
+    health === 'down'     ? 'var(--danger)'  :
+                            'var(--text-3)';
+
+  const label =
+    health === 'ok'       ? 'All systems operational' :
+    health === 'degraded' ? 'Degraded performance'    :
+    health === 'down'     ? 'Service unavailable'     :
+                            'Checking health…';
+
+  return (
+    <div
+      className="flex items-center gap-2 px-4 py-2"
+      style={{ borderTop: '1px solid var(--border)' }}
+      title={label}
+    >
+      <span
+        className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${health === 'unknown' ? 'animate-pulse' : ''}`}
+        style={{ background: dotColor }}
+      />
+      <span className="text-xs truncate" style={{ color: 'var(--text-3)' }}>{label}</span>
+    </div>
+  );
+}
+
 // ─── App Shell ────────────────────────────────────────────────────────────────
 
 export default function AppShell() {
@@ -240,7 +286,8 @@ export default function AppShell() {
 
         {/* Footer */}
         <div className="flex-shrink-0" style={{ borderTop: '1px solid var(--border)' }}>
-          <div className="flex items-center justify-between px-4 py-2.5">
+          <HealthDot />
+          <div className="flex items-center justify-between px-4 py-2.5" style={{ borderTop: '1px solid var(--border)' }}>
             <span className="text-xs font-medium" style={{ color: 'var(--text-3)' }}>
               {theme === 'dark' ? 'Dark' : 'Light'} mode
             </span>

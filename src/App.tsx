@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { useEffect } from 'react';
+import { useEffect, type ReactElement } from 'react';
 import { destroyActivityFeed } from './services/websocket';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { PageErrorBoundary } from './components/common/PageErrorBoundary';
@@ -12,6 +12,7 @@ import AuthLayout from './layouts/AuthLayout';
 import Login         from './pages/Login/Login';
 import OAuthCallback from './pages/OAuthCallback/OAuthCallback';
 import ProtectedRoute from './routes/ProtectedRoute';
+import Onboarding    from './pages/Onboarding/Onboarding';
 
 // ── App pages ─────────────────────────────────────────────────────────────────
 import Dashboard    from './pages/Dashboard/Dashboard';
@@ -31,7 +32,7 @@ function Placeholder({ name }: { name: string }) {
 }
 
 // ── Helper: wrap element in an error boundary ─────────────────────────────────
-function page(el: React.ReactElement) {
+function page(el: ReactElement) {
   return <PageErrorBoundary>{el}</PageErrorBoundary>;
 }
 
@@ -54,6 +55,10 @@ function App() {
 
         {/* ── OAuth callback — standalone, no layout shell ── */}
         <Route path="/auth/callback" element={<OAuthCallback />} />
+
+        {/* ── Onboarding — public multi-step flow, no auth required ── */}
+        <Route path="/onboard" element={<Onboarding />} />
+        <Route path="/onboard/verify-email" element={<Onboarding />} />
 
         {/* ── Protected — all inside AppShell sidebar ── */}
         <Route element={<ProtectedRoute />}>

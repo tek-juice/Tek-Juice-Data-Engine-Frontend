@@ -12,7 +12,95 @@ import type {
   DocumentStatus,
   TenantSummary,
   TenantPerformance,
+  VisibilityOverview,
+  VisibilityPublishedItem,
+  VisibilityConnection,
+  VisibilityGapItem,
+  VisibilityQualityScore,
 } from '../types';
+
+// ── Visibility Dashboard (primary tenant-facing endpoints) ────────────────────
+
+/**
+ * GET /api/v1/dashboard/visibility/overview
+ * Main dashboard — injection status, published count, open gaps, crawl progress.
+ */
+export async function getVisibilityOverview(): Promise<VisibilityOverview> {
+  const { data } = await apiClient.get<VisibilityOverview>(
+    '/api/v1/dashboard/visibility/overview',
+  );
+  return data;
+}
+
+/**
+ * GET /api/v1/dashboard/visibility/published
+ * Paginated list of all published / live content items.
+ */
+export async function getVisibilityPublished(
+  params?: PaginatedQuery,
+): Promise<VisibilityPublishedItem[]> {
+  const { data } = await apiClient.get<VisibilityPublishedItem[]>(
+    '/api/v1/dashboard/visibility/published',
+    { params: { page: 1, page_size: 20, ...params } },
+  );
+  return data;
+}
+
+/**
+ * GET /api/v1/dashboard/visibility/connection
+ * Bridge status, detected platform, last crawl timestamp, API key info.
+ */
+export async function getVisibilityConnection(): Promise<VisibilityConnection> {
+  const { data } = await apiClient.get<VisibilityConnection>(
+    '/api/v1/dashboard/visibility/connection',
+  );
+  return data;
+}
+
+/**
+ * GET /api/v1/dashboard/visibility/gaps
+ * Gap closure progress per document — coverage before/after per item.
+ */
+export async function getVisibilityGaps(): Promise<VisibilityGapItem[]> {
+  const { data } = await apiClient.get<VisibilityGapItem[]>(
+    '/api/v1/dashboard/visibility/gaps',
+  );
+  return data;
+}
+
+/**
+ * GET /api/v1/dashboard/visibility/quality-scores
+ * Quality score distribution across all published content.
+ */
+export async function getVisibilityQualityScores(): Promise<VisibilityQualityScore[]> {
+  const { data } = await apiClient.get<VisibilityQualityScore[]>(
+    '/api/v1/dashboard/visibility/quality-scores',
+  );
+  return data;
+}
+
+// ── Authenticated Proxy ───────────────────────────────────────────────────────
+
+/**
+ * Proxy — GET/POST/PUT/DELETE/PATCH /api/v1/{service}/{path}
+ * Routes authenticated requests to any downstream microservice.
+ */
+export async function proxyRequest<T = unknown>(
+  method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH',
+  service: string,
+  path: string,
+  body?: unknown,
+  params?: Record<string, unknown>,
+): Promise<T> {
+  const { data } = await apiClient.request<T>({
+    method,
+    url: `/api/v1/${service}/${path}`,
+    data: body,
+    params,
+  });
+  return data;
+}
+
 
 // ── Dashboard & Analytics ─────────────────────────────────────────────────────
 

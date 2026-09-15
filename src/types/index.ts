@@ -621,3 +621,122 @@ export interface QualityScoreRequest {
   target_keywords?: string[];
   monthly_search_volume?: number;
 }
+
+// ── Onboarding ────────────────────────────────────────────────────────────────
+
+export interface OnboardRegisterPayload {
+  product_name: string;
+  email: string;
+  website_url: string;
+  password?: string;
+  [key: string]: unknown;
+}
+
+export interface OnboardRegisterResponse {
+  tenant_id: string;
+  api_key: string;
+  message?: string;
+}
+
+export interface OnboardVerifyEmailPayload {
+  token: string;
+}
+
+export interface OnboardVerifyEmailResponse {
+  tenant_id: string;
+  product_name: string;
+  website_url: string;
+}
+
+export interface OnboardScanPayload {
+  website_url: string;
+}
+
+export interface OnboardScanResponse {
+  platform_type: string;
+  credential_guide: string;
+  detected_at?: string;
+}
+
+export interface OnboardInstallPayload {
+  tenant_id: string;
+  platform: string;
+  credentials: Record<string, string>;
+}
+
+export interface OnboardInstallResponse {
+  success: boolean;
+  installing: boolean;
+  message?: string;
+}
+
+export type InjectionStatus = 'configuring' | 'live' | 'failed';
+
+export interface OnboardPingResponse {
+  tenant_id: string;
+  injection_status: InjectionStatus;
+  message?: string;
+  checked_at?: string;
+}
+
+// ── SDK Bridge ────────────────────────────────────────────────────────────────
+
+export interface SdkSignalPayload {
+  api_key: string;
+  event: 'page-live' | 'scroll' | string;
+  url: string;
+  tenant_id?: string;
+  metadata?: Record<string, unknown>;
+  timestamp?: string;
+}
+
+// ── Visibility Dashboard ──────────────────────────────────────────────────────
+
+export interface VisibilityOverview {
+  injection_status: InjectionStatus | 'not_installed';
+  published_count: number;
+  open_gaps: number;
+  crawl_progress: number;
+  last_crawled_at?: string | null;
+  platform_type?: string | null;
+  coverage_pct?: number;
+  [key: string]: unknown;
+}
+
+export interface VisibilityPublishedItem {
+  document_id: string;
+  title: string;
+  url: string;
+  published_at: string;
+  quality_score?: number;
+  coverage_pct?: number;
+  [key: string]: unknown;
+}
+
+export interface VisibilityConnection {
+  bridge_status: 'connected' | 'disconnected' | 'error';
+  platform_type: string;
+  last_crawled_at?: string | null;
+  api_key_prefix?: string;
+  website_url?: string;
+  [key: string]: unknown;
+}
+
+export interface VisibilityGapItem {
+  document_id: string;
+  title: string;
+  coverage_before: number;
+  coverage_after: number;
+  gap_score: number;
+  status: 'pending' | 'drafts_ready' | 'resolved';
+  [key: string]: unknown;
+}
+
+export interface VisibilityQualityScore {
+  document_id: string;
+  title: string;
+  quality_score: number;
+  label: string;
+  beats_paid_ads: boolean;
+  [key: string]: unknown;
+}
