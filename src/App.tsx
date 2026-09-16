@@ -13,6 +13,7 @@ import Login         from './pages/Login/Login';
 import OAuthCallback from './pages/OAuthCallback/OAuthCallback';
 import ProtectedRoute from './routes/ProtectedRoute';
 import Onboarding    from './pages/Onboarding/Onboarding';
+import Connect       from './pages/Connect/Connect';
 
 // ── App pages ─────────────────────────────────────────────────────────────────
 import Dashboard    from './pages/Dashboard/Dashboard';
@@ -56,9 +57,14 @@ function App() {
         {/* ── OAuth callback — standalone, no layout shell ── */}
         <Route path="/auth/callback" element={<OAuthCallback />} />
 
-        {/* ── Onboarding — public multi-step flow, no auth required ── */}
+        {/* ── Connect wizard — public, no auth required ── */}
+        <Route path="/connect" element={<Connect />} />
+
+        {/* ── Onboarding — legacy flow ── */}
         <Route path="/onboard" element={<Onboarding />} />
-        <Route path="/onboard/verify-email" element={<Onboarding />} />
+
+        {/* ── Email verification — reads ?token= and auto-verifies, then redirects to /connect ── */}
+        <Route path="/onboard/verify-email" element={<Connect />} />
 
         {/* ── Protected — all inside AppShell sidebar ── */}
         <Route element={<ProtectedRoute />}>
