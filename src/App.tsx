@@ -90,7 +90,6 @@ function App() {
 
             {/* System */}
             <Route path="/sync"           element={page(<Placeholder name="Sync" />)} />
-            <Route path="/telemetry"      element={page(<Placeholder name="Telemetry" />)} />
 
             {/* Access */}
             <Route path="/settings"       element={page(<Placeholder name="Settings" />)} />

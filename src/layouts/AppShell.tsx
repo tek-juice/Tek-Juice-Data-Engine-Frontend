@@ -19,12 +19,41 @@ const NAV: NavGroup[] = [
     heading: 'Overview',
     items: [
       { label: 'Dashboard',       to: '/dashboard' },
+      { label: 'Analytics',       to: '/analytics' },
+    ],
+  },
+  {
+    heading: 'Content',
+    items: [
+      { label: 'Website Setup',   to: '/website' },
+      { label: 'Drafts',          to: '/drafts' },
+      { label: 'Search',          to: '/search' },
+    ],
+  },
+  {
+    heading: 'Intelligence',
+    items: [
+      { label: 'Gap Detection',   to: '/gaps' },
+      { label: 'Trends',          to: '/trends' },
+      { label: 'Schema Factory',  to: '/schema-factory' },
+    ],
+  },
+  {
+    heading: 'Visibility',
+    items: [
+      { label: 'SEO',             to: '/seo' },
+      { label: 'GEO',             to: '/geo' },
+    ],
+  },
+  {
+    heading: 'System',
+    items: [
+      { label: 'Sync',            to: '/sync' },
     ],
   },
   {
     heading: 'Access',
     items: [
-      { label: 'API Credentials', to: '/credentials' },
       { label: 'Settings',        to: '/settings' },
     ],
   },
@@ -32,6 +61,7 @@ const NAV: NavGroup[] = [
     heading: 'Performance',
     items: [
       { label: 'My Performance',  to: '/my-performance' },
+      { label: 'All Products',    to: '/admin/tenants' },
     ],
   },
 ];
