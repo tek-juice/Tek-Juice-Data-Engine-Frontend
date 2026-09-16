@@ -15,69 +15,6 @@ import { getQualityScore } from '../../api/gaps';
 import type { QualityScoreResponse } from '../../types';
 import type { TenantPerformance } from '../../types';
 
-// ─── Seed data generator ──────────────────────────────────────────────────────
-
-function seedMyPerformance(): TenantPerformance {
-  const hours = Array.from({ length: 24 }, (_, i) => `${String(i).padStart(2, '0')}:00`);
-
-  let calls = 28, seo = 67, geo = 51, aeo = 38;
-  const usage_timeseries = hours.map(h => {
-    calls = Math.max(0, calls + (Math.random() * 12 - 5));
-    return { hour: h, api_calls: Math.round(calls), errors: Math.round(calls * 0.012), avg_latency_ms: Math.round(110 + Math.random() * 70) };
-  });
-
-  const visibility_history = hours.map(h => {
-    seo = Math.min(99, Math.max(30, seo + (Math.random() * 4 - 1.5)));
-    geo = Math.min(99, Math.max(20, geo + (Math.random() * 5 - 2)));
-    aeo = Math.min(99, Math.max(10, aeo + (Math.random() * 6 - 2.5)));
-    return { time: h, seo: +seo.toFixed(1), geo: +geo.toFixed(1), aeo: +aeo.toFixed(1) };
-  });
-
-  let coverage = 72, gapScore = 0.28;
-  const gap_history = Array.from({ length: 14 }, (_, i) => {
-    coverage = Math.min(99, coverage + Math.random() * 1.5);
-    gapScore = Math.max(0.05, gapScore - Math.random() * 0.018);
-    return { day: `D${i + 1}`, gap_score: +gapScore.toFixed(2), coverage_before: +(coverage - 6).toFixed(1), coverage_after: +coverage.toFixed(1), gaps_closed: Math.floor(Math.random() * 4 + 1) };
-  });
-
-  const event_types = ['document.completed', 'gap.detected', 'drafts.ready', 'ranking.updated', 'schema.generated', 'gap.resolved'];
-  const recent_activity = Array.from({ length: 25 }, (_, i) => ({
-    event_type: event_types[Math.floor(Math.random() * event_types.length)],
-    service: ['ingest', 'gaps', 'seo', 'geo', 'drafts', 'schema'][Math.floor(Math.random() * 6)],
-    document_id: `doc_${Math.random().toString(36).slice(2, 9)}`,
-    timestamp: new Date(Date.now() - i * 480000).toISOString(),
-    status: (Math.random() > 0.08 ? 'success' : 'error') as 'success' | 'error' | 'pending',
-    duration_ms: Math.round(75 + Math.random() * 380),
-  }));
-
-  return {
-    tenant: {
-      tenant_id: 'my_tenant',
-      name: 'My Product',
-      key_prefix: 'de_prod',
-      plan: 'pro',
-      created_at: new Date(Date.now() - 21 * 86400000).toISOString(),
-      last_active: new Date().toISOString(),
-      status: 'active' as const,
-      documents_total: 142,
-      api_calls_total: 18740,
-      api_calls_24h: 284,
-      webhooks_delivered: 1820,
-      avg_gap_score: 0.18,
-      avg_seo_score: 67,
-      avg_geo_score: 51,
-      coverage_pct: 78.4,
-      drafts_generated: 94,
-      gaps_closed: 61,
-      error_rate: 0.008,
-    },
-    usage_timeseries,
-    visibility_history,
-    gap_history,
-    recent_activity,
-  };
-}
-
 // ─── Shared tooltip style ─────────────────────────────────────────────────────
 
 const TT = {
@@ -212,77 +149,40 @@ function SH({ title, sub, icon }: { title: string; sub?: string; icon?: React.Re
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function TenantDashboard() {
-  const [perf, setPerf]             = useState<TenantPerformance>(seedMyPerformance());
-  const [loading, setLoading]       = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
+  const [perf, setPerf]               = useState<TenantPerformance | null>(null);
+  const [loading, setLoading]         = useState(true);
+  const [error, setError]             = useState('');
+  const [refreshing, setRefreshing]   = useState(false);
   const [lastUpdated, setLastUpdated] = useState(new Date());
-  const [qsData, setQsData]         = useState<QualityScoreResponse | null>(null);
-  const [liveQS, setLiveQS]         = useState<number | null>(null);
-  const [qsLoading, setQsLoading]   = useState(false);
-
-  // Live-tick visibility scores every 8s
-  const latest = perf.visibility_history[perf.visibility_history.length - 1];
-  const [liveSEO, setLiveSEO]     = useState(latest.seo);
-  const [liveGEO, setLiveGEO]     = useState(latest.geo);
-  const [liveAEO, setLiveAEO]     = useState(latest.aeo);
-  const [liveCalls, setLiveCalls] = useState(perf.tenant.api_calls_24h);
-
-  useEffect(() => {
-    const t = setInterval(() => {
-      setLiveSEO(v => +Math.min(99, Math.max(30, v + (Math.random() * 2 - 0.8))).toFixed(1));
-      setLiveGEO(v => +Math.min(99, Math.max(20, v + (Math.random() * 2 - 1))).toFixed(1));
-      setLiveAEO(v => +Math.min(99, Math.max(10, v + (Math.random() * 3 - 1.2))).toFixed(1));
-      setLiveCalls(v => v + Math.floor(Math.random() * 3));
-    }, 8000);
-    return () => clearInterval(t);
-  }, []);
+  const [qsData, setQsData]           = useState<QualityScoreResponse | null>(null);
+  const [qsLoading, setQsLoading]     = useState(false);
 
   const load = useCallback((refreshMode = false) => {
     if (refreshMode) setRefreshing(true); else setLoading(true);
+    setError('');
     getMyTenantPerformance()
       .then(data => { setPerf(data); setLastUpdated(new Date()); })
-      .catch(() => { /* keep seed */ })
+      .catch(() => setError('Could not load performance data from the backend.'))
       .finally(() => { setLoading(false); setRefreshing(false); });
   }, []);
 
   useEffect(() => { load(); }, [load]);
 
+  // Load quality score using the tenant's first real document once perf data arrives
   useEffect(() => {
+    if (!perf) return;
+    const firstDoc = perf.recent_activity?.[0];
+    if (!firstDoc) return;
     setQsLoading(true);
     getQualityScore({
-      content: 'This product helps businesses increase revenue by automating data pipelines. According to Gartner 2024, companies using automated ETL reduce data engineering costs by 40%. Our platform integrates with 50+ data sources.\n\n## Key Features\n- Real-time sync\n- No-code builder\n- SOC2 compliant',
-      title: 'Data Automation Platform',
-      query: 'data pipeline automation software',
-      target_keywords: ['data pipeline', 'ETL automation', 'data integration'],
+      content: firstDoc.event_type,
+      title: perf.tenant.name,
+      query: perf.tenant.name,
     })
-      .then(res => { setQsData(res); setLiveQS(res.quality_score); })
+      .then(res => setQsData(res))
       .catch(() => {})
       .finally(() => setQsLoading(false));
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const t = perf.tenant;
-
-  const latestGap = perf.gap_history[perf.gap_history.length - 1];
-  const gapLift   = (latestGap.coverage_after - latestGap.coverage_before).toFixed(1);
-
-  const pipelineStages = [
-    { label: 'Ingest',     ok: Math.round(t.documents_total * 0.997), total: t.documents_total },
-    { label: 'Chunking',   ok: Math.round(t.documents_total * 0.994), total: t.documents_total },
-    { label: 'Embedding',  ok: Math.round(t.documents_total * 0.991), total: t.documents_total },
-    { label: 'Gap detect', ok: Math.round(t.documents_total * 0.989), total: t.documents_total },
-    { label: 'Drafts',     ok: t.drafts_generated,                     total: t.gaps_closed },
-  ];
-
-  const sevenDaySeverity = [
-    { day: 'Mon', critical: 1, high: 3, medium: 5, low: 2 },
-    { day: 'Tue', critical: 0, high: 4, medium: 4, low: 3 },
-    { day: 'Wed', critical: 2, high: 2, medium: 6, low: 1 },
-    { day: 'Thu', critical: 0, high: 3, medium: 3, low: 4 },
-    { day: 'Fri', critical: 0, high: 2, medium: 4, low: 5 },
-    { day: 'Sat', critical: 0, high: 1, medium: 3, low: 4 },
-    { day: 'Sun', critical: 0, high: 2, medium: 2, low: 3 },
-  ];
+  }, [perf]);
 
   const fmt    = new Intl.NumberFormat().format;
   const fmtPct = (n: number) => `${n.toFixed(1)}%`;
@@ -297,6 +197,39 @@ export default function TenantDashboard() {
       </div>
     );
   }
+
+  if (error || !perf) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center gap-3" style={{ background: 'var(--bg)', color: 'var(--text-3)' }}>
+        <AlertTriangle size={18} style={{ color: 'var(--warning)' }} />
+        <p className="text-sm" style={{ color: 'var(--text-2)' }}>{error || 'No performance data available.'}</p>
+        <button onClick={() => load()} className="text-xs px-3 py-1.5 mt-2" style={{ border: '1px solid var(--border)', color: 'var(--text-3)' }}>Retry</button>
+      </div>
+    );
+  }
+
+  const t = perf.tenant;
+  const latestGap  = perf.gap_history?.[perf.gap_history.length - 1];
+  const gapLift    = latestGap ? (latestGap.coverage_after - latestGap.coverage_before).toFixed(1) : '0';
+  const seo        = t.avg_seo_score ?? 0;
+  const geo        = t.avg_geo_score ?? 0;
+  const aeo        = t.avg_aeo_score ?? 0;
+
+  // Pipeline health derived from real pipeline metrics if available
+  const pipelineStages = perf.pipeline_metrics
+    ? Object.entries(perf.pipeline_metrics).map(([label, m]) => ({
+        label,
+        ok:    (m as { success?: number }).success ?? 0,
+        total: ((m as { success?: number }).success ?? 0) + ((m as { error?: number }).error ?? 0),
+      }))
+    : [];
+
+  // Gap severity from real gap history
+  const sevenDaySeverity = (perf.gap_history ?? []).slice(-7).map((g, i) => ({
+    day: ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'][i] ?? `D${i+1}`,
+    closed: g.gaps_closed ?? 0,
+    score: +(g.gap_score * 100).toFixed(0),
+  }));
 
   return (
     <div style={{ background: 'var(--bg)', color: 'var(--text)' }}>
@@ -350,19 +283,19 @@ export default function TenantDashboard() {
 
         {/* ── KPI row ── */}
         <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
-          <StatCard label="SEO score"       value={`${liveSEO}%`}       delta={+((liveSEO - 61).toFixed(0))}  icon={<Search size={14}/>}       color="var(--info)" />
-          <StatCard label="GEO score"       value={`${liveGEO}%`}       delta={+((liveGEO - 44).toFixed(0))}  icon={<Globe size={14}/>}        color="#a78bfa" />
-          <StatCard label="AEO score"       value={`${liveAEO}%`}       delta={+((liveAEO - 29).toFixed(0))}  icon={<Bot size={14}/>}          color="var(--warning)" />
-          <StatCard label="Coverage"        value={fmtPct(t.coverage_pct)} delta={+gapLift}                   icon={<CheckCircle2 size={14}/>} color="var(--success)" />
-          <StatCard label="API calls / 24h" value={fmt(liveCalls)}       sub="today"                          icon={<Activity size={14}/>} />
-          <StatCard label="Gaps closed"     value={fmt(t.gaps_closed)}   sub="lifetime"                       icon={<Shield size={14}/>} />
-          {liveQS !== null && (
+          <StatCard label="SEO score"       value={`${seo.toFixed(0)}%`}              icon={<Search size={14}/>}       color="var(--info)" />
+          <StatCard label="GEO score"       value={`${geo.toFixed(0)}%`}              icon={<Globe size={14}/>}        color="#a78bfa" />
+          <StatCard label="AEO score"       value={`${aeo.toFixed(0)}%`}              icon={<Bot size={14}/>}          color="var(--warning)" />
+          <StatCard label="Coverage"        value={fmtPct(t.coverage_pct ?? 0)} delta={+gapLift} icon={<CheckCircle2 size={14}/>} color="var(--success)" />
+          <StatCard label="API calls / 24h" value={fmt(t.api_calls_24h ?? 0)}   sub="today"      icon={<Activity size={14}/>} />
+          <StatCard label="Gaps closed"     value={fmt(t.gaps_closed ?? 0)}      sub="lifetime"   icon={<Shield size={14}/>} />
+          {qsData && (
             <StatCard
               label="Quality Score"
-              value={`${liveQS.toFixed(1)}/10`}
-              sub={qsData?.beats_paid_ads ? '✓ beats paid ads' : 'below paid ads'}
+              value={`${qsData.quality_score.toFixed(1)}/10`}
+              sub={qsData.beats_paid_ads ? '✓ beats paid ads' : 'below paid ads'}
               icon={<Target size={14}/>}
-              color={qsData?.beats_paid_ads ? 'var(--success)' : 'var(--warning)'}
+              color={qsData.beats_paid_ads ? 'var(--success)' : 'var(--warning)'}
             />
           )}
         </div>
@@ -376,9 +309,9 @@ export default function TenantDashboard() {
             Engine Visibility
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <VisGauge label="SEO — Search Engines"         score={liveSEO} barColor="var(--info)"   icon={<Search size={15}/>} />
-            <VisGauge label="GEO — Generative Engines"     score={liveGEO} barColor="#a78bfa"       icon={<Globe size={15}/>} />
-            <VisGauge label="AEO — AI Engine Optimisation" score={liveAEO} barColor="var(--warning)" icon={<Bot size={15}/>} />
+            <VisGauge label="SEO — Search Engines"         score={seo} barColor="var(--info)"    icon={<Search size={15}/>} />
+            <VisGauge label="GEO — Generative Engines"     score={geo} barColor="#a78bfa"        icon={<Globe size={15}/>} />
+            <VisGauge label="AEO — AI Engine Optimisation" score={aeo} barColor="var(--warning)" icon={<Bot size={15}/>} />
           </div>
         </div>
 
@@ -603,24 +536,26 @@ export default function TenantDashboard() {
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
           <PipelineHealth stages={pipelineStages} />
 
-          {/* Gap severity breakdown */}
+          {/* Gap closure — last 7 days (from real gap_history) */}
           <div className="p-4" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
-            <SH title="Gap Severity — last 7 days" icon={<Shield size={14}/>} />
-            <div className="h-44">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={sevenDaySeverity} margin={{ top: 0, right: 0, left: -24, bottom: 0 }} barSize={14}>
-                  <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" vertical={false} />
-                  <XAxis dataKey="day" tick={{ fontSize: 10, fill: 'var(--text-3)' }} tickLine={false} axisLine={false} />
-                  <YAxis tick={{ fontSize: 10, fill: 'var(--text-3)' }} tickLine={false} axisLine={false} />
-                  <Tooltip {...TT} />
-                  <Legend wrapperStyle={{ fontSize: 11, color: 'var(--text-3)', paddingTop: 8 }} />
-                  <Bar dataKey="critical" name="Critical" stackId="a" fill="#ef4444" radius={[0,0,0,0]} />
-                  <Bar dataKey="high"     name="High"     stackId="a" fill="#f59e0b" radius={[0,0,0,0]} />
-                  <Bar dataKey="medium"   name="Medium"   stackId="a" fill="#3b82f6" radius={[0,0,0,0]} />
-                  <Bar dataKey="low"      name="Low"      stackId="a" fill="var(--surface-3)" radius={[2,2,0,0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
+            <SH title="Gap Closure — last 7 days" icon={<Shield size={14}/>} />
+            {sevenDaySeverity.length === 0 ? (
+              <p className="text-xs py-8 text-center" style={{ color: 'var(--text-3)' }}>No gap history yet.</p>
+            ) : (
+              <div className="h-44">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={sevenDaySeverity} margin={{ top: 0, right: 0, left: -24, bottom: 0 }} barSize={18}>
+                    <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" vertical={false} />
+                    <XAxis dataKey="day" tick={{ fontSize: 10, fill: 'var(--text-3)' }} tickLine={false} axisLine={false} />
+                    <YAxis tick={{ fontSize: 10, fill: 'var(--text-3)' }} tickLine={false} axisLine={false} />
+                    <Tooltip {...TT} />
+                    <Legend wrapperStyle={{ fontSize: 11, color: 'var(--text-3)', paddingTop: 8 }} />
+                    <Bar dataKey="closed" name="Gaps closed" fill="var(--success)" radius={[2,2,0,0]} />
+                    <Bar dataKey="score"  name="Gap score %"  fill="#f59e0b"        radius={[2,2,0,0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            )}
           </div>
         </div>
 

@@ -486,6 +486,7 @@ export interface TenantSummary {
   avg_gap_score: number;            // 0–1
   avg_seo_score: number;            // 0–100
   avg_geo_score: number;            // 0–100
+  avg_aeo_score?: number;           // 0–100
   coverage_pct: number;             // 0–100
   drafts_generated: number;
   gaps_closed: number;
@@ -532,6 +533,8 @@ export interface TenantPerformance {
     geo: number;
     aeo: number;
   }>;
+  /** Per-stage pipeline metrics from GET /api/v1/dashboard/metrics/pipeline */
+  pipeline_metrics?: Record<string, { success?: number; error?: number; avg_latency_ms?: number }>;
 }
 
 // ── Quality Score (Google Ads Ad Rank Engine) ─────────────────────────────────

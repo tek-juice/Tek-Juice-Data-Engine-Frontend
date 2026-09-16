@@ -14,71 +14,6 @@ import type { TenantSummary, TenantPerformance } from '../../types';
 
 // ─── Seed data generators ─────────────────────────────────────────────────────
 
-function seedTenants(): TenantSummary[] {
-  const names = [
-    { name: 'Acme Corp',         prefix: 'de_acme',  plan: 'enterprise', status: 'active'  as const },
-    { name: 'TechFlow Ltd',      prefix: 'de_tfl',   plan: 'pro',        status: 'active'  as const },
-    { name: 'Nova Analytics',    prefix: 'de_nova',  plan: 'pro',        status: 'idle'    as const },
-    { name: 'Pulse Media',       prefix: 'de_pulse', plan: 'free',       status: 'active'  as const },
-    { name: 'EdgeScale Inc',     prefix: 'de_edge',  plan: 'enterprise', status: 'error'   as const },
-    { name: 'Bright Content Co', prefix: 'de_bcc',   plan: 'pro',        status: 'active'  as const },
-  ];
-  return names.map((n, i) => ({
-    tenant_id: `t_${String(i + 1).padStart(4, '0')}`,
-    name: n.name, key_prefix: n.prefix, plan: n.plan,
-    created_at: new Date(Date.now() - (30 - i * 4) * 86400000).toISOString(),
-    last_active: n.status !== 'idle' ? new Date(Date.now() - i * 3600000).toISOString() : null,
-    documents_total: Math.floor(Math.random() * 400 + 20),
-    api_calls_total: Math.floor(Math.random() * 50000 + 1000),
-    api_calls_24h:   Math.floor(Math.random() * 800 + 10),
-    webhooks_delivered: Math.floor(Math.random() * 3000 + 50),
-    avg_gap_score: +(Math.random() * 0.5 + 0.1).toFixed(2),
-    avg_seo_score: +(Math.random() * 40 + 45).toFixed(1),
-    avg_geo_score: +(Math.random() * 35 + 35).toFixed(1),
-    coverage_pct:  +(Math.random() * 30 + 60).toFixed(1),
-    drafts_generated: Math.floor(Math.random() * 200 + 10),
-    gaps_closed: Math.floor(Math.random() * 150 + 5),
-    error_rate: n.status === 'error' ? +(Math.random() * 0.15 + 0.05).toFixed(3) : +(Math.random() * 0.02).toFixed(3),
-    status: n.status,
-  }));
-}
-
-function seedTenantPerformance(t: TenantSummary): TenantPerformance {
-  const hours = Array.from({ length: 24 }, (_, i) => `${String(i).padStart(2,'0')}:00`);
-  let calls = t.api_calls_24h / 24;
-  const usage_timeseries = hours.map(h => {
-    calls = Math.max(0, calls + (Math.random() * 10 - 4));
-    return { hour: h, api_calls: Math.round(calls), errors: Math.round(calls * t.error_rate), avg_latency_ms: Math.round(120 + Math.random() * 80) };
-  });
-
-  let seo = t.avg_seo_score, geo = t.avg_geo_score, aeo = 30;
-  const visibility_history = hours.map(h => {
-    seo = Math.min(99, Math.max(20, seo + (Math.random() * 4 - 1.8)));
-    geo = Math.min(99, Math.max(15, geo + (Math.random() * 5 - 2)));
-    aeo = Math.min(99, Math.max(10, aeo + (Math.random() * 6 - 2.5)));
-    return { time: h, seo: +seo.toFixed(1), geo: +geo.toFixed(1), aeo: +aeo.toFixed(1) };
-  });
-
-  let coverage = t.coverage_pct - 15, gapScore = t.avg_gap_score + 0.2;
-  const gap_history = Array.from({ length: 14 }, (_, i) => {
-    coverage = Math.min(99, coverage + Math.random() * 2);
-    gapScore = Math.max(0.05, gapScore - Math.random() * 0.02);
-    return { day: `D${i + 1}`, gap_score: +gapScore.toFixed(2), coverage_before: +(coverage - 5).toFixed(1), coverage_after: +coverage.toFixed(1), gaps_closed: Math.floor(Math.random() * 5) };
-  });
-
-  const event_types = ['document.completed', 'gap.detected', 'drafts.ready', 'ranking.updated', 'document.failed', 'gap.resolved'];
-  const recent_activity = Array.from({ length: 20 }, (_, i) => ({
-    event_type: event_types[Math.floor(Math.random() * event_types.length)],
-    service: ['ingest', 'gaps', 'seo', 'geo', 'drafts'][Math.floor(Math.random() * 5)],
-    document_id: `doc_${Math.random().toString(36).slice(2,9)}`,
-    timestamp: new Date(Date.now() - i * 600000).toISOString(),
-    status: (Math.random() > 0.1 ? 'success' : 'error') as 'success' | 'error' | 'pending',
-    duration_ms: Math.round(80 + Math.random() * 400),
-  }));
-
-  return { tenant: t, usage_timeseries, recent_activity, gap_history, visibility_history };
-}
-
 // ─── Shared tooltip style ─────────────────────────────────────────────────────
 
 const TT = {
@@ -212,35 +147,56 @@ function TenantRow({ t, onSelect }: { t: TenantSummary; onSelect: (t: TenantSumm
 
 // ─── Tenant detail panel (drawer) ─────────────────────────────────────────────
 
-function TenantDetailPanel({ tenantId, seed, onClose }: {
+function TenantDetailPanel({ tenantId, onClose }: {
   tenantId: string;
-  seed: TenantSummary;
   onClose: () => void;
 }) {
-  const [perf, setPerf]       = useState<TenantPerformance>(seedTenantPerformance(seed));
+  const [perf, setPerf]       = useState<TenantPerformance | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError]     = useState('');
 
   useEffect(() => {
     setLoading(true);
+    setError('');
     getTenantPerformance(tenantId)
       .then(setPerf)
-      .catch(() => { /* keep seed */ })
+      .catch(() => setError('Could not load tenant performance.'))
       .finally(() => setLoading(false));
   }, [tenantId]);
+
+  if (loading) {
+    return (
+      <div className="fixed inset-0 z-40 flex">
+        <div className="flex-1 bg-black/50" onClick={onClose} />
+        <div className="w-full max-w-2xl flex items-center justify-center" style={{ background: 'var(--bg)', borderLeft: '1px solid var(--border)' }}>
+          <Loader2 size={18} className="animate-spin" style={{ color: 'var(--text-2)' }} />
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !perf) {
+    return (
+      <div className="fixed inset-0 z-40 flex">
+        <div className="flex-1 bg-black/50" onClick={onClose} />
+        <div className="w-full max-w-2xl flex flex-col items-center justify-center gap-3" style={{ background: 'var(--bg)', borderLeft: '1px solid var(--border)' }}>
+          <AlertTriangle size={18} style={{ color: 'var(--warning)' }} />
+          <p className="text-sm" style={{ color: 'var(--text-2)' }}>{error || 'No data available.'}</p>
+          <button onClick={onClose} className="text-xs px-3 py-1.5" style={{ border: '1px solid var(--border)', color: 'var(--text-3)' }}>Close</button>
+        </div>
+      </div>
+    );
+  }
 
   const t = perf.tenant;
 
   return (
     <div className="fixed inset-0 z-40 flex">
-      {/* backdrop */}
       <div className="flex-1 bg-black/50" onClick={onClose} />
-      {/* panel */}
       <div
         className="w-full max-w-2xl flex flex-col overflow-hidden"
         style={{ background: 'var(--bg)', borderLeft: '1px solid var(--border)' }}
       >
-
-        {/* header */}
         <div
           className="flex items-center justify-between px-6 py-4 flex-shrink-0"
           style={{ borderBottom: '1px solid var(--border)' }}
@@ -270,15 +226,6 @@ function TenantDetailPanel({ tenantId, seed, onClose }: {
           </button>
         </div>
 
-        {loading && (
-          <div
-            className="absolute inset-0 z-10 flex items-center justify-center"
-            style={{ background: 'rgba(0,0,0,0.4)' }}
-          >
-            <Loader2 size={18} className="animate-spin" style={{ color: 'var(--text-2)' }} />
-          </div>
-        )}
-
         <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6">
 
           {/* ── KPI row ── */}
@@ -298,9 +245,9 @@ function TenantDetailPanel({ tenantId, seed, onClose }: {
           {/* ── Visibility scores ── */}
           <div className="grid grid-cols-3 gap-3">
             {[
-              { label: 'SEO', score: t.avg_seo_score, barColor: 'var(--info)',   icon: <Search size={12} /> },
-              { label: 'GEO', score: t.avg_geo_score, barColor: '#a78bfa',       icon: <Globe size={12} /> },
-              { label: 'AEO', score: 30,               barColor: 'var(--warning)', icon: <Bot size={12} /> },
+              { label: 'SEO', score: t.avg_seo_score ?? 0,  barColor: 'var(--info)',    icon: <Search size={12} /> },
+              { label: 'GEO', score: t.avg_geo_score ?? 0,  barColor: '#a78bfa',        icon: <Globe size={12} /> },
+              { label: 'AEO', score: t.avg_aeo_score ?? 0,  barColor: 'var(--warning)', icon: <Bot size={12} /> },
             ].map(g => (
               <div key={g.label} className="p-3" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
                 <div className="flex items-center gap-1.5 mb-2" style={{ color: 'var(--text-2)' }}>
@@ -440,7 +387,7 @@ type SortKey = 'name' | 'api_calls_24h' | 'avg_seo_score' | 'avg_geo_score' | 'c
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function AdminTenants() {
-  const [tenants, setTenants]   = useState<TenantSummary[]>(seedTenants());
+  const [tenants, setTenants]   = useState<TenantSummary[]>([]);
   const [loading, setLoading]   = useState(true);
   const [error, setError]       = useState('');
   const [search, setSearch]     = useState('');
@@ -454,7 +401,7 @@ export default function AdminTenants() {
     setError('');
     listTenants()
       .then(data => setTenants(data))
-      .catch(() => { /* keep seed */ })
+      .catch(() => setError('Could not load tenants from the backend.'))
       .finally(() => setLoading(false));
   }, []);
 
@@ -506,7 +453,6 @@ export default function AdminTenants() {
       {selected && (
         <TenantDetailPanel
           tenantId={selected.tenant_id}
-          seed={selected}
           onClose={() => setSelected(null)}
         />
       )}
