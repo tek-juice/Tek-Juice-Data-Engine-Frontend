@@ -107,18 +107,6 @@ function ErrorBox({ msg }: { msg: string }) {
   );
 }
 
-function SuccessBox({ msg }: { msg: string }) {
-  return (
-    <div
-      className="flex items-start gap-2 px-3 py-2.5 rounded-md text-xs"
-      style={{ background: 'var(--success-bg, #0d2d1a)', border: '1px solid var(--brand)', color: 'var(--brand)' }}
-    >
-      <CheckCircle2 size={13} className="flex-shrink-0 mt-0.5" />
-      <span>{msg}</span>
-    </div>
-  );
-}
-
 function SubmitBtn({ loading, label, loadingLabel }: { loading: boolean; label: string; loadingLabel: string }) {
   return (
     <button
@@ -137,19 +125,18 @@ function SubmitBtn({ loading, label, loadingLabel }: { loading: boolean; label: 
 
 // ── Step 1: Register ──────────────────────────────────────────────────────────
 
-function StepRegister({ onDone }: { onDone: (result: OnboardRegisterResponse, url: string) => void }) {
+function StepRegister({ onDone }: { onDone: (result: OnboardRegisterResponse, url: string, email: string) => void }) {
   const [productName, setProductName] = useState('');
   const [email, setEmail]             = useState('');
   const [website, setWebsite]         = useState('');
-  const [password, setPassword]       = useState('');
   const [loading, setLoading]         = useState(false);
   const [error, setError]             = useState('');
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError('');
-    if (!productName.trim()) { setError('Product name is required.'); return; }
-    if (!email.trim())       { setError('Email is required.'); return; }
+    if (!productName.trim()) { setError('Company name is required.'); return; }
+    if (!email.trim())       { setError('Email address is required.'); return; }
     if (!website.trim())     { setError('Website URL is required.'); return; }
     try { new URL(website.trim()); } catch { setError('Enter a valid URL including https://'); return; }
 
@@ -159,9 +146,8 @@ function StepRegister({ onDone }: { onDone: (result: OnboardRegisterResponse, ur
         product_name: productName.trim(),
         email: email.trim(),
         website_url: website.trim(),
-        password: password || undefined,
       });
-      onDone(result, website.trim());
+      onDone(result, website.trim(), email.trim());
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail
         ?? 'Registration failed. Please try again.';
@@ -178,83 +164,79 @@ function StepRegister({ onDone }: { onDone: (result: OnboardRegisterResponse, ur
           <Zap size={14} style={{ color: '#111' }} />
         </div>
         <div>
-          <h2 className="text-sm font-bold" style={{ color: 'var(--text)' }}>Register your product</h2>
-          <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>Creates your tenant and sends a verification email.</p>
+          <h2 className="text-sm font-bold" style={{ color: 'var(--text)' }}>Connect your product</h2>
+          <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>Fill in 3 fields. The Engine does everything else.</p>
         </div>
       </div>
       {error && <ErrorBox msg={error} />}
-      <Field label="Product name">
-        <Input value={productName} onChange={e => setProductName(e.target.value)} placeholder="Acme Analytics" />
-      </Field>
-      <Field label="Email address">
-        <Input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@company.com" />
+      <Field label="Company name">
+        <Input value={productName} onChange={e => setProductName(e.target.value)} placeholder="Acme Corp" autoFocus />
       </Field>
       <Field label="Website URL">
         <Input type="url" value={website} onChange={e => setWebsite(e.target.value)} placeholder="https://yourproduct.com" />
       </Field>
-      <Field label="Password (optional — set later in Settings)">
-        <Input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Leave blank to set later" />
+      <Field label="Email address">
+        <Input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@company.com" />
       </Field>
-      <SubmitBtn loading={loading} label="Register product" loadingLabel="Registering…" />
+      <SubmitBtn loading={loading} label="Connect" loadingLabel="Connecting…" />
     </form>
   );
 }
 
 // ── Step 2: Verify email ──────────────────────────────────────────────────────
 
-function StepVerifyEmail({ tenantId, onDone }: { tenantId: string; onDone: () => void }) {
+function StepVerifyEmail({ email, onDone }: { email: string; onDone: () => void }) {
   const [params] = useSearchParams();
-  const [token, setToken]     = useState(params.get('token') ?? '');
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState('');
 
   async function submitToken(t: string) {
-    if (!t.trim()) { setError('Paste the token from your email.'); return; }
     setLoading(true); setError('');
     try {
       await onboardVerifyEmail({ token: t.trim() });
       onDone();
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail
-        ?? 'Invalid or expired token. Check your email and try again.';
+        ?? 'Invalid or expired link. Check your email and click the link again.';
       setError(msg);
-    } finally {
       setLoading(false);
     }
   }
 
-  // Auto-submit if token arrives via URL query param
+  // Auto-advance when the email link brings them back with ?token=
   useEffect(() => {
     const urlToken = params.get('token');
     if (urlToken) { void submitToken(urlToken); }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  async function handleSubmit(e: FormEvent) {
-    e.preventDefault();
-    await submitToken(token);
-  }
-
   return (
-    <form className="space-y-4" onSubmit={handleSubmit} noValidate>
+    <div className="space-y-4">
       <div className="flex items-center gap-3 mb-5">
         <div className="w-8 h-8 flex items-center justify-center rounded flex-shrink-0" style={{ background: 'var(--brand)' }}>
           <Mail size={14} style={{ color: '#111' }} />
         </div>
         <div>
-          <h2 className="text-sm font-bold" style={{ color: 'var(--text)' }}>Verify your email</h2>
-          <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>Paste the token from your email, or click the link in it.</p>
+          <h2 className="text-sm font-bold" style={{ color: 'var(--text)' }}>Check your inbox</h2>
+          <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>We sent a verification link to your email.</p>
         </div>
       </div>
-      <div className="px-3 py-2 rounded text-xs font-mono" style={{ background: 'var(--surface-2)', color: 'var(--text-2)' }}>
-        Tenant: <span style={{ color: 'var(--text)' }}>{tenantId}</span>
+      <div
+        className="px-4 py-4 rounded text-sm leading-relaxed"
+        style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', color: 'var(--text-2)' }}
+      >
+        A verification link has been sent to{' '}
+        <span className="font-semibold" style={{ color: 'var(--text)' }}>{email}</span>.
+        <br /><br />
+        Open your email and click the link to continue. This page will advance automatically.
       </div>
+      {loading && (
+        <div className="flex items-center gap-2 text-xs" style={{ color: 'var(--text-3)' }}>
+          <Loader2 size={12} className="animate-spin" /> Verifying…
+        </div>
+      )}
       {error && <ErrorBox msg={error} />}
-      <Field label="Verification token">
-        <Input value={token} onChange={e => setToken(e.target.value)} placeholder="Paste the token from your email…" />
-      </Field>
-      <SubmitBtn loading={loading} label="Verify email" loadingLabel="Verifying…" />
-    </form>
+    </div>
   );
 }
 
@@ -412,7 +394,7 @@ function StepInstall({ tenantId, scan, onDone }: { tenantId: string; scan: Onboa
 
 // ── Step 5: Done ──────────────────────────────────────────────────────────────
 
-function StepDone({ tenantId, onNavigate }: { tenantId: string; onNavigate: () => void }) {
+function StepDone({ onNavigate }: { onNavigate: () => void }) {
   return (
     <div className="space-y-5">
       <div className="flex items-center gap-3 mb-5">
@@ -420,20 +402,33 @@ function StepDone({ tenantId, onNavigate }: { tenantId: string; onNavigate: () =
           <ShieldCheck size={14} style={{ color: '#111' }} />
         </div>
         <div>
-          <h2 className="text-sm font-bold" style={{ color: 'var(--text)' }}>Bridge is live!</h2>
-          <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>Your product's website is connected to the Data Engine.</p>
+          <h2 className="text-sm font-bold" style={{ color: 'var(--text)' }}>You are done — forever.</h2>
+          <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>The Engine takes it from here.</p>
         </div>
       </div>
-      <SuccessBox msg="Injection bridge installed and verified. Your site is now being crawled, embedded, and gap-analysed automatically." />
-      <div className="px-3 py-2 rounded text-xs font-mono" style={{ background: 'var(--surface-2)', color: 'var(--text-2)' }}>
-        Tenant: <span style={{ color: 'var(--text)' }}>{tenantId}</span>
+      <div className="space-y-2">
+        {[
+          '✅ Connected.',
+          '✅ Injection bridge live.',
+          '✅ First crawl started.',
+        ].map(line => (
+          <div key={line} className="px-4 py-2.5 text-sm font-medium rounded"
+            style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', color: 'var(--text)' }}>
+            {line}
+          </div>
+        ))}
       </div>
+      <p className="text-sm leading-relaxed" style={{ color: 'var(--text-2)' }}>
+        The Data Engine is now crawling your website, detecting every content gap, writing AI-optimised content, and publishing it directly into your site — automatically, every 24 hours, forever.
+        <br /><br />
+        <span className="font-semibold" style={{ color: 'var(--text)' }}>Your job is done. You can close this page.</span>
+      </p>
       <button
         onClick={onNavigate}
         className="flex items-center gap-2 px-4 py-2 rounded-md text-sm font-semibold transition-colors"
         style={{ background: 'var(--brand)', color: '#111' }}
       >
-        <ArrowRight size={13} /> Go to Dashboard
+        <ArrowRight size={13} /> View Dashboard
       </button>
     </div>
   );
@@ -445,12 +440,14 @@ export default function Onboarding() {
   const navigate = useNavigate();
   const [step, setStep]               = useState<Step>('register');
   const [tenantId, setTenantId]       = useState('');
+  const [email, setEmail]             = useState('');
   const [websiteUrl, setWebsiteUrl]   = useState('');
   const [scan, setScan]               = useState<OnboardScanResponse | null>(null);
 
-  const handleRegisterDone = useCallback((result: OnboardRegisterResponse, url: string) => {
+  const handleRegisterDone = useCallback((result: OnboardRegisterResponse, url: string, registeredEmail: string) => {
     setTenantId(result.tenant_id);
     setWebsiteUrl(url);
+    setEmail(registeredEmail);
     setStep('verify');
   }, []);
 
@@ -472,7 +469,7 @@ export default function Onboarding() {
           </div>
           <span className="text-sm font-bold" style={{ color: 'var(--text)' }}>Data Engine</span>
           <span className="text-sm" style={{ color: 'var(--text-3)' }}>/</span>
-          <span className="text-sm" style={{ color: 'var(--text-2)' }}>Onboarding</span>
+          <span className="text-sm" style={{ color: 'var(--text-2)' }}>Connect</span>
         </div>
 
         <StepBar current={step} />
@@ -482,10 +479,10 @@ export default function Onboarding() {
           style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
         >
           {step === 'register' && <StepRegister onDone={handleRegisterDone} />}
-          {step === 'verify'   && <StepVerifyEmail tenantId={tenantId} onDone={handleVerifyDone} />}
+          {step === 'verify'   && <StepVerifyEmail email={email} onDone={handleVerifyDone} />}
           {step === 'scan'     && <StepScanPlatform websiteUrl={websiteUrl} onDone={handleScanDone} />}
           {step === 'install'  && scan && <StepInstall tenantId={tenantId} scan={scan} onDone={handleInstallDone} />}
-          {step === 'done'     && <StepDone tenantId={tenantId} onNavigate={() => navigate('/dashboard', { replace: true })} />}
+          {step === 'done'     && <StepDone onNavigate={() => navigate('/dashboard', { replace: true })} />}
         </div>
 
       </div>

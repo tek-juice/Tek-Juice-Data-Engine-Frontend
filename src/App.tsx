@@ -17,7 +17,6 @@ import Connect       from './pages/Connect/Connect';
 
 // ── App pages ─────────────────────────────────────────────────────────────────
 import Dashboard    from './pages/Dashboard/Dashboard';
-import Credentials  from './pages/Credentials/Credentials';
 import WebsiteSetup from './pages/WebsiteSetup/WebsiteSetup';
 
 // ── Placeholder for pages not yet built ──────────────────────────────────────
@@ -94,7 +93,6 @@ function App() {
             <Route path="/telemetry"      element={page(<Placeholder name="Telemetry" />)} />
 
             {/* Access */}
-            <Route path="/credentials"    element={page(<Credentials />)} />
             <Route path="/settings"       element={page(<Placeholder name="Settings" />)} />
             <Route path="/profile"        element={page(<Placeholder name="Profile" />)} />
 
