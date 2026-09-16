@@ -351,7 +351,7 @@ function Step2VerifyEmail({
     if (!token || didAutoVerify.current) return;
     didAutoVerify.current = true;
     setVerifying(true);
-    onboardVerifyEmail({ token, tenant_id: tenantId })
+    onboardVerifyEmail({ token })
       .then(() => { setVerified(true); setTimeout(onDone, 1200); })
       .catch(err => {
         const s = (err as { response?: { status?: number } })?.response?.status;
@@ -437,7 +437,7 @@ function Step3Platform({
   useEffect(() => {
     if (didScan.current) return;
     didScan.current = true;
-    onboardScan({ website_url: websiteUrl, tenant_id: tenantId })
+    onboardScan({ website_url: websiteUrl })
       .then(res => {
         const p = (res.platform_type?.toLowerCase() ?? 'unknown') as Platform;
         setPlatform(PLATFORM_GUIDES[p] ? p : 'unknown');
@@ -581,10 +581,9 @@ function Step4Install({
     didInstall.current = true;
 
     onboardInstall({
-      website_url:  websiteUrl,
-      platform_type: platform,
+      tenant_id:   tenantId,
+      platform:    platform,
       credentials,
-      tenant_id:    tenantId,
     })
       .then(res => {
         if (res.installing) {
