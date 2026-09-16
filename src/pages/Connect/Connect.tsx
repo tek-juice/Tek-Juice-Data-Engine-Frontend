@@ -559,13 +559,11 @@ function Step3Platform({
 // ─── Step 4: Bridge Installation ─────────────────────────────────────────────
 
 function Step4Install({
-  websiteUrl,
   tenantId,
   platform,
   credentials,
   onDone,
 }: {
-  websiteUrl: string;
   tenantId?: string;
   platform: Platform;
   credentials: Record<string, string>;
@@ -581,7 +579,7 @@ function Step4Install({
     didInstall.current = true;
 
     onboardInstall({
-      tenant_id:   tenantId,
+      tenant_id:   tenantId ?? '',
       platform:    platform,
       credentials,
     })
@@ -788,7 +786,6 @@ export default function Connect() {
 
         {step === 4 && (
           <Step4Install
-            websiteUrl={websiteUrl}
             tenantId={tenantId}
             platform={platform}
             credentials={credentials}
