@@ -643,7 +643,6 @@ export interface OnboardRegisterResponse {
 
 export interface OnboardVerifyEmailPayload {
   token: string;
-  tenant_id?: string;
 }
 
 export interface OnboardVerifyEmailResponse {
@@ -654,7 +653,6 @@ export interface OnboardVerifyEmailResponse {
 
 export interface OnboardScanPayload {
   website_url: string;
-  tenant_id?: string;
 }
 
 export interface OnboardScanResponse {
@@ -664,10 +662,8 @@ export interface OnboardScanResponse {
 }
 
 export interface OnboardInstallPayload {
-  tenant_id?: string;
-  platform?: string;
-  platform_type?: string;
-  website_url?: string;
+  tenant_id: string;
+  platform: string;
   credentials: Record<string, string>;
 }
 

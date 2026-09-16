@@ -346,7 +346,7 @@ export default function TenantDashboard() {
                       fontFamily: 'ui-monospace, monospace',
                     }}
                   >
-                    {qsData.quality_score.toFixed(1)}
+                    {liveQS?.toFixed(1)}
                     <span className="text-base font-normal ml-1" style={{ color: 'var(--text-3)' }}>/10</span>
                   </div>
                   <div
