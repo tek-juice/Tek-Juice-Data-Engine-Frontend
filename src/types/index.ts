@@ -631,12 +631,15 @@ export interface OnboardRegisterPayload {
   product_name: string;
   admin_email: string;
   website_url: string;
+  password?: string;
   [key: string]: unknown;
 }
 
 export interface OnboardRegisterResponse {
   tenant_id: string;
   api_key: string;
+  access_token?: string;
+  refresh_token?: string;
   message?: string;
   status?: string;
   email?: string;

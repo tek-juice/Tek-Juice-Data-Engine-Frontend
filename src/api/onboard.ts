@@ -23,8 +23,12 @@ export async function onboardRegister(
   payload: OnboardRegisterPayload,
 ): Promise<OnboardRegisterResponse> {
   const { data } = await apiClient.post<OnboardRegisterResponse>(
-    '/onboard',
-    payload,
+    '/api/v1/auth/register',
+    {
+      email:     payload.admin_email,
+      password:  payload.password,
+      full_name: payload.product_name,
+    },
   );
   return data;
 }

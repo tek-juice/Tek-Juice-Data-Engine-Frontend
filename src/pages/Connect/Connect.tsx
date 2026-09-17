@@ -256,18 +256,21 @@ function Step1Register({
 }: {
   onDone: (email: string, websiteUrl: string, tenantId?: string) => void;
 }) {
-  const [company, setCompany] = useState('');
-  const [website, setWebsite] = useState('');
-  const [email, setEmail]     = useState('');
-  const [error, setError]     = useState('');
-  const [loading, setLoading] = useState(false);
+  const [company, setCompany]   = useState('');
+  const [website, setWebsite]   = useState('');
+  const [email, setEmail]       = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError]       = useState('');
+  const [loading, setLoading]   = useState(false);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError('');
-    if (!company.trim()) { setError('Company name is required.'); return; }
-    if (!website.trim()) { setError('Website URL is required.'); return; }
-    if (!email.trim())   { setError('Email address is required.'); return; }
+    if (!company.trim())     { setError('Company name is required.'); return; }
+    if (!website.trim())     { setError('Website URL is required.'); return; }
+    if (!email.trim())       { setError('Email address is required.'); return; }
+    if (!password)           { setError('Password is required.'); return; }
+    if (password.length < 8) { setError('Password must be at least 8 characters.'); return; }
 
     setLoading(true);
     try {
@@ -275,8 +278,9 @@ function Step1Register({
         product_name: company.trim(),
         website_url:  website.trim(),
         admin_email:  email.trim(),
+        password,
       });
-      onDone(email.trim(), website.trim(), res.tenant_id);
+      onDone(email.trim(), website.trim(), res.tenant_id ?? res.email);
     } catch (err: unknown) {
       const status = (err as { response?: { status?: number } })?.response?.status;
       if (status === 409) {
@@ -306,9 +310,10 @@ function Step1Register({
 
       {error && <ErrorMsg msg={error} />}
 
-      <FieldInput id="company" label="Company name"  value={company} onChange={setCompany} placeholder="Acme Inc."           disabled={loading} />
-      <FieldInput id="website" label="Website URL"   value={website} onChange={setWebsite} placeholder="https://example.com" disabled={loading} />
-      <FieldInput id="email"   label="Email address" value={email}   onChange={setEmail}   placeholder="you@example.com"     disabled={loading} type="email" />
+      <FieldInput id="company"  label="Company name"    value={company}  onChange={setCompany}  placeholder="Acme Inc."           disabled={loading} />
+      <FieldInput id="website"  label="Website URL"     value={website}  onChange={setWebsite}  placeholder="https://example.com" disabled={loading} />
+      <FieldInput id="email"    label="Email address"   value={email}    onChange={setEmail}    placeholder="you@example.com"     disabled={loading} type="email" />
+      <FieldInput id="password" label="Password"        value={password} onChange={setPassword} placeholder="8+ characters"       disabled={loading} type="password" />
 
       <PrimaryBtn type="submit" loading={loading}>
         Connect product & continue
