@@ -9,11 +9,11 @@ import AppShell   from './layouts/AppShell';
 import AuthLayout from './layouts/AuthLayout';
 
 // ── Auth pages (public) ───────────────────────────────────────────────────────
-import Login         from './pages/Login/Login';
-import OAuthCallback from './pages/OAuthCallback/OAuthCallback';
+import Login          from './pages/Login/Login';
+import OAuthCallback  from './pages/OAuthCallback/OAuthCallback';
 import ProtectedRoute from './routes/ProtectedRoute';
-import Onboarding    from './pages/Onboarding/Onboarding';
-import Connect       from './pages/Connect/Connect';
+import Onboarding     from './pages/Onboarding/Onboarding';
+import Connect        from './pages/Connect/Connect';
 
 // ── App pages ─────────────────────────────────────────────────────────────────
 import Dashboard       from './pages/Dashboard/Dashboard';
@@ -21,18 +21,13 @@ import WebsiteSetup    from './pages/WebsiteSetup/WebsiteSetup';
 import Monitor         from './pages/Monitor/Monitor';
 import TenantDashboard from './pages/TenantDashboard/TenantDashboard';
 import AdminTenants    from './pages/AdminTenants/AdminTenants';
-
-// ── Placeholder for pages not yet built ──────────────────────────────────────
-function Placeholder({ name }: { name: string }) {
-  return (
-    <div className="flex items-center justify-center h-full min-h-64">
-      <div className="text-center">
-        <div className="text-sm font-semibold" style={{ color: 'var(--text-2)' }}>{name}</div>
-        <div className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>Coming soon</div>
-      </div>
-    </div>
-  );
-}
+import GapDetection    from './pages/GapDetection/GapDetection';
+import Drafts          from './pages/Drafts/Drafts';
+import Trends          from './pages/Trends/Trends';
+import SEO             from './pages/SEO/SEO';
+import GEO             from './pages/GEO/GEO';
+import Sync            from './pages/Sync/Sync';
+import Settings        from './pages/Settings/Settings';
 
 // ── Helper: wrap element in an error boundary ─────────────────────────────────
 function page(el: ReactElement) {
@@ -59,13 +54,13 @@ function App() {
         {/* ── OAuth callback — standalone, no layout shell ── */}
         <Route path="/auth/callback" element={<OAuthCallback />} />
 
-        {/* ── Connect wizard — also available unauthenticated (pre-login flow) ── */}
-        {/* /onboard/verify-email must render the Onboarding wizard so the        */}
-        {/* StepVerifyEmail component can auto-advance with the ?token= param.    */}
+        {/* ── Onboarding wizard — public, no auth required ── */}
+        {/* /onboard/verify-email must render Onboarding so StepVerifyEmail  */}
+        {/* auto-advances with the ?token= from the verification email link. */}
         <Route path="/onboard"              element={<Onboarding />} />
         <Route path="/onboard/verify-email" element={<Onboarding />} />
 
-        {/* ── Protected — all inside AppShell sidebar ── */}
+        {/* ── Protected — all routes inside AppShell sidebar ── */}
         <Route element={<ProtectedRoute />}>
           <Route element={<AppShell />}>
             <Route path="/"               element={<Navigate to="/dashboard" replace />} />
@@ -77,28 +72,28 @@ function App() {
             {/* Content */}
             <Route path="/connect"        element={page(<Connect embedded />)} />
             <Route path="/website"        element={page(<WebsiteSetup />)} />
-            <Route path="/drafts"         element={page(<Placeholder name="Drafts" />)} />
-            <Route path="/search"         element={page(<Placeholder name="Search" />)} />
+            <Route path="/drafts"         element={page(<Drafts />)} />
+            <Route path="/search"         element={page(<Monitor />)} />
 
             {/* Intelligence */}
-            <Route path="/gaps"           element={page(<Placeholder name="Gap Detection" />)} />
-            <Route path="/trends"         element={page(<Placeholder name="Trends" />)} />
-            <Route path="/schema-factory" element={page(<Placeholder name="Schema Factory" />)} />
+            <Route path="/gaps"           element={page(<GapDetection />)} />
+            <Route path="/trends"         element={page(<Trends />)} />
+            <Route path="/schema-factory" element={page(<TenantDashboard />)} />
 
             {/* Visibility */}
-            <Route path="/seo"            element={page(<Placeholder name="SEO" />)} />
-            <Route path="/geo"            element={page(<Placeholder name="GEO" />)} />
+            <Route path="/seo"            element={page(<SEO />)} />
+            <Route path="/geo"            element={page(<GEO />)} />
 
             {/* System */}
-            <Route path="/sync"           element={page(<Placeholder name="Sync" />)} />
+            <Route path="/sync"           element={page(<Sync />)} />
 
             {/* Access */}
-            <Route path="/settings"       element={page(<Placeholder name="Settings" />)} />
-            <Route path="/profile"        element={page(<Placeholder name="Profile" />)} />
+            <Route path="/settings"       element={page(<Settings />)} />
+            <Route path="/profile"        element={page(<Settings />)} />
 
             {/* Performance */}
-            <Route path="/my-performance"   element={page(<TenantDashboard />)} />
-            <Route path="/admin/tenants"    element={page(<AdminTenants />)} />
+            <Route path="/my-performance" element={page(<TenantDashboard />)} />
+            <Route path="/admin/tenants"  element={page(<AdminTenants />)} />
           </Route>
         </Route>
 
