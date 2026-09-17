@@ -56,13 +56,8 @@ function App() {
         {/* ── OAuth callback — standalone, no layout shell ── */}
         <Route path="/auth/callback" element={<OAuthCallback />} />
 
-        {/* ── Connect wizard — public, no auth required ── */}
-        <Route path="/connect" element={<Connect />} />
-
-        {/* ── Onboarding — legacy flow ── */}
-        <Route path="/onboard" element={<Onboarding />} />
-
-        {/* ── Email verification — reads ?token= and auto-verifies, then redirects to /connect ── */}
+        {/* ── Connect wizard — also available unauthenticated (pre-login flow) ── */}
+        <Route path="/onboard"             element={<Onboarding />} />
         <Route path="/onboard/verify-email" element={<Connect />} />
 
         {/* ── Protected — all inside AppShell sidebar ── */}
@@ -75,6 +70,7 @@ function App() {
             <Route path="/analytics"      element={page(<Placeholder name="Analytics" />)} />
 
             {/* Content */}
+            <Route path="/connect"        element={page(<Connect embedded />)} />
             <Route path="/website"        element={page(<WebsiteSetup />)} />
             <Route path="/drafts"         element={page(<Placeholder name="Drafts" />)} />
             <Route path="/search"         element={page(<Placeholder name="Search" />)} />

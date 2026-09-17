@@ -198,27 +198,39 @@ function Step1Register({ onDone }: { onDone: () => void }) {
 
 // ─── Main wizard ──────────────────────────────────────────────────────────────
 
-export default function Connect() {
+// embedded=true → rendered inside AppShell sidebar (no full-page wrapper)
+// embedded=false (default) → standalone pre-login page
+export default function Connect({ embedded = false }: { embedded?: boolean }) {
   const navigate = useNavigate();
 
-  return (
+  const inner = (
     <>
-      <WizardBox>
-        <Brand />
-
-        <Step1Register onDone={() => navigate('/dashboard', { replace: true })} />
-
-        <p style={{ marginTop: 16, fontSize: '0.75rem', textAlign: 'center', color: 'var(--text-3)', margin: '1rem 0 0' }}>
-          Already signed in?{' '}
-          <button
-            type="button"
-            onClick={() => navigate('/dashboard')}
-            style={{ background: 'none', border: 'none', padding: 0, color: 'var(--brand)', fontWeight: 600, cursor: 'pointer', fontSize: 'inherit', textDecoration: 'underline', textUnderlineOffset: 2 }}
-          >
-            Go to dashboard
-          </button>
-        </p>
-      </WizardBox>
+      <Brand />
+      <Step1Register onDone={() => navigate('/dashboard', { replace: true })} />
     </>
+  );
+
+  if (embedded) {
+    return (
+      <div style={{ padding: '2.5rem', maxWidth: 480 }}>
+        {inner}
+      </div>
+    );
+  }
+
+  return (
+    <WizardBox>
+      {inner}
+      <p style={{ marginTop: 16, fontSize: '0.75rem', textAlign: 'center', color: 'var(--text-3)', margin: '1rem 0 0' }}>
+        Already signed in?{' '}
+        <button
+          type="button"
+          onClick={() => navigate('/dashboard')}
+          style={{ background: 'none', border: 'none', padding: 0, color: 'var(--brand)', fontWeight: 600, cursor: 'pointer', fontSize: 'inherit', textDecoration: 'underline', textUnderlineOffset: 2 }}
+        >
+          Go to dashboard
+        </button>
+      </p>
+    </WizardBox>
   );
 }

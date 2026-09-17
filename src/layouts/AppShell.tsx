@@ -25,6 +25,7 @@ const NAV: NavGroup[] = [
   {
     heading: 'Content',
     items: [
+      { label: 'Connect Product', to: '/connect' },
       { label: 'Website Setup',   to: '/website' },
       { label: 'Drafts',          to: '/drafts' },
       { label: 'Search',          to: '/search' },
