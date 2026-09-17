@@ -46,24 +46,6 @@ function Brand() {
   );
 }
 
-function StepIndicator({ current, total }: { current: number; total: number }) {
-  return (
-    <div style={{ display: 'flex', gap: 6, marginBottom: '1.5rem' }}>
-      {Array.from({ length: total }, (_, i) => (
-        <div
-          key={i}
-          style={{
-            flex: 1,
-            height: 3,
-            borderRadius: 2,
-            background: i < current ? 'var(--brand)' : i === current - 1 ? 'var(--brand)' : 'var(--border)',
-          }}
-        />
-      ))}
-    </div>
-  );
-}
-
 function FieldInput({
   id, label, value, onChange, placeholder, type = 'text', disabled,
 }: {
