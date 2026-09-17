@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Loader2, RefreshCw, AlertTriangle, Copy, Trash2, Plus, Eye, EyeOff } from 'lucide-react';
+import { Loader2, RefreshCw, Copy, Trash2, Plus, Eye, EyeOff } from 'lucide-react';
 import { listApiKeys, createApiKey, deleteApiKey, listWebhooks, deleteWebhook } from '../../api/auth';
 import type { ApiKeyListItem, WebhookEndpoint } from '../../types';
 

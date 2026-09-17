@@ -179,7 +179,7 @@ export default function TenantDashboard() {
     getQualityScore({
       content:  documentId,          // backend fetches content by document_id
       title:    perf.tenant.name,
-      query:    perf.tenant.website_url ?? perf.tenant.name,
+      query:    perf.tenant.name,
     })
       .then(res => setQsData(res))
       .catch(() => {})
