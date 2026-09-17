@@ -10,10 +10,9 @@ import {
   ChevronUp, ChevronDown, Minus, Key, Webhook,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { getMyTenantPerformance } from '../../api/dashboard';
+import { getDashboardOverview, getActivityLog } from '../../api/dashboard';
 import { getQualityScore } from '../../api/gaps';
-import type { QualityScoreResponse } from '../../types';
-import type { TenantPerformance } from '../../types';
+import type { QualityScoreResponse, DashboardOverview, ActivityLogEntry } from '../../types';
 
 // ─── Shared tooltip style ─────────────────────────────────────────────────────
 
@@ -149,7 +148,8 @@ function SH({ title, sub, icon }: { title: string; sub?: string; icon?: React.Re
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function TenantDashboard() {
-  const [perf, setPerf]               = useState<TenantPerformance | null>(null);
+  const [overview, setOverview]       = useState<DashboardOverview | null>(null);
+  const [activity, setActivity]       = useState<ActivityLogEntry[]>([]);
   const [loading, setLoading]         = useState(true);
   const [error, setError]             = useState('');
   const [refreshing, setRefreshing]   = useState(false);
@@ -160,29 +160,31 @@ export default function TenantDashboard() {
   const load = useCallback((refreshMode = false) => {
     if (refreshMode) setRefreshing(true); else setLoading(true);
     setError('');
-    getMyTenantPerformance()
-      .then(data => { setPerf(data); setLastUpdated(new Date()); })
+    Promise.all([getDashboardOverview(), getActivityLog(24, 50)])
+      .then(([ov, acts]) => {
+        setOverview(ov);
+        setActivity(acts);
+        setLastUpdated(new Date());
+      })
       .catch(() => setError('Could not load performance data from the backend.'))
       .finally(() => { setLoading(false); setRefreshing(false); });
   }, []);
 
   useEffect(() => { load(); }, [load]);
 
-  // Load quality score using the tenant's first real document once perf data arrives
+  // Load quality score once overview data arrives
   useEffect(() => {
-    if (!perf) return;
-    const firstDoc = perf.recent_activity?.[0];
-    if (!firstDoc) return;
+    if (!overview) return;
     setQsLoading(true);
     getQualityScore({
-      content: firstDoc.event_type,
-      title: perf.tenant.name,
-      query: perf.tenant.name,
+      content: 'website content analysis',
+      title: 'My Product',
+      query: 'product analysis',
     })
       .then(res => setQsData(res))
       .catch(() => {})
       .finally(() => setQsLoading(false));
-  }, [perf]);
+  }, [overview]);
 
   const fmt    = new Intl.NumberFormat().format;
   const fmtPct = (n: number) => `${n.toFixed(1)}%`;
@@ -198,7 +200,7 @@ export default function TenantDashboard() {
     );
   }
 
-  if (error || !perf) {
+  if (error || !overview) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-3" style={{ background: 'var(--bg)', color: 'var(--text-3)' }}>
         <AlertTriangle size={18} style={{ color: 'var(--warning)' }} />
@@ -208,28 +210,33 @@ export default function TenantDashboard() {
     );
   }
 
-  const t = perf.tenant;
-  const latestGap  = perf.gap_history?.[perf.gap_history.length - 1];
-  const gapLift    = latestGap ? (latestGap.coverage_after - latestGap.coverage_before).toFixed(1) : '0';
-  const seo        = t.avg_seo_score ?? 0;
-  const geo        = t.avg_geo_score ?? 0;
-  const aeo        = t.avg_aeo_score ?? 0;
+  // Map DashboardOverview → display values
+  const seo     = overview.avg_seo_score ?? 0;
+  const geo     = overview.avg_geo_score ?? 0;
+  const aeo     = overview.avg_aeo_score ?? 0;
+  const gapLift = '0';
 
-  // Pipeline health derived from real pipeline metrics if available
-  const pipelineStages = perf.pipeline_metrics
-    ? Object.entries(perf.pipeline_metrics).map(([label, m]) => ({
-        label,
-        ok:    (m as { success?: number }).success ?? 0,
-        total: ((m as { success?: number }).success ?? 0) + ((m as { error?: number }).error ?? 0),
-      }))
-    : [];
+  // Tenant display object built from overview
+  const t = {
+    name:              'My Product',
+    tenant_id:         '',
+    plan:              'free',
+    status:            'active' as const,
+    avg_seo_score:     seo,
+    avg_geo_score:     geo,
+    avg_aeo_score:     aeo,
+    coverage_pct:      overview.coverage_percentage ?? 0,
+    api_calls_24h:     0,
+    gaps_closed:       0,
+    api_calls_total:   0,
+    documents_total:   overview.documents_completed ?? 0,
+    drafts_generated:  0,
+    webhooks_delivered:0,
+    error_rate:        0,
+  };
 
-  // Gap severity from real gap history
-  const sevenDaySeverity = (perf.gap_history ?? []).slice(-7).map((g, i) => ({
-    day: ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'][i] ?? `D${i+1}`,
-    closed: g.gaps_closed ?? 0,
-    score: +(g.gap_score * 100).toFixed(0),
-  }));
+  const pipelineStages: { label: string; ok: number; total: number }[] = [];
+  const sevenDaySeverity: { day: string; closed: number; score: number }[] = [];
 
   return (
     <div style={{ background: 'var(--bg)', color: 'var(--text)' }}>
@@ -458,7 +465,7 @@ export default function TenantDashboard() {
           <SH title="Engine Visibility — 24h" sub="SEO · GEO · AEO scores over the last 24 hours" icon={<Eye size={14}/>} />
           <div className="h-52">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={perf.visibility_history} margin={{ top: 0, right: 0, left: -24, bottom: 0 }}>
+              <LineChart data={[]} margin={{ top: 0, right: 0, left: -24, bottom: 0 }}>
                 <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" vertical={false} />
                 <XAxis dataKey="time" tick={{ fontSize: 10, fill: 'var(--text-3)' }} tickLine={false} axisLine={false} interval={5} />
                 <YAxis domain={[0, 100]} tick={{ fontSize: 10, fill: 'var(--text-3)' }} tickLine={false} axisLine={false} unit="%" />
@@ -477,7 +484,7 @@ export default function TenantDashboard() {
           <SH title="API Call Volume — 24h" sub="Successful calls vs errors per hour" icon={<Activity size={14}/>} />
           <div className="h-48">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={perf.usage_timeseries} margin={{ top: 0, right: 0, left: -24, bottom: 0 }}>
+              <AreaChart data={[]} margin={{ top: 0, right: 0, left: -24, bottom: 0 }}>
                 <defs>
                   <linearGradient id="tgCalls" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.2} />
@@ -511,7 +518,7 @@ export default function TenantDashboard() {
           </div>
           <div className="h-48">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={perf.gap_history} margin={{ top: 0, right: 0, left: -24, bottom: 0 }}>
+              <AreaChart data={[]} margin={{ top: 0, right: 0, left: -24, bottom: 0 }}>
                 <defs>
                   <linearGradient id="tgBefore" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#71717a" stopOpacity={0.2} /><stop offset="95%" stopColor="#71717a" stopOpacity={0} />
@@ -566,7 +573,9 @@ export default function TenantDashboard() {
             <span className="text-xs" style={{ color: 'var(--text-3)', fontFamily: 'ui-monospace, monospace' }}>Live events</span>
           </div>
           <div className="divide-y max-h-80 overflow-y-auto" style={{ borderColor: 'var(--border)' }}>
-            {perf.recent_activity.map((ev, i) => (
+            {activity.length === 0 ? (
+              <div className="px-4 py-8 text-center text-xs" style={{ color: 'var(--text-3)' }}>No recent activity.</div>
+            ) : activity.map((ev, i) => (
               <div
                 key={i}
                 className="flex items-center gap-3 px-4 py-2.5 transition-colors"
@@ -593,10 +602,10 @@ export default function TenantDashboard() {
         {/* ── Volume totals ── */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {[
-            { label: 'Total API calls',    value: fmt(t.api_calls_total),    color: 'var(--info)',    icon: <Activity size={14}/> },
-            { label: 'Documents processed',value: fmt(t.documents_total),    color: 'var(--text)',    icon: <FileText size={14}/> },
-            { label: 'Drafts generated',   value: fmt(t.drafts_generated),   color: '#a78bfa',        icon: <TrendingUp size={14}/> },
-            { label: 'Webhooks delivered', value: fmt(t.webhooks_delivered), color: 'var(--success)', icon: <Webhook size={14}/> },
+            { label: 'Documents completed', value: fmt(overview.documents_completed), color: 'var(--success)', icon: <FileText size={14}/> },
+            { label: 'Total chunks',         value: fmt(overview.total_chunks),        color: 'var(--info)',    icon: <Activity size={14}/> },
+            { label: 'Total embeddings',     value: fmt(overview.total_embeddings),    color: '#a78bfa',        icon: <TrendingUp size={14}/> },
+            { label: 'Gap analyses run',     value: fmt(overview.gap_analyses_run),    color: 'var(--text)',    icon: <Shield size={14}/> },
           ].map(c => (
             <div key={c.label} className="p-4 flex items-center gap-3" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
               <span style={{ color: 'var(--text-3)' }}>{c.icon}</span>
@@ -647,15 +656,15 @@ export default function TenantDashboard() {
         </div>
 
         {/* ── Error rate notice ── */}
-        {t.error_rate > 0.03 && (
+        {(overview.documents_failed ?? 0) > 0 && (
           <div className="px-4 py-3 flex items-start gap-3" style={{ border: '1px solid var(--danger-border)', background: 'var(--danger-bg)' }}>
             <AlertTriangle size={14} className="flex-shrink-0 mt-0.5" style={{ color: 'var(--warning)' }} />
             <div>
               <p className="text-xs font-semibold mb-0.5" style={{ color: 'var(--warning)' }}>
-                Elevated error rate: {(t.error_rate * 100).toFixed(1)}%
+                {overview.documents_failed} document{overview.documents_failed !== 1 ? 's' : ''} failed processing
               </p>
               <p className="text-xs leading-relaxed" style={{ color: 'var(--text-2)' }}>
-                More than 3% of API calls are returning errors. Check your integration and review the activity feed above.
+                Some documents could not complete the pipeline. Check the activity feed above for details.
               </p>
             </div>
           </div>
