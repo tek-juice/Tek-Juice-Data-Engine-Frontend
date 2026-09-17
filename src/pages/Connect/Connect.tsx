@@ -7,6 +7,7 @@ import {
   onboardInstall,
   onboardPing,
 } from '../../api/onboard';
+import { getAccessToken } from '../../services/auth.service';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -251,42 +252,50 @@ function ErrorMsg({ msg }: { msg: string }) {
 
 // ─── Step 1: Register ─────────────────────────────────────────────────────────
 
+// Decode email from the stored JWT without a full library
+function getEmailFromToken(): string {
+  const token = getAccessToken();
+  if (!token) return '';
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+    return (payload.email as string) ?? (payload.sub as string) ?? '';
+  } catch {
+    return '';
+  }
+}
+
 function Step1Register({
   onDone,
 }: {
   onDone: (email: string, websiteUrl: string, tenantId?: string) => void;
 }) {
-  const [company, setCompany]   = useState('');
-  const [website, setWebsite]   = useState('');
-  const [email, setEmail]       = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError]       = useState('');
-  const [loading, setLoading]   = useState(false);
+  const [company, setCompany] = useState('');
+  const [website, setWebsite] = useState('');
+  const [error, setError]     = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const accountEmail = getEmailFromToken();
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError('');
-    if (!company.trim())     { setError('Company name is required.'); return; }
-    if (!website.trim())     { setError('Website URL is required.'); return; }
-    if (!email.trim())       { setError('Email address is required.'); return; }
-    if (!password)           { setError('Password is required.'); return; }
-    if (password.length < 8) { setError('Password must be at least 8 characters.'); return; }
+    if (!company.trim()) { setError('Company name is required.'); return; }
+    if (!website.trim()) { setError('Website URL is required.'); return; }
 
     setLoading(true);
     try {
       const res = await onboardRegister({
         product_name: company.trim(),
         website_url:  website.trim(),
-        admin_email:  email.trim(),
-        password,
+        admin_email:  accountEmail,
       });
-      onDone(email.trim(), website.trim(), res.tenant_id ?? res.email);
+      onDone(accountEmail, website.trim(), res.tenant_id ?? res.email);
     } catch (err: unknown) {
       const status = (err as { response?: { status?: number } })?.response?.status;
       if (status === 409) {
-        setError('A product with that email is already registered.');
+        setError('A product with that email is already connected. Sign in to manage it.');
       } else {
-        const detail = (err as { response?: { data?: { detail?: string; error?: { message?: string } } } })
+        const detail = (err as { response?: { data?: { error?: { message?: string }; detail?: string } } })
           ?.response?.data?.error?.message
           ?? (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail
           ?? 'Registration failed. Please try again.';
@@ -310,10 +319,14 @@ function Step1Register({
 
       {error && <ErrorMsg msg={error} />}
 
-      <FieldInput id="company"  label="Company name"    value={company}  onChange={setCompany}  placeholder="Acme Inc."           disabled={loading} />
-      <FieldInput id="website"  label="Website URL"     value={website}  onChange={setWebsite}  placeholder="https://example.com" disabled={loading} />
-      <FieldInput id="email"    label="Email address"   value={email}    onChange={setEmail}    placeholder="you@example.com"     disabled={loading} type="email" />
-      <FieldInput id="password" label="Password"        value={password} onChange={setPassword} placeholder="8+ characters"       disabled={loading} type="password" />
+      {accountEmail && (
+        <div style={{ fontSize: '0.8125rem', padding: '0.5rem 0.75rem', borderRadius: 6, background: 'var(--surface-2)', color: 'var(--text-2)', border: '1px solid var(--border)' }}>
+          Connecting as <span style={{ fontWeight: 600, color: 'var(--text)' }}>{accountEmail}</span>
+        </div>
+      )}
+
+      <FieldInput id="company" label="Company name" value={company} onChange={setCompany} placeholder="Acme Inc."           disabled={loading} />
+      <FieldInput id="website" label="Website URL"  value={website} onChange={setWebsite} placeholder="https://example.com" disabled={loading} />
 
       <PrimaryBtn type="submit" loading={loading}>
         Connect product & continue
@@ -326,85 +339,80 @@ function Step1Register({
 
 function Step2VerifyEmail({
   email,
-  tenantId,
   onDone,
 }: {
   email: string;
-  tenantId?: string;
   onDone: () => void;
 }) {
-  const [searchParams] = useSearchParams();
-  const [verifying, setVerifying] = useState(false);
-  const [verified,  setVerified]  = useState(false);
-  const [error,     setError]     = useState('');
-  const didAutoVerify = useRef(false);
+  const [otp,      setOtp]      = useState('');
+  const [loading,  setLoading]  = useState(false);
+  const [verified, setVerified] = useState(false);
+  const [error,    setError]    = useState('');
 
-  useEffect(() => {
-    const token = searchParams.get('token');
-    if (!token || didAutoVerify.current) return;
-    didAutoVerify.current = true;
-    setVerifying(true);
-    onboardVerifyEmail({ token })
-      .then(() => { setVerified(true); setTimeout(onDone, 1200); })
-      .catch(err => {
-        const s = (err as { response?: { status?: number } })?.response?.status;
-        if (s === 404) {
-          // endpoint not yet live — just advance
-          setVerified(true);
-          setTimeout(onDone, 800);
-        } else {
-          setError('Verification failed. The link may have expired.');
-        }
-      })
-      .finally(() => setVerifying(false));
-  }, [searchParams, tenantId, onDone]);
+  async function handleSubmit(e: FormEvent) {
+    e.preventDefault();
+    setError('');
+    if (!otp.trim()) { setError('Please enter the verification code.'); return; }
+    setLoading(true);
+    try {
+      await onboardVerifyEmail({ token: otp.trim() });
+      setVerified(true);
+      setTimeout(onDone, 1000);
+    } catch (err: unknown) {
+      const s = (err as { response?: { status?: number } })?.response?.status;
+      if (s === 404) {
+        // endpoint not yet live — advance anyway
+        setVerified(true);
+        setTimeout(onDone, 800);
+      } else {
+        setError('Invalid or expired code. Check your email and try again.');
+      }
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+    <form onSubmit={handleSubmit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <div>
         <h1 style={{ fontSize: '1.125rem', fontWeight: 700, color: 'var(--text)', margin: '0 0 0.25rem', letterSpacing: '-0.015em' }}>
-          Check your inbox
+          Verify your email
         </h1>
         <p style={{ fontSize: '0.8125rem', color: 'var(--text-2)', margin: 0 }}>
-          Step 2 of 5 — Verify your email
+          Step 2 of 5 — Enter the code we sent you
         </p>
       </div>
 
-      <div style={{ textAlign: 'center', padding: '1.5rem 0' }}>
-        {verifying ? (
-          <>
-            <Spinner size={28} color="var(--brand)" />
-            <p style={{ marginTop: 12, fontSize: '0.875rem', color: 'var(--text-2)' }}>Verifying…</p>
-          </>
-        ) : verified ? (
-          <>
-            <div style={{ fontSize: 36 }}>✅</div>
-            <p style={{ marginTop: 8, fontSize: '0.875rem', fontWeight: 600, color: 'var(--success)' }}>Email verified!</p>
-          </>
-        ) : (
-          <>
-            <div style={{ fontSize: 36 }}>📧</div>
-            <p style={{ marginTop: 10, fontSize: '0.9375rem', fontWeight: 600, color: 'var(--text)' }}>
-              We sent a verification link to
-            </p>
-            <p style={{ fontSize: '0.875rem', color: 'var(--brand)', fontWeight: 600, marginTop: 4 }}>
-              {email || 'your email address'}
-            </p>
-            <p style={{ marginTop: 8, fontSize: '0.8125rem', color: 'var(--text-3)' }}>
-              Click the link in the email, then come back and press the button below.
-            </p>
-          </>
-        )}
-      </div>
+      {verified ? (
+        <div style={{ textAlign: 'center', padding: '1rem 0' }}>
+          <div style={{ fontSize: 32 }}>✅</div>
+          <p style={{ marginTop: 8, fontSize: '0.875rem', fontWeight: 600, color: 'var(--success, #22c55e)' }}>Email verified!</p>
+        </div>
+      ) : (
+        <>
+          <div style={{ fontSize: '0.8125rem', padding: '0.5rem 0.75rem', borderRadius: 6, background: 'var(--surface-2)', color: 'var(--text-2)', border: '1px solid var(--border)' }}>
+            A verification code was sent to{' '}
+            <span style={{ fontWeight: 600, color: 'var(--text)' }}>{email || 'your email'}</span>.
+            Copy it and paste it below.
+          </div>
 
-      {error && <ErrorMsg msg={error} />}
+          {error && <ErrorMsg msg={error} />}
 
-      {!verifying && !verified && (
-        <PrimaryBtn onClick={onDone}>
-          I've verified my email →
-        </PrimaryBtn>
+          <FieldInput
+            id="otp"
+            label="Verification code"
+            value={otp}
+            onChange={setOtp}
+            placeholder="Paste your code here"
+            disabled={loading}
+          />
+
+          <PrimaryBtn type="submit" loading={loading}>
+            Verify & continue
+          </PrimaryBtn>
+        </>
       )}
-    </div>
+    </form>
   );
 }
 
@@ -760,7 +768,6 @@ export default function Connect() {
         {step === 2 && (
           <Step2VerifyEmail
             email={email}
-            tenantId={tenantId}
             onDone={() => setStep(3)}
           />
         )}
