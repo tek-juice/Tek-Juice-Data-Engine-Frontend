@@ -10,7 +10,6 @@ import type {
 
 export interface GeoAnalyzePayload {
   document_id: string;
-  tenant_id: string;
   content: string;
   target_models?: string[];
 }
@@ -19,6 +18,7 @@ export interface GeoAnalyzePayload {
  * POST /api/v1/geo/analyze
  * Score content for AI engine citation readiness —
  * ChatGPT, Perplexity, Google AI Overviews.
+ * tenant_id is resolved server-side from the Bearer token.
  */
 export async function analyzeGeo(
   payload: GeoAnalyzePayload,

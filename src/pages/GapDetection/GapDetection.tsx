@@ -46,7 +46,8 @@ function GapRow({ doc }: { doc: DocumentListItem }) {
   const load = useCallback(() => {
     if (data || loading) return;
     setLoading(true);
-    getCloseActions(doc.document_id, '')
+    // tenant_id resolved server-side from Bearer token — not passed explicitly
+    getCloseActions(doc.document_id)
       .then(setData)
       .catch(() => setErr('Could not load gap detail.'))
       .finally(() => setLoading(false));
@@ -67,10 +68,12 @@ function GapRow({ doc }: { doc: DocumentListItem }) {
         onMouseLeave={e => (e.currentTarget.style.background = 'var(--surface)')}
       >
         <span className="flex-1 text-sm font-medium truncate" style={{ color: 'var(--text)' }}>
-          {doc.file_name ?? doc.document_id}
+          {doc.filename ?? doc.document_id}
         </span>
         <span className="text-xs" style={{ color: 'var(--text-3)' }}>{relTime(doc.created_at)}</span>
-        {open ? <ChevronUp size={14} style={{ color: 'var(--text-3)', flexShrink: 0 }} /> : <ChevronDown size={14} style={{ color: 'var(--text-3)', flexShrink: 0 }} />}
+        {open
+          ? <ChevronUp   size={14} style={{ color: 'var(--text-3)', flexShrink: 0 }} />
+          : <ChevronDown size={14} style={{ color: 'var(--text-3)', flexShrink: 0 }} />}
       </button>
 
       {open && (
@@ -87,7 +90,18 @@ function GapRow({ doc }: { doc: DocumentListItem }) {
                 <Pill label={data.severity} color={SEV_COLOR[data.severity] ?? 'var(--text-3)'} />
                 <Pill label={data.status}   color={STATUS_COLOR[data.status] ?? 'var(--text-3)'} />
                 <span className="text-xs" style={{ color: 'var(--text-3)' }}>
-                  Gap score: <span style={{ color: 'var(--text)', fontWeight: 600 }}>{(data.gap_score * 100).toFixed(0)}%</span>
+                  Gap score:{' '}
+                  <span style={{ color: 'var(--text)', fontWeight: 600 }}>
+                    {(data.gap_score * 100).toFixed(0)}%
+                  </span>
+                </span>
+                {data.resolved_at && (
+                  <span className="text-xs" style={{ color: 'var(--text-3)' }}>
+                    Resolved {relTime(data.resolved_at)}
+                  </span>
+                )}
+                <span className="text-xs" style={{ color: 'var(--text-3)' }}>
+                  Detected {relTime(data.created_at)}
                 </span>
               </div>
 
@@ -104,14 +118,14 @@ function GapRow({ doc }: { doc: DocumentListItem }) {
 
               {data.close_plan?.clusters?.length > 0 && (
                 <div>
-                  <p className="text-xs font-semibold mb-1.5" style={{ color: 'var(--text-2)' }}>Close plan clusters</p>
+                  <p className="text-xs font-semibold mb-1.5" style={{ color: 'var(--text-2)' }}>Close plan</p>
                   <div className="space-y-1.5">
                     {data.close_plan.clusters.map((c, i) => (
                       <div key={i} className="flex items-start gap-2 px-3 py-2 rounded-sm" style={{ background: 'var(--surface-2)', border: '1px solid var(--border)' }}>
                         <span className="text-xs font-semibold w-4 flex-shrink-0 tabular-nums" style={{ color: 'var(--text-3)' }}>{i + 1}</span>
                         <div>
                           <span className="text-xs font-semibold" style={{ color: 'var(--text)' }}>{c.topic}</span>
-                          <span className="text-xs ml-2" style={{ color: 'var(--text-3)' }}>{c.intent}</span>
+                          {c.intent && <span className="text-xs ml-2" style={{ color: 'var(--text-3)' }}>{c.intent}</span>}
                         </div>
                       </div>
                     ))}
@@ -133,7 +147,7 @@ export default function GapDetection() {
 
   const load = useCallback(() => {
     setLoading(true); setError('');
-    listDocuments({ page: 1, page_size: 50, status: 'completed' })
+    listDocuments({ page: 1, page_size: 100, status: 'completed' })
       .then(setDocs)
       .catch(() => setError('Could not load documents from the backend.'))
       .finally(() => setLoading(false));
@@ -146,7 +160,11 @@ export default function GapDetection() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-base font-bold" style={{ color: 'var(--text)' }}>Gap Detection</h1>
-          <p className="text-sm mt-0.5" style={{ color: 'var(--text-3)' }}>Content gaps detected per crawled document — click a row to expand.</p>
+          <p className="text-sm mt-0.5" style={{ color: 'var(--text-3)' }}>
+            {docs.length > 0
+              ? `${docs.length} document${docs.length !== 1 ? 's' : ''} — click a row to see detected gaps`
+              : 'Content gaps detected per crawled document.'}
+          </p>
         </div>
         <button onClick={load} disabled={loading} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded transition-colors disabled:opacity-40" style={{ border: '1px solid var(--border)', color: 'var(--text-2)' }}>
           <RefreshCw size={12} className={loading ? 'animate-spin' : ''} /> Refresh
@@ -158,20 +176,17 @@ export default function GapDetection() {
           <Loader2 size={14} className="animate-spin" /> Loading…
         </div>
       )}
-
       {error && (
         <div className="flex items-center gap-2 text-sm" style={{ color: 'var(--danger)' }}>
           <AlertTriangle size={14} /> {error}
         </div>
       )}
-
       {!loading && !error && docs.length === 0 && (
         <div className="py-16 text-center">
           <p className="text-sm font-semibold" style={{ color: 'var(--text-2)' }}>No completed documents yet</p>
           <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>Gap analysis runs automatically after the first crawl completes.</p>
         </div>
       )}
-
       {!loading && docs.length > 0 && (
         <div className="space-y-2">
           {docs.map(doc => <GapRow key={doc.document_id} doc={doc} />)}

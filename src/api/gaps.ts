@@ -23,6 +23,7 @@ export interface GapAnalyzePayload {
 /**
  * POST /api/v1/gaps/analyze
  * Run gap analysis on a document against recent trend signals.
+ * tenant_id is resolved server-side from the Bearer token.
  */
 export async function analyzeGaps(
   payload: GapAnalyzePayload,
@@ -37,14 +38,13 @@ export async function analyzeGaps(
 /**
  * GET /api/v1/gaps/history/{document_id}
  * Full gap analysis history — shows coverage improvement over time.
+ * tenant_id is resolved server-side from the Bearer token.
  */
 export async function getGapHistory(
   document_id: string,
-  tenant_id: string,
 ): Promise<GapAnalysisResponse[]> {
   const { data } = await apiClient.get<GapAnalysisResponse[]>(
     `/api/v1/gaps/history/${document_id}`,
-    { params: { tenant_id } },
   );
   return data;
 }
@@ -75,15 +75,13 @@ export async function buildGapClusters(
 /**
  * GET /api/v1/gaps/close-actions/{document_id}
  * Get the live auto-closure plan — full cluster spec of what Gemini will write.
- * Status: pending | drafts_ready | resolved
+ * tenant_id is resolved server-side from the Bearer token.
  */
 export async function getCloseActions(
   document_id: string,
-  tenant_id: string,
 ): Promise<GapCloseActionsResponse> {
   const { data } = await apiClient.get<GapCloseActionsResponse>(
     `/api/v1/gaps/close-actions/${document_id}`,
-    { params: { tenant_id } },
   );
   return data;
 }
@@ -91,15 +89,13 @@ export async function getCloseActions(
 /**
  * POST /api/v1/gaps/close/{document_id}
  * Force immediate gap detection + closure plan (synchronous).
+ * tenant_id is resolved server-side from the Bearer token.
  */
 export async function closeGap(
   document_id: string,
-  tenant_id: string,
 ): Promise<GapCloseResponse> {
   const { data } = await apiClient.post<GapCloseResponse>(
     `/api/v1/gaps/close/${document_id}`,
-    null,
-    { params: { tenant_id } },
   );
   return data;
 }
@@ -107,16 +103,13 @@ export async function closeGap(
 /**
  * POST /api/v1/gaps/write/{document_id}
  * Dispatch Gemini writing agent for a document (async).
- * Poll GET /api/v1/gaps/drafts/{document_id} or wait for `drafts.ready` webhook.
+ * tenant_id is resolved server-side from the Bearer token.
  */
 export async function dispatchWrite(
   document_id: string,
-  tenant_id: string,
 ): Promise<GapWriteResponse> {
   const { data } = await apiClient.post<GapWriteResponse>(
     `/api/v1/gaps/write/${document_id}`,
-    null,
-    { params: { tenant_id } },
   );
   return data;
 }
@@ -124,16 +117,15 @@ export async function dispatchWrite(
 /**
  * GET /api/v1/gaps/drafts/{document_id}
  * Retrieve all Gemini-generated content drafts.
- * Filter by status: draft | embedded | approved | rejected
+ * tenant_id is resolved server-side from the Bearer token.
  */
 export async function getDrafts(
   document_id: string,
-  tenant_id: string,
   status?: DraftStatus,
 ): Promise<DraftItem[]> {
   const { data } = await apiClient.get<DraftItem[]>(
     `/api/v1/gaps/drafts/${document_id}`,
-    { params: { tenant_id, ...(status && { status }) } },
+    { params: { ...(status && { status }) } },
   );
   return data;
 }

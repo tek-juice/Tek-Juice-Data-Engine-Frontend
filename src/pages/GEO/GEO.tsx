@@ -28,9 +28,11 @@ function GeoDocRow({ doc }: { doc: DocumentListItem }) {
     setOpen(v => !v);
     if (!open && !result && !loading) {
       setLoading(true);
-      analyzeGeo({ document_id: doc.document_id, tenant_id: '', content: doc.file_name ?? '' })
+      // Pass document_id; content uses filename as the identifier
+      // tenant_id resolved server-side from Bearer token
+      analyzeGeo({ document_id: doc.document_id, content: doc.filename ?? doc.document_id })
         .then(setResult)
-        .catch(() => setErr('Could not run GEO analysis for this document.'))
+        .catch(() => setErr('Could not run GEO analysis.'))
         .finally(() => setLoading(false));
     }
   }
@@ -43,25 +45,34 @@ function GeoDocRow({ doc }: { doc: DocumentListItem }) {
         onMouseEnter={e => (e.currentTarget.style.background = 'var(--surface-2)')}
         onMouseLeave={e => (e.currentTarget.style.background = '')}
       >
-        <span className="flex-1 text-sm font-medium truncate" style={{ color: 'var(--text)' }}>{doc.file_name ?? doc.document_id}</span>
+        <span className="flex-1 text-sm font-medium truncate" style={{ color: 'var(--text)' }}>
+          {doc.filename ?? doc.document_id}
+        </span>
         <span className="text-xs" style={{ color: 'var(--text-3)' }}>{open ? '▲' : '▼'}</span>
       </button>
 
       {open && (
         <div className="px-4 pb-4" style={{ borderTop: '1px solid var(--border)' }}>
-          {loading && <div className="flex items-center gap-2 pt-3 text-xs" style={{ color: 'var(--text-3)' }}><Loader2 size={12} className="animate-spin" /> Analysing…</div>}
-          {err     && <p className="text-xs pt-3" style={{ color: 'var(--danger)' }}>{err}</p>}
-          {result  && (
+          {loading && (
+            <div className="flex items-center gap-2 pt-3 text-xs" style={{ color: 'var(--text-3)' }}>
+              <Loader2 size={12} className="animate-spin" /> Analysing…
+            </div>
+          )}
+          {err && <p className="text-xs pt-3" style={{ color: 'var(--danger)' }}>{err}</p>}
+          {result && (
             <div className="pt-3 space-y-3">
               <div className="space-y-2">
-                <ScoreGauge label="LLM visibility score"    value={result.llm_visibility_score * 100} />
-                <ScoreGauge label="Entity coverage"         value={result.entity_coverage * 100} />
-                <ScoreGauge label="Citation readiness"      value={result.citation_readiness * 100} />
-                <ScoreGauge label="Context richness"        value={result.context_richness_score * 100} />
+                <ScoreGauge label="LLM visibility"   value={result.llm_visibility_score * 100} />
+                <ScoreGauge label="Entity coverage"  value={result.entity_coverage * 100} />
+                <ScoreGauge label="Citation readiness" value={result.citation_readiness * 100} />
+                <ScoreGauge label="Context richness" value={result.context_richness_score * 100} />
               </div>
+
               {result.extracted_entities?.length > 0 && (
                 <div>
-                  <p className="text-xs font-semibold mb-1.5" style={{ color: 'var(--text-3)' }}>Extracted entities</p>
+                  <p className="text-xs font-semibold mb-1.5" style={{ color: 'var(--text-3)' }}>
+                    Extracted entities ({result.extracted_entities.length})
+                  </p>
                   <div className="flex flex-wrap gap-1.5">
                     {result.extracted_entities.map(e => (
                       <span key={e} className="px-2 py-0.5 text-xs rounded-sm" style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', color: 'var(--text-2)' }}>{e}</span>
@@ -69,6 +80,7 @@ function GeoDocRow({ doc }: { doc: DocumentListItem }) {
                   </div>
                 </div>
               )}
+
               {result.recommendations?.length > 0 && (
                 <div>
                   <p className="text-xs font-semibold mb-1.5" style={{ color: 'var(--text-3)' }}>Recommendations</p>
@@ -96,7 +108,7 @@ export default function GEO() {
 
   const load = useCallback(() => {
     setLoading(true); setError('');
-    listDocuments({ page: 1, page_size: 50, status: 'completed' })
+    listDocuments({ page: 1, page_size: 100, status: 'completed' })
       .then(setDocs)
       .catch(() => setError('Could not load documents.'))
       .finally(() => setLoading(false));
@@ -110,7 +122,7 @@ export default function GEO() {
         <div>
           <h1 className="text-base font-bold" style={{ color: 'var(--text)' }}>GEO</h1>
           <p className="text-sm mt-0.5" style={{ color: 'var(--text-3)' }}>
-            Generative Engine Optimisation — scores content for ChatGPT, Perplexity, Google AI Overviews.
+            Generative Engine Optimisation — AI citation readiness for ChatGPT, Perplexity, Google AI Overviews.
           </p>
         </div>
         <button onClick={load} disabled={loading} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded transition-colors disabled:opacity-40" style={{ border: '1px solid var(--border)', color: 'var(--text-2)' }}>
@@ -120,14 +132,12 @@ export default function GEO() {
 
       {loading && <div className="flex items-center gap-2 text-sm" style={{ color: 'var(--text-3)' }}><Loader2 size={14} className="animate-spin" /> Loading…</div>}
       {error   && <div className="flex items-center gap-2 text-sm" style={{ color: 'var(--danger)' }}><AlertTriangle size={14} /> {error}</div>}
-
       {!loading && !error && docs.length === 0 && (
         <div className="py-16 text-center">
           <p className="text-sm font-semibold" style={{ color: 'var(--text-2)' }}>No documents yet</p>
-          <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>GEO analysis runs automatically after content is crawled and processed.</p>
+          <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>GEO analysis runs automatically after content is crawled.</p>
         </div>
       )}
-
       {!loading && docs.length > 0 && (
         <div className="space-y-2">
           {docs.map(doc => <GeoDocRow key={doc.document_id} doc={doc} />)}

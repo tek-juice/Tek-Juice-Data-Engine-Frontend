@@ -168,16 +168,18 @@ export default function TenantDashboard() {
 
   useEffect(() => { load(); }, [load]);
 
-  // Load quality score using the tenant's first real document once perf data arrives
+  // Load quality score only when we have a real document_id from activity
   useEffect(() => {
     if (!perf) return;
-    const firstDoc = perf.recent_activity?.[0];
-    if (!firstDoc) return;
+    // Find the first activity event that has an actual document_id payload
+    const docEvent = perf.recent_activity?.find(e => e.payload?.document_id);
+    if (!docEvent) return;
+    const documentId = docEvent.payload!.document_id as string;
     setQsLoading(true);
     getQualityScore({
-      content: firstDoc.event_type,
-      title: perf.tenant.name,
-      query: perf.tenant.name,
+      content:  documentId,          // backend fetches content by document_id
+      title:    perf.tenant.name,
+      query:    perf.tenant.website_url ?? perf.tenant.name,
     })
       .then(res => setQsData(res))
       .catch(() => {})
