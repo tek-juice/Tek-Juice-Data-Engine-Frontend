@@ -1,11 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { onboardVerifyEmail } from '../../api/onboard';
 import { getAccessToken } from '../../services/auth.service';
-
-// ─── Types ────────────────────────────────────────────────────────────────────
-
-type Step = 1 | 2;
 
 // ─── Primitives ───────────────────────────────────────────────────────────────
 
@@ -152,7 +147,7 @@ function getEmailFromToken(): string {
 
 // ─── Step 1: Register product ─────────────────────────────────────────────────
 
-function Step1Register({ onDone }: { onDone: (email: string) => void }) {
+function Step1Register({ onDone }: { onDone: () => void }) {
   const [company, setCompany] = useState('');
   const [website, setWebsite] = useState('');
   const [error,   setError]   = useState('');
@@ -164,7 +159,7 @@ function Step1Register({ onDone }: { onDone: (email: string) => void }) {
     setError('');
     if (!company.trim()) { setError('Company name is required.'); return; }
     if (!website.trim()) { setError('Website URL is required.'); return; }
-    onDone(accountEmail);
+    onDone();
   }
 
   return (
@@ -194,106 +189,28 @@ function Step1Register({ onDone }: { onDone: (email: string) => void }) {
   );
 }
 
-// ─── Step 2: Verify email via OTP ─────────────────────────────────────────────
-
-function Step2VerifyEmail({ email, onDone }: { email: string; onDone: () => void }) {
-  const [otp,      setOtp]      = useState('');
-  const [loading,  setLoading]  = useState(false);
-  const [verified, setVerified] = useState(false);
-  const [error,    setError]    = useState('');
-
-  async function handleSubmit(e: FormEvent) {
-    e.preventDefault();
-    setError('');
-    if (!otp.trim()) { setError('Please enter the verification code.'); return; }
-    setLoading(true);
-    try {
-      await onboardVerifyEmail({ token: otp.trim() });
-      setVerified(true);
-      setTimeout(onDone, 1000);
-    } catch (err: unknown) {
-      const s = (err as { response?: { status?: number } })?.response?.status;
-      if (s === 404) {
-        setVerified(true);
-        setTimeout(onDone, 800);
-      } else {
-        setError('Invalid or expired code. Check your email and try again.');
-      }
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  return (
-    <form onSubmit={handleSubmit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-      <div>
-        <h1 style={{ fontSize: '1.125rem', fontWeight: 700, color: 'var(--text)', margin: '0 0 0.25rem', letterSpacing: '-0.015em' }}>
-          Verify your email
-        </h1>
-        <p style={{ fontSize: '0.8125rem', color: 'var(--text-2)', margin: 0 }}>
-          Step 2 of 2 — Enter the code we sent you
-        </p>
-      </div>
-
-      {verified ? (
-        <div style={{ textAlign: 'center', padding: '1rem 0' }}>
-          <div style={{ fontSize: 32 }}>✅</div>
-          <p style={{ marginTop: 8, fontSize: '0.875rem', fontWeight: 600, color: 'var(--brand)' }}>Email verified!</p>
-        </div>
-      ) : (
-        <>
-          <div style={{ fontSize: '0.8125rem', padding: '0.5rem 0.75rem', borderRadius: 6, background: 'var(--surface-2)', color: 'var(--text-2)', border: '1px solid var(--border)' }}>
-            A verification code was sent to{' '}
-            <span style={{ fontWeight: 600, color: 'var(--text)' }}>{email || 'your email'}</span>.
-            Copy it and paste it below.
-          </div>
-          {error && <ErrorMsg msg={error} />}
-          <FieldInput id="otp" label="Verification code" value={otp} onChange={setOtp} placeholder="Paste your code here" disabled={loading} />
-          <PrimaryBtn type="submit" loading={loading}>Verify & continue</PrimaryBtn>
-        </>
-      )}
-    </form>
-  );
-}
-
 // ─── Main wizard ──────────────────────────────────────────────────────────────
 
 export default function Connect() {
   const navigate = useNavigate();
 
-  const [step,  setStep]  = useState<Step>(1);
-  const [email, setEmail] = useState('');
-
   return (
     <>
-      <style>{`@keyframes connect-spin { to { transform: rotate(360deg); } }`}</style>
       <WizardBox>
         <Brand />
-        <StepIndicator current={step} total={2} />
 
-        {step === 1 && (
-          <Step1Register onDone={em => { setEmail(em); setStep(2); }} />
-        )}
+        <Step1Register onDone={() => navigate('/dashboard', { replace: true })} />
 
-        {step === 2 && (
-          <Step2VerifyEmail
-            email={email}
-            onDone={() => navigate('/dashboard', { replace: true })}
-          />
-        )}
-
-        {step === 1 && (
-          <p style={{ marginTop: 16, fontSize: '0.75rem', textAlign: 'center', color: 'var(--text-3)', margin: '1rem 0 0' }}>
-            Already signed in?{' '}
-            <button
-              type="button"
-              onClick={() => navigate('/dashboard')}
-              style={{ background: 'none', border: 'none', padding: 0, color: 'var(--brand)', fontWeight: 600, cursor: 'pointer', fontSize: 'inherit', textDecoration: 'underline', textUnderlineOffset: 2 }}
-            >
-              Go to dashboard
-            </button>
-          </p>
-        )}
+        <p style={{ marginTop: 16, fontSize: '0.75rem', textAlign: 'center', color: 'var(--text-3)', margin: '1rem 0 0' }}>
+          Already signed in?{' '}
+          <button
+            type="button"
+            onClick={() => navigate('/dashboard')}
+            style={{ background: 'none', border: 'none', padding: 0, color: 'var(--brand)', fontWeight: 600, cursor: 'pointer', fontSize: 'inherit', textDecoration: 'underline', textUnderlineOffset: 2 }}
+          >
+            Go to dashboard
+          </button>
+        </p>
       </WizardBox>
     </>
   );
