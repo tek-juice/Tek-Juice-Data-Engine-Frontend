@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getAccessToken } from '../../services/auth.service';
+import { registerWebsiteCrawl } from '../../api/ingest';
 
 // ─── Primitives ───────────────────────────────────────────────────────────────
 
@@ -133,14 +134,36 @@ function Step1Register({ onDone }: { onDone: () => void }) {
   const [company, setCompany] = useState('');
   const [website, setWebsite] = useState('');
   const [error,   setError]   = useState('');
+  const [loading, setLoading] = useState(false);
 
   const accountEmail = getEmailFromToken();
 
-  function handleSubmit(e: FormEvent) {
+  async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError('');
     if (!company.trim()) { setError('Company name is required.'); return; }
-    if (!website.trim()) { setError('Website URL is required.'); return; }
+    if (!website.trim()) { setError('Website URL is required.');  return; }
+
+    // Validate URL format before sending
+    try { new URL(website.trim()); } catch {
+      setError('Enter a valid URL including https://');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await registerWebsiteCrawl({
+        website_url: website.trim(),
+        max_pages:   50,
+        max_depth:   3,
+        recrawl_interval_hours: 24,
+      });
+    } catch {
+      // Non-fatal — crawl registration failed but we still let the user
+      // reach the dashboard (they can retry from Website Setup)
+    } finally {
+      setLoading(false);
+    }
     onDone();
   }
 
@@ -151,7 +174,7 @@ function Step1Register({ onDone }: { onDone: () => void }) {
           Connect your product
         </h1>
         <p style={{ fontSize: '0.8125rem', color: 'var(--text-2)', margin: 0 }}>
-          Step 1 of 2 — Register your product
+          Register your website — the engine crawls it automatically.
         </p>
       </div>
 
@@ -166,7 +189,9 @@ function Step1Register({ onDone }: { onDone: () => void }) {
       <FieldInput id="company" label="Company name" value={company} onChange={setCompany} placeholder="Acme Inc." />
       <FieldInput id="website" label="Website URL"  value={website} onChange={setWebsite} placeholder="https://example.com" />
 
-      <PrimaryBtn type="submit">Connect product & continue</PrimaryBtn>
+      <PrimaryBtn type="submit" loading={loading}>
+        {loading ? 'Registering crawl…' : 'Connect product & start crawl'}
+      </PrimaryBtn>
     </form>
   );
 }
