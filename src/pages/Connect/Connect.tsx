@@ -748,8 +748,9 @@ export default function Connect() {
               style={{ background: 'none', border: 'none', padding: 0, color: 'var(--brand)', fontWeight: 600, cursor: 'pointer', fontSize: 'inherit', textDecoration: 'underline', textUnderlineOffset: 2 }}
             >
               Go to dashboard
-          </button>
-        </p>
+            </button>
+          </p>
+        )}
       </WizardBox>
     </>
   );
