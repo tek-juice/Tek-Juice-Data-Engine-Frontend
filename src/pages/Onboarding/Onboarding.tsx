@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, type ReactNode, type FormEvent, type InputHTMLAttributes } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import {
   Globe, CheckCircle2, Loader2, AlertTriangle,
   Mail, Key, ArrowRight, Zap, RefreshCw, ShieldCheck,
@@ -437,8 +437,14 @@ function StepDone({ onNavigate }: { onNavigate: () => void }) {
 // ── Main Onboarding page ──────────────────────────────────────────────────────
 
 export default function Onboarding() {
-  const navigate = useNavigate();
-  const [step, setStep]               = useState<Step>('register');
+  const navigate  = useNavigate();
+  const location  = useLocation();
+
+  // If the user lands on /onboard/verify-email?token=... (from the email link),
+  // jump straight to the verify step so the token auto-advance fires immediately.
+  const initialStep: Step = location.pathname.includes('verify-email') ? 'verify' : 'register';
+
+  const [step, setStep]               = useState<Step>(initialStep);
   const [tenantId, setTenantId]       = useState('');
   const [email, setEmail]             = useState('');
   const [websiteUrl, setWebsiteUrl]   = useState('');

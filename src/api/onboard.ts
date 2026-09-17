@@ -25,9 +25,10 @@ export async function onboardRegister(
   const { data } = await apiClient.post<OnboardRegisterResponse>(
     '/api/v1/auth/register',
     {
-      email:     payload.admin_email,
-      password:  payload.password,
-      full_name: payload.product_name,
+      email:       payload.admin_email,
+      password:    payload.password,
+      full_name:   payload.product_name,
+      website_url: payload.website_url,
     },
   );
   return data;

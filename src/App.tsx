@@ -57,8 +57,10 @@ function App() {
         <Route path="/auth/callback" element={<OAuthCallback />} />
 
         {/* ── Connect wizard — also available unauthenticated (pre-login flow) ── */}
-        <Route path="/onboard"             element={<Onboarding />} />
-        <Route path="/onboard/verify-email" element={<Connect />} />
+        {/* /onboard/verify-email must render the Onboarding wizard so the        */}
+        {/* StepVerifyEmail component can auto-advance with the ?token= param.    */}
+        <Route path="/onboard"              element={<Onboarding />} />
+        <Route path="/onboard/verify-email" element={<Onboarding />} />
 
         {/* ── Protected — all inside AppShell sidebar ── */}
         <Route element={<ProtectedRoute />}>
