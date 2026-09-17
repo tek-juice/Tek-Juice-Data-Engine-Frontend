@@ -189,7 +189,13 @@ function HealthDot() {
   useEffect(() => {
     function check() {
       getHealth()
-        .then(h => setHealth(h.status as HealthState))
+        .then(h => {
+          // Backend returns "healthy" — normalise to "ok" for the state machine
+          const raw = h.status as string;
+          if (raw === 'healthy' || raw === 'ok') setHealth('ok');
+          else if (raw === 'degraded')           setHealth('degraded');
+          else                                   setHealth('down');
+        })
         .catch(() => setHealth('down'));
     }
     check();

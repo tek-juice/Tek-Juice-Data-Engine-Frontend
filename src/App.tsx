@@ -16,8 +16,11 @@ import Onboarding    from './pages/Onboarding/Onboarding';
 import Connect       from './pages/Connect/Connect';
 
 // ── App pages ─────────────────────────────────────────────────────────────────
-import Dashboard    from './pages/Dashboard/Dashboard';
-import WebsiteSetup from './pages/WebsiteSetup/WebsiteSetup';
+import Dashboard       from './pages/Dashboard/Dashboard';
+import WebsiteSetup    from './pages/WebsiteSetup/WebsiteSetup';
+import Monitor         from './pages/Monitor/Monitor';
+import TenantDashboard from './pages/TenantDashboard/TenantDashboard';
+import AdminTenants    from './pages/AdminTenants/AdminTenants';
 
 // ── Placeholder for pages not yet built ──────────────────────────────────────
 function Placeholder({ name }: { name: string }) {
@@ -69,7 +72,7 @@ function App() {
 
             {/* Overview */}
             <Route path="/dashboard"      element={page(<Dashboard />)} />
-            <Route path="/analytics"      element={page(<Placeholder name="Analytics" />)} />
+            <Route path="/analytics"      element={page(<Monitor />)} />
 
             {/* Content */}
             <Route path="/connect"        element={page(<Connect embedded />)} />
@@ -94,8 +97,8 @@ function App() {
             <Route path="/profile"        element={page(<Placeholder name="Profile" />)} />
 
             {/* Performance */}
-            <Route path="/my-performance"   element={page(<Placeholder name="My Performance" />)} />
-            <Route path="/admin/tenants"    element={page(<Placeholder name="All Products" />)} />
+            <Route path="/my-performance"   element={page(<TenantDashboard />)} />
+            <Route path="/admin/tenants"    element={page(<AdminTenants />)} />
           </Route>
         </Route>
 
