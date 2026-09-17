@@ -144,8 +144,8 @@ function StepRegister({ onDone }: { onDone: (result: OnboardRegisterResponse, ur
     try {
       const result = await onboardRegister({
         product_name: productName.trim(),
-        email: email.trim(),
-        website_url: website.trim(),
+        admin_email:  email.trim(),
+        website_url:  website.trim(),
       });
       onDone(result, website.trim(), email.trim());
     } catch (err: unknown) {

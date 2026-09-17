@@ -629,9 +629,8 @@ export interface QualityScoreRequest {
 
 export interface OnboardRegisterPayload {
   product_name: string;
-  email: string;
+  admin_email: string;
   website_url: string;
-  password?: string;
   [key: string]: unknown;
 }
 
@@ -639,6 +638,8 @@ export interface OnboardRegisterResponse {
   tenant_id: string;
   api_key: string;
   message?: string;
+  status?: string;
+  email?: string;
 }
 
 export interface OnboardVerifyEmailPayload {

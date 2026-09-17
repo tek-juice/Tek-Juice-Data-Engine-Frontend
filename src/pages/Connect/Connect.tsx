@@ -7,7 +7,6 @@ import {
   onboardInstall,
   onboardPing,
 } from '../../api/onboard';
-import { register as registerUser } from '../../api/auth';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -257,12 +256,11 @@ function Step1Register({
 }: {
   onDone: (email: string, websiteUrl: string, tenantId?: string) => void;
 }) {
-  const [company, setCompany]   = useState('');
-  const [website, setWebsite]   = useState('');
-  const [email, setEmail]       = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError]       = useState('');
-  const [loading, setLoading]   = useState(false);
+  const [company, setCompany] = useState('');
+  const [website, setWebsite] = useState('');
+  const [email, setEmail]     = useState('');
+  const [error, setError]     = useState('');
+  const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -270,34 +268,25 @@ function Step1Register({
     if (!company.trim()) { setError('Company name is required.'); return; }
     if (!website.trim()) { setError('Website URL is required.'); return; }
     if (!email.trim())   { setError('Email address is required.'); return; }
-    if (!password)       { setError('Password is required.'); return; }
-    if (password.length < 8) { setError('Password must be at least 8 characters.'); return; }
 
     setLoading(true);
     try {
       const res = await onboardRegister({
         product_name: company.trim(),
         website_url:  website.trim(),
-        email:        email.trim(),
-        password,
+        admin_email:  email.trim(),
       });
       onDone(email.trim(), website.trim(), res.tenant_id);
     } catch (err: unknown) {
       const status = (err as { response?: { status?: number } })?.response?.status;
-      if (status === 404 || status === 0) {
-        // Onboard endpoint not yet live — fall back to auth/register
-        try {
-          await registerUser(email.trim(), password, company.trim());
-          onDone(email.trim(), website.trim(), undefined);
-        } catch (e2: unknown) {
-          const s2 = (e2 as { response?: { status?: number } })?.response?.status;
-          if (s2 === 409) setError('An account with that email already exists.');
-          else setError("Couldn't create your account. Please try again.");
-        }
-      } else if (status === 409) {
-        setError('An account with that email already exists.');
+      if (status === 409) {
+        setError('A product with that email is already registered.');
       } else {
-        setError("Couldn't create your account. Please try again.");
+        const detail = (err as { response?: { data?: { detail?: string; error?: { message?: string } } } })
+          ?.response?.data?.error?.message
+          ?? (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail
+          ?? 'Registration failed. Please try again.';
+        setError(detail);
       }
     } finally {
       setLoading(false);
@@ -311,19 +300,18 @@ function Step1Register({
           Connect your product
         </h1>
         <p style={{ fontSize: '0.8125rem', color: 'var(--text-2)', margin: 0 }}>
-          Step 1 of 5 — Create your account
+          Step 1 of 5 — Register your product
         </p>
       </div>
 
       {error && <ErrorMsg msg={error} />}
 
-      <FieldInput id="company"  label="Company name"    value={company}  onChange={setCompany}  placeholder="Acme Inc."              disabled={loading} />
-      <FieldInput id="website"  label="Website URL"     value={website}  onChange={setWebsite}  placeholder="https://example.com"    disabled={loading} />
-      <FieldInput id="email"    label="Email address"   value={email}    onChange={setEmail}    placeholder="you@example.com"        disabled={loading} type="email" />
-      <FieldInput id="password" label="Password"        value={password} onChange={setPassword} placeholder="8+ characters"          disabled={loading} type="password" />
+      <FieldInput id="company" label="Company name"  value={company} onChange={setCompany} placeholder="Acme Inc."           disabled={loading} />
+      <FieldInput id="website" label="Website URL"   value={website} onChange={setWebsite} placeholder="https://example.com" disabled={loading} />
+      <FieldInput id="email"   label="Email address" value={email}   onChange={setEmail}   placeholder="you@example.com"     disabled={loading} type="email" />
 
       <PrimaryBtn type="submit" loading={loading}>
-        Create account & continue
+        Connect product & continue
       </PrimaryBtn>
     </form>
   );
