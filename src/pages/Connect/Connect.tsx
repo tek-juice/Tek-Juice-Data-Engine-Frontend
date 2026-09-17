@@ -267,43 +267,20 @@ function getEmailFromToken(): string {
 function Step1Register({
   onDone,
 }: {
-  onDone: (email: string, websiteUrl: string, tenantId?: string) => void;
+  onDone: (email: string, websiteUrl: string) => void;
 }) {
   const [company, setCompany] = useState('');
   const [website, setWebsite] = useState('');
   const [error, setError]     = useState('');
-  const [loading, setLoading] = useState(false);
 
   const accountEmail = getEmailFromToken();
 
-  async function handleSubmit(e: FormEvent) {
+  function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError('');
     if (!company.trim()) { setError('Company name is required.'); return; }
     if (!website.trim()) { setError('Website URL is required.'); return; }
-
-    setLoading(true);
-    try {
-      const res = await onboardRegister({
-        product_name: company.trim(),
-        website_url:  website.trim(),
-        admin_email:  accountEmail,
-      });
-      onDone(accountEmail, website.trim(), res.tenant_id ?? res.email);
-    } catch (err: unknown) {
-      const status = (err as { response?: { status?: number } })?.response?.status;
-      if (status === 409) {
-        setError('A product with that email is already connected. Sign in to manage it.');
-      } else {
-        const detail = (err as { response?: { data?: { error?: { message?: string }; detail?: string } } })
-          ?.response?.data?.error?.message
-          ?? (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail
-          ?? 'Registration failed. Please try again.';
-        setError(detail);
-      }
-    } finally {
-      setLoading(false);
-    }
+    onDone(accountEmail, website.trim());
   }
 
   return (
@@ -313,7 +290,7 @@ function Step1Register({
           Connect your product
         </h1>
         <p style={{ fontSize: '0.8125rem', color: 'var(--text-2)', margin: 0 }}>
-          Step 1 of 5 — Register your product
+          Step 1 of 2 — Register your product
         </p>
       </div>
 
@@ -325,10 +302,10 @@ function Step1Register({
         </div>
       )}
 
-      <FieldInput id="company" label="Company name" value={company} onChange={setCompany} placeholder="Acme Inc."           disabled={loading} />
-      <FieldInput id="website" label="Website URL"  value={website} onChange={setWebsite} placeholder="https://example.com" disabled={loading} />
+      <FieldInput id="company" label="Company name" value={company} onChange={setCompany} placeholder="Acme Inc."           />
+      <FieldInput id="website" label="Website URL"  value={website} onChange={setWebsite} placeholder="https://example.com" />
 
-      <PrimaryBtn type="submit" loading={loading}>
+      <PrimaryBtn type="submit" loading={false}>
         Connect product & continue
       </PrimaryBtn>
     </form>
@@ -379,7 +356,7 @@ function Step2VerifyEmail({
           Verify your email
         </h1>
         <p style={{ fontSize: '0.8125rem', color: 'var(--text-2)', margin: 0 }}>
-          Step 2 of 5 — Enter the code we sent you
+          Step 2 of 2 — Enter the code we sent you
         </p>
       </div>
 
@@ -732,34 +709,24 @@ function Step5Done() {
 // ─── Main wizard ──────────────────────────────────────────────────────────────
 
 export default function Connect() {
-  const navigate       = useNavigate();
-  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
 
-  const [step,        setStep]        = useState<Step>(1);
-  const [email,       setEmail]       = useState('');
-  const [websiteUrl,  setWebsiteUrl]  = useState('');
-  const [tenantId,    setTenantId]    = useState<string | undefined>();
-  const [platform,    setPlatform]    = useState<Platform>('unknown');
-  const [credentials, setCredentials] = useState<Record<string, string>>({});
-
-  // If ?token= is present, jump straight to step 2 for auto-verification
-  useEffect(() => {
-    if (searchParams.get('token') && step === 1) setStep(2);
-  }, [searchParams]); // eslint-disable-line react-hooks/exhaustive-deps
+  const [step,       setStep]       = useState<Step>(1);
+  const [email,      setEmail]      = useState('');
+  const [websiteUrl, setWebsiteUrl] = useState('');
 
   return (
     <>
       <style>{`@keyframes connect-spin { to { transform: rotate(360deg); } }`}</style>
       <WizardBox>
         <Brand />
-        <StepIndicator current={step} total={5} />
+        <StepIndicator current={step} total={2} />
 
         {step === 1 && (
           <Step1Register
-            onDone={(em, url, tid) => {
+            onDone={(em, url) => {
               setEmail(em);
               setWebsiteUrl(url);
-              if (tid) setTenantId(tid);
               setStep(2);
             }}
           />
@@ -768,61 +735,19 @@ export default function Connect() {
         {step === 2 && (
           <Step2VerifyEmail
             email={email}
-            onDone={() => setStep(3)}
+            onDone={() => navigate('/dashboard', { replace: true })}
           />
         )}
 
-        {step === 3 && (
-          <Step3Platform
-            websiteUrl={websiteUrl}
-            tenantId={tenantId}
-            onDone={(p, creds) => {
-              setPlatform(p);
-              setCredentials(creds);
-              setStep(4);
-            }}
-          />
-        )}
-
-        {step === 4 && (
-          <Step4Install
-            tenantId={tenantId}
-            platform={platform}
-            credentials={credentials}
-            onDone={() => setStep(5)}
-          />
-        )}
-
-        {step === 5 && <Step5Done />}
-
-        {step > 1 && step < 5 && (
-          <button
-            type="button"
-            onClick={() => setStep(prev => (prev - 1) as Step)}
-            style={{
-              background: 'none',
-              border: 'none',
-              padding: '0.5rem 0',
-              marginTop: 12,
-              fontSize: '0.8125rem',
-              color: 'var(--text-3)',
-              cursor: 'pointer',
-              width: '100%',
-              textAlign: 'center',
-            }}
-          >
-            ← Back
-          </button>
-        )}
-
-        <p style={{ marginTop: 16, fontSize: '0.75rem', textAlign: 'center', color: 'var(--text-3)', margin: '1rem 0 0' }}>
-          Already have an account?{' '}
-          <button
-            type="button"
-            onClick={() => navigate('/login')}
-            style={{ background: 'none', border: 'none', padding: 0, color: 'var(--brand)', fontWeight: 600, cursor: 'pointer', fontSize: 'inherit', textDecoration: 'underline', textUnderlineOffset: 2 }}
-          >
-            Sign in
+        {step === 1 && (
+          <p style={{ marginTop: 16, fontSize: '0.75rem', textAlign: 'center', color: 'var(--text-3)', margin: '1rem 0 0' }}>
+            Already signed in?{' '}
+            <button
+              type="button"
+              onClick={() => navigate('/dashboard')}
+              style={{ background: 'none', border: 'none', padding: 0, color: 'var(--brand)', fontWeight: 600, cursor: 'pointer', fontSize: 'inherit', textDecoration: 'underline', textUnderlineOffset: 2 }}
+            >
+              Go to dashboard
           </button>
         </p>
       </WizardBox>
