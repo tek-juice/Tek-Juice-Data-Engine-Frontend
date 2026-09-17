@@ -3,20 +3,8 @@ import { Link } from 'react-router-dom';
 import {
   ChevronUp, ChevronDown, Minus, RefreshCw,
 } from 'lucide-react';
-import {
-  getVisibilityOverview,
-  getVisibilityPublished,
-  getVisibilityGaps,
-  getVisibilityQualityScores,
-} from '../../api/dashboard';
-import { getRankings } from '../../api/seo';
-import type {
-  VisibilityOverview,
-  VisibilityPublishedItem,
-  VisibilityGapItem,
-  VisibilityQualityScore,
-  RankSnapshot,
-} from '../../types';
+import { getDashboardOverview, getDashboardDocuments } from '../../api/dashboard';
+import type { DashboardOverview, DocumentListItem } from '../../types';
 
 // ─── Primitives ───────────────────────────────────────────────────────────────
 
@@ -525,39 +513,20 @@ function FirstRunBanner() {
 // ─── Root Dashboard ───────────────────────────────────────────────────────────
 
 export default function Dashboard() {
-  const [overview,  setOverview]  = useState<VisibilityOverview | null>(null);
-  const [published, setPublished] = useState<VisibilityPublishedItem[]>([]);
-  const [gaps,      setGaps]      = useState<VisibilityGapItem[]>([]);
-  const [scores,    setScores]    = useState<VisibilityQualityScore[]>([]);
-  const [rankings,  setRankings]  = useState<RankSnapshot[]>([]);
+  const [overview,  setOverview]  = useState<DashboardOverview | null>(null);
+  const [documents, setDocuments] = useState<DocumentListItem[]>([]);
 
-  const [loading,    setLoading]    = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
+  const [loading,     setLoading]     = useState(true);
+  const [refreshing,  setRefreshing]  = useState(false);
   const [lastUpdated, setLastUpdated] = useState(new Date());
 
   const fetchAll = useCallback(async () => {
-    const [ov, pub, g, sc] = await Promise.allSettled([
-      getVisibilityOverview(),
-      getVisibilityPublished({ page: 1, page_size: 20 }),
-      getVisibilityGaps(),
-      getVisibilityQualityScores(),
+    const [ov, docs] = await Promise.allSettled([
+      getDashboardOverview(),
+      getDashboardDocuments({ page: 1, page_size: 20 }),
     ]);
-
-    if (ov.status  === 'fulfilled') setOverview(ov.value);
-    if (pub.status === 'fulfilled') setPublished(pub.value);
-    if (g.status   === 'fulfilled') setGaps(g.value);
-    if (sc.status  === 'fulfilled') setScores(sc.value);
-
-    // Attempt rankings using domain from overview
-    if (ov.status === 'fulfilled' && ov.value?.platform_type) {
-      const domain =
-        (ov.value['website_url'] as string | undefined)?.replace(/^https?:\/\//, '').split('/')[0]
-        ?? import.meta.env.VITE_DEFAULT_DOMAIN ?? '';
-      if (domain) {
-        getRankings(domain, '', 30).then(setRankings).catch(() => {});
-      }
-    }
-
+    if (ov.status   === 'fulfilled') setOverview(ov.value);
+    if (docs.status === 'fulfilled') setDocuments(docs.value);
     setLastUpdated(new Date());
   }, []);
 
@@ -572,22 +541,16 @@ export default function Dashboard() {
     setRefreshing(false);
   }, [fetchAll]);
 
-  // Derived
-  const injectionStatus = overview?.injection_status;
-  const isConnected     = injectionStatus === 'live' || injectionStatus === 'configuring';
-  const noData          = !loading && !overview;
-
-  const publishedCount  = overview?.published_count ?? 0;
-  const openGaps        = overview?.open_gaps ?? 0;
-  const coveragePct     = overview?.coverage_pct ?? 0;
-  const crawlProgress   = overview?.crawl_progress ?? 0;
-  const rank1Count      = rankings.filter(r => r.position === 1).length;
-  const avgQuality      = scores.length
-    ? scores.reduce((s, x) => s + x.quality_score, 0) / scores.length
-    : null;
-  const avgCoverage     = scores.length
-    ? scores.reduce((s, x) => s + (x['coverage_pct'] as number ?? 0), 0) / scores.length
-    : null;
+  // Derived from real backend fields
+  const noData             = !loading && !overview;
+  const docsCompleted      = (overview as unknown as Record<string, number> | null)?.documents_completed ?? 0;
+  const docsFailed         = (overview as unknown as Record<string, number> | null)?.documents_failed    ?? 0;
+  const totalChunks        = (overview as unknown as Record<string, number> | null)?.total_chunks        ?? 0;
+  const totalEmbeddings    = (overview as unknown as Record<string, number> | null)?.total_embeddings    ?? 0;
+  const gapAnalysesRun     = (overview as unknown as Record<string, number> | null)?.gap_analyses_run    ?? 0;
+  const schemasGenerated   = (overview as unknown as Record<string, number> | null)?.schemas_generated   ?? 0;
+  const trendsToday        = (overview as unknown as Record<string, number> | null)?.trends_today        ?? 0;
+  const isConnected        = docsCompleted > 0 || totalChunks > 0;
 
   return (
     <div className="h-full flex flex-col overflow-hidden" style={{ background: 'var(--bg)', color: 'var(--text)' }}>
@@ -601,97 +564,47 @@ export default function Dashboard() {
 
           {/* ── KPI strip ── */}
           <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
-            <StatCard
-              label="Keywords #1"
-              value={loading ? '—' : rank1Count}
-              sub={rankings.length ? `of ${rankings.length} tracked` : undefined}
-              loading={loading}
-            />
-            <StatCard
-              label="Published this week"
-              value={loading ? '—' : published.filter(p => new Date(p.published_at).getTime() > Date.now() - 7 * 24 * 3600 * 1000).length}
-              loading={loading}
-            />
-            <StatCard
-              label="AI citations"
-              value={loading ? '—' : (overview?.['ai_citation_count'] as number | undefined) ?? '—'}
-              loading={loading}
-            />
-            <StatCard
-              label="Traffic growth"
-              value={loading ? '—' : (overview?.['traffic_growth_pct'] as number | undefined) != null ? `${(overview!['traffic_growth_pct'] as number).toFixed(0)}%` : '—'}
-              delta={(overview?.['traffic_growth_pct'] as number | undefined)}
-              loading={loading}
-            />
-            <StatCard
-              label="Avg quality"
-              value={avgQuality != null ? `${avgQuality.toFixed(1)}/10` : '—'}
-              loading={loading}
-            />
-            <StatCard
-              label="Open gaps"
-              value={loading ? '—' : openGaps}
-              sub={openGaps === 0 && !loading ? 'All resolved' : undefined}
-              loading={loading}
-            />
+            <StatCard label="Docs completed"  value={loading ? '—' : docsCompleted}    loading={loading} />
+            <StatCard label="Docs failed"     value={loading ? '—' : docsFailed}       loading={loading} />
+            <StatCard label="Total chunks"    value={loading ? '—' : totalChunks}      loading={loading} />
+            <StatCard label="Embeddings"      value={loading ? '—' : totalEmbeddings}  loading={loading} />
+            <StatCard label="Gap analyses"    value={loading ? '—' : gapAnalysesRun}   loading={loading} />
+            <StatCard label="Trends today"    value={loading ? '—' : trendsToday}      loading={loading} />
           </div>
 
-          {/* ── Engine status + scores ── */}
+          {/* ── Engine status ── */}
           {(isConnected || loading) && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              {/* Bridge status */}
               <Card className="p-5 flex flex-col gap-4">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-bold" style={{ color: 'var(--text)' }}>Engine status</span>
                   {loading
                     ? <Skeleton className="h-5 w-16" />
-                    : <StatusPill status={injectionStatus ?? 'unknown'} />
+                    : <StatusPill status={isConnected ? 'live' : 'pending'} />
                   }
                 </div>
                 <div className="space-y-3">
-                  <ScoreBar label="Coverage"     score={coveragePct}  loading={loading} />
-                  <ScoreBar label="Crawl progress" score={crawlProgress} loading={loading} />
-                  <ScoreBar label="Avg quality"   score={avgQuality != null ? avgQuality * 10 : 0} loading={loading} />
-                  <ScoreBar label="Gap closure"   score={avgCoverage != null ? avgCoverage * 100 : 0} loading={loading} />
+                  <ScoreBar label="Docs processed"   score={docsCompleted > 0 ? 100 : 0}          loading={loading} />
+                  <ScoreBar label="Chunks generated" score={totalChunks > 0 ? 100 : 0}            loading={loading} />
+                  <ScoreBar label="Embeddings ready" score={totalEmbeddings > 0 ? 100 : 0}        loading={loading} />
+                  <ScoreBar label="Gap analyses"     score={gapAnalysesRun > 0 ? 100 : 0}         loading={loading} />
                 </div>
               </Card>
 
-              {/* Published */}
               <Card className="p-5 flex flex-col gap-3">
-                <span className="text-sm font-bold" style={{ color: 'var(--text)' }}>Content published</span>
+                <span className="text-sm font-bold" style={{ color: 'var(--text)' }}>Documents</span>
                 <div className="flex items-baseline gap-2">
                   <span className="text-[40px] font-bold leading-none tabular-nums" style={{ color: 'var(--text)' }}>
-                    {loading ? '—' : publishedCount}
+                    {loading ? '—' : documents.length}
                   </span>
-                  <span className="text-base" style={{ color: 'var(--text-3)' }}>total items</span>
+                  <span className="text-base" style={{ color: 'var(--text-3)' }}>indexed</span>
                 </div>
                 <p className="text-sm" style={{ color: 'var(--text-3)' }}>
-                  {loading ? '' : `${published.filter(p => new Date(p.published_at).getTime() > Date.now() - 7 * 24 * 3600 * 1000).length} published in the last 7 days`}
+                  {loading ? '' : `${schemasGenerated} schemas generated · ${trendsToday} trends today`}
                 </p>
-                {!loading && (
-                  <div className="mt-auto pt-3" style={{ borderTop: '1px solid var(--border)' }}>
-                    <span className="text-xs" style={{ color: 'var(--text-3)' }}>
-                      {overview?.last_crawled_at
-                        ? `Last crawled ${new Date(overview.last_crawled_at).toLocaleDateString([], { month: 'short', day: 'numeric' })}`
-                        : 'Crawl not yet run'}
-                    </span>
-                  </div>
-                )}
               </Card>
             </div>
           )}
-
-          {/* ── Rankings ── */}
-          <RankingsPanel rankings={rankings} loading={loading} />
-
-          {/* ── Published this week list ── */}
-          <PublishedList items={published} loading={loading} />
-
-          {/* ── Quality scores ── */}
-          <QualityList scores={scores} loading={loading} />
-
-          {/* ── What the engine is working on next ── */}
-          <NextActions gaps={gaps} loading={loading} />
 
         </div>
       </div>
