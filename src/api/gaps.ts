@@ -77,11 +77,20 @@ export async function buildGapClusters(
  * Get the live auto-closure plan — full cluster spec of what Gemini will write.
  * tenant_id is resolved server-side from the Bearer token.
  */
+function getTenantId(): string {
+  try {
+    const token = localStorage.getItem('data_engine_token') ?? '';
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return payload.tenant_id ?? payload.sub ?? '';
+  } catch { return ''; }
+}
+
 export async function getCloseActions(
   document_id: string,
 ): Promise<GapCloseActionsResponse> {
   const { data } = await apiClient.get<GapCloseActionsResponse>(
     `/api/v1/gaps/close-actions/${document_id}`,
+    { params: { tenant_id: getTenantId() } },
   );
   return data;
 }
