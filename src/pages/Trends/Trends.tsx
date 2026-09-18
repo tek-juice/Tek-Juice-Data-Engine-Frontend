@@ -65,7 +65,7 @@ export default function Trends() {
             {platform}
           </p>
           <div className="space-y-1.5">
-            {items.map((t, i) => (
+            {items.map((t: Record<string,unknown>, i: number) => (
               <div
                 key={i}
                 className="flex items-center gap-3 px-4 py-3 rounded"
@@ -78,7 +78,7 @@ export default function Trends() {
                   </span>
                   {(t as Record<string,unknown>).snippet && (
                     <span className="text-xs block truncate mt-0.5" style={{ color: 'var(--text-3)' }}>
-                      {(t as Record<string,unknown>).snippet as string}
+                      {String((t as Record<string,unknown>).snippet ?? "")}
                     </span>
                   )}
                 </div>
