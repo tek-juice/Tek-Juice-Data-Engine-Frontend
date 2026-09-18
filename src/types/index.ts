@@ -94,7 +94,10 @@ export interface DocumentStatusResponse {
 }
 
 export interface DocumentListItem extends DocumentStatusResponse {
-  [key: string]: unknown; // Extended metadata from dashboard endpoint
+  id: string;            // alias for document_id (returned by list endpoint)
+  source_type?: string;
+  file_size_bytes?: number;
+  [key: string]: string | number | boolean | null | undefined | unknown[];
 }
 
 // ── Embeddings ────────────────────────────────────────────────────────────────
