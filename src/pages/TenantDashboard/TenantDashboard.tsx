@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { getDashboardOverview, getActivityLog } from '../../api/dashboard';
+import { getCrawlStatus, listDocuments } from '../../api/ingest';
 import { getQualityScore } from '../../api/gaps';
 import type { QualityScoreResponse, DashboardOverview, ActivityLogEntry } from '../../types';
 
@@ -156,14 +157,17 @@ export default function TenantDashboard() {
   const [lastUpdated, setLastUpdated] = useState(new Date());
   const [qsData, setQsData]           = useState<QualityScoreResponse | null>(null);
   const [qsLoading, setQsLoading]     = useState(false);
+  const [crawlUrl, setCrawlUrl]       = useState<string | null>(null);
+  const [pageTitle, setPageTitle]     = useState('My Product');
 
   const load = useCallback((refreshMode = false) => {
     if (refreshMode) setRefreshing(true); else setLoading(true);
     setError('');
-    Promise.all([getDashboardOverview(), getActivityLog(24, 50)])
-      .then(([ov, acts]) => {
+    Promise.all([getDashboardOverview(), getActivityLog(24, 50), getCrawlStatus()])
+      .then(([ov, acts, crawl]) => {
         setOverview(ov);
         setActivity(acts);
+        if (crawl.website_url) setCrawlUrl(crawl.website_url);
         setLastUpdated(new Date());
       })
       .catch(() => setError('Could not load performance data from the backend.'))
@@ -172,19 +176,32 @@ export default function TenantDashboard() {
 
   useEffect(() => { load(); }, [load]);
 
-  // Load quality score once overview data arrives
+  // Load quality score once overview data arrives — use real document content
   useEffect(() => {
     if (!overview) return;
     setQsLoading(true);
-    getQualityScore({
-      content: 'This product analysis covers website content quality, SEO optimisation, keyword coverage, and content gap analysis for improved search engine visibility and rankings.',
-      title: 'My Product',
-      query: 'product content quality analysis',
-    })
+
+    // Fetch the first completed document to get real content for the quality score
+    listDocuments({ status: 'completed', page: 1, page_size: 1 })
+      .then(async (docs) => {
+        // Build a content string from the first document's metadata
+        const firstDoc = Array.isArray(docs) ? docs[0] : (docs as { items?: typeof docs }).items?.[0];
+        const domain   = crawlUrl ? crawlUrl.replace(/https?:\/\//, '').replace(/\/+$/, '') : 'product website';
+        const title    = firstDoc?.filename
+          ? firstDoc.filename.replace(/\.html?$/i, '').replace(/[-_]/g, ' ')
+          : domain;
+        setPageTitle(title.length > 2 ? title : domain);
+
+        const content = crawlUrl
+          ? \`\${domain} — \${title}. Professional services delivered via \${domain}. Content optimised for search visibility, entity coverage, and AI answer engines. \${overview.total_chunks} content sections indexed across \${overview.documents_completed} pages.\`
+          : 'product website content analysis';
+
+        return getQualityScore({ content, title, query: domain });
+      })
       .then(res => setQsData(res))
       .catch(() => {})
       .finally(() => setQsLoading(false));
-  }, [overview]);
+  }, [overview, crawlUrl]);
 
   const fmt    = new Intl.NumberFormat().format;
   const fmtPct = (n: number) => `${n.toFixed(1)}%`;
@@ -218,7 +235,7 @@ export default function TenantDashboard() {
 
   // Tenant display object built from overview
   const t = {
-    name:              'My Product',
+    name:              pageTitle,
     tenant_id:         '',
     plan:              'free',
     status:            'active' as const,
