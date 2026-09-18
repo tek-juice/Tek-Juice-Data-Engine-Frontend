@@ -47,7 +47,7 @@ function GapRow({ doc }: { doc: DocumentListItem }) {
     if (data || loading) return;
     setLoading(true);
     // tenant_id resolved server-side from Bearer token — not passed explicitly
-    getCloseActions(doc.id)
+    getCloseActions(String(doc.id))
       .then(setData)
       .catch(() => setErr('Could not load gap detail.'))
       .finally(() => setLoading(false));
