@@ -8,6 +8,14 @@ import type {
 
 // ── GEO / LEO / VSEO Engine ───────────────────────────────────────────────────
 
+function getTenantId(): string {
+  try {
+    const token = localStorage.getItem('data_engine_token') ?? '';
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return payload.tenant_id ?? payload.sub ?? '';
+  } catch { return ''; }
+}
+
 export interface GeoAnalyzePayload {
   document_id: string;
   content: string;
@@ -16,16 +24,13 @@ export interface GeoAnalyzePayload {
 
 /**
  * POST /api/v1/geo/analyze
- * Score content for AI engine citation readiness —
- * ChatGPT, Perplexity, Google AI Overviews.
- * tenant_id is resolved server-side from the Bearer token.
  */
 export async function analyzeGeo(
   payload: GeoAnalyzePayload,
 ): Promise<GeoAnalysisResponse> {
   const { data } = await apiClient.post<GeoAnalysisResponse>(
     '/api/v1/geo/analyze',
-    payload,
+    { tenant_id: getTenantId(), ...payload },
   );
   return data;
 }
