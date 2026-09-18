@@ -76,7 +76,7 @@ export default function Trends() {
                   <span className="text-sm font-medium block truncate" style={{ color: 'var(--text)' }}>
                     {(t as Record<string,unknown>).title as string ?? (t as Record<string,unknown>).topic as string ?? '—'}
                   </span>
-                  {(t as Record<string,unknown>).snippet && (
+                  {Boolean((t as Record<string,unknown>).snippet) && (
                     <span className="text-xs block truncate mt-0.5" style={{ color: 'var(--text-3)' }}>
                       {String((t as Record<string,unknown>).snippet ?? "")}
                     </span>
