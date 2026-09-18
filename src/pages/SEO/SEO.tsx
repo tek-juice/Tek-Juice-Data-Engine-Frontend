@@ -8,8 +8,9 @@ function domain(url: string) {
   try { return new URL(url).hostname.replace(/^www\./, ''); } catch { return url; }
 }
 
-function ScoreBar({ label, value, max = 100 }: { label: string; value: number; max?: number }) {
-  const pct = Math.min(100, (value / max) * 100);
+function ScoreBar({ label, value, max = 100 }: { label: string; value: number | undefined | null; max?: number }) {
+  const v = value ?? 0;
+  const pct = Math.min(100, (v / max) * 100);
   const color = pct >= 70 ? 'var(--success)' : pct >= 40 ? 'var(--warning)' : 'var(--danger)';
   return (
     <div className="flex items-center gap-3">
@@ -17,7 +18,7 @@ function ScoreBar({ label, value, max = 100 }: { label: string; value: number; m
       <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--surface-2)' }}>
         <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: color }} />
       </div>
-      <span className="text-xs font-bold tabular-nums w-12 text-right" style={{ color }}>{value.toLocaleString()}</span>
+      <span className="text-xs font-bold tabular-nums w-12 text-right" style={{ color }}>{v.toLocaleString()}</span>
     </div>
   );
 }
