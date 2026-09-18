@@ -74,9 +74,9 @@ export async function getDomainAuthority(
   domain: string,
   days = 90,
 ): Promise<AuthoritySnapshot[]> {
-  const { data } = await apiClient.get<AuthoritySnapshot[]>(
+  const { data } = await apiClient.get<AuthoritySnapshot[] | { snapshots: AuthoritySnapshot[]; count: number }>(
     `/api/v1/seo/authority/${domain}`,
     { params: { days } },
   );
-  return data;
+  return Array.isArray(data) ? data : (data as { snapshots: AuthoritySnapshot[] }).snapshots ?? [];
 }
