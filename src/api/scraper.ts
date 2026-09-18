@@ -22,10 +22,10 @@ export async function runScrape(payload: ScrapeRunPayload): Promise<unknown> {
  * Fetch latest scraped trending topics for the dashboard trend feed.
  */
 export async function getTrendingTopics(): Promise<TrendingTopic[]> {
-  const { data } = await apiClient.get<TrendingTopic[]>(
+  const { data } = await apiClient.get<TrendingTopic[] | { items: TrendingTopic[]; count: number }>(
     '/api/v1/scrape/trending',
   );
-  return data;
+  return Array.isArray(data) ? data : (data as { items: TrendingTopic[] }).items ?? [];
 }
 
 export interface IndirectScrapePayload {
