@@ -587,8 +587,8 @@ export default function TenantDashboard() {
                 />
                 <span className="text-xs flex-1 min-w-0 truncate" style={{ color: 'var(--text)', fontFamily: 'ui-monospace, monospace' }}>{ev.event_type}</span>
                 <span className="text-xs flex-shrink-0" style={{ color: 'var(--text-3)', fontFamily: 'ui-monospace, monospace' }}>{ev.service}</span>
-                {ev.document_id && (
-                  <span className="text-xs flex-shrink-0 hidden md:inline" style={{ color: 'var(--text-3)', fontFamily: 'ui-monospace, monospace' }}>{ev.document_id}</span>
+                {ev.payload?.document_id && (
+                  <span className="text-xs flex-shrink-0 hidden md:inline" style={{ color: 'var(--text-3)', fontFamily: 'ui-monospace, monospace' }}>{ev.payload.document_id as string}</span>
                 )}
                 {ev.duration_ms && (
                   <span className="text-xs tabular-nums flex-shrink-0" style={{ color: 'var(--text-3)', fontFamily: 'ui-monospace, monospace' }}>{ev.duration_ms}ms</span>
