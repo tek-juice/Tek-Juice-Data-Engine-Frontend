@@ -59,11 +59,11 @@ export async function getRankings(
   keyword: string,
   days = 30,
 ): Promise<RankSnapshot[]> {
-  const { data } = await apiClient.get<RankSnapshot[]>(
+  const { data } = await apiClient.get<RankSnapshot[] | { snapshots: RankSnapshot[]; count: number }>(
     `/api/v1/seo/rankings/${domain}`,
     { params: { keyword, days } },
   );
-  return data;
+  return Array.isArray(data) ? data : (data as { snapshots: RankSnapshot[] }).snapshots ?? [];
 }
 
 /**
