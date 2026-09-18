@@ -177,9 +177,9 @@ export default function TenantDashboard() {
     if (!overview) return;
     setQsLoading(true);
     getQualityScore({
-      content: 'website content analysis',
+      content: 'This product analysis covers website content quality, SEO optimisation, keyword coverage, and content gap analysis for improved search engine visibility and rankings.',
       title: 'My Product',
-      query: 'product analysis',
+      query: 'product content quality analysis',
     })
       .then(res => setQsData(res))
       .catch(() => {})
@@ -375,7 +375,7 @@ export default function TenantDashboard() {
                   </div>
                 </div>
                 {/* 3 dimension bars */}
-                {Object.entries(qsData.dimensions).map(([key, dim]) => (
+                {Object.entries(qsData.dimensions ?? {}).map(([key, dim]) => (
                   <div key={key} className="p-3 flex flex-col gap-2" style={{ border: '1px solid var(--border)' }}>
                     <div className="text-xs leading-tight" style={{ color: 'var(--text-3)' }}>{dim.name.split('(')[0].trim()}</div>
                     <div className="flex items-end gap-1">
