@@ -193,7 +193,7 @@ export default function TenantDashboard() {
         setPageTitle(title.length > 2 ? title : domain);
 
         const content = crawlUrl
-          ? \`\${domain} — \${title}. Professional services delivered via \${domain}. Content optimised for search visibility, entity coverage, and AI answer engines. \${overview.total_chunks} content sections indexed across \${overview.documents_completed} pages.\`
+          ? domain + ' — ' + title + '. Professional services delivered via ' + domain + '. Content optimised for search visibility, entity coverage, and AI answer engines. ' + overview.total_chunks + ' content sections indexed across ' + overview.documents_completed + ' pages.'
           : 'product website content analysis';
 
         return getQualityScore({ content, title, query: domain });
