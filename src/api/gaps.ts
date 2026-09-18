@@ -157,9 +157,14 @@ export async function getDrafts(
 export async function getQualityScore(
   payload: QualityScoreRequest,
 ): Promise<QualityScoreResponse> {
+  // Backend requires content >= 50 chars
+  const MIN = 50;
+  const safeContent = payload.content.length < MIN
+    ? payload.content.padEnd(MIN, ' ')
+    : payload.content;
   const { data } = await apiClient.post<QualityScoreResponse>(
     '/api/v1/gaps/quality-score',
-    payload,
+    { ...payload, content: safeContent },
   );
   return data;
 }
