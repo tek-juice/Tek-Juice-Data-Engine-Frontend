@@ -72,13 +72,24 @@ export default function Trends() {
                 style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
               >
                 <span className="text-xs tabular-nums w-5 flex-shrink-0 text-right" style={{ color: 'var(--text-3)' }}>{i + 1}</span>
-                <span className="flex-1 text-sm font-medium" style={{ color: 'var(--text)' }}>{t.topic}</span>
-                {t.score != null && (
-                  <span className="text-xs tabular-nums font-semibold" style={{ color: 'var(--brand)' }}>
-                    {typeof t.score === 'number' ? t.score.toFixed(0) : t.score}
+                <div className="flex-1 min-w-0">
+                  <span className="text-sm font-medium block truncate" style={{ color: 'var(--text)' }}>
+                    {(t as Record<string,unknown>).title as string ?? (t as Record<string,unknown>).topic as string ?? '—'}
+                  </span>
+                  {(t as Record<string,unknown>).snippet && (
+                    <span className="text-xs block truncate mt-0.5" style={{ color: 'var(--text-3)' }}>
+                      {(t as Record<string,unknown>).snippet as string}
+                    </span>
+                  )}
+                </div>
+                {(t as Record<string,unknown>).relevance_score != null && (
+                  <span className="text-xs tabular-nums font-semibold flex-shrink-0" style={{ color: 'var(--brand)' }}>
+                    {Number((t as Record<string,unknown>).relevance_score).toFixed(1)}
                   </span>
                 )}
-                <span className="text-xs flex-shrink-0" style={{ color: 'var(--text-3)' }}>{relTime(t.timestamp as string)}</span>
+                <span className="text-xs flex-shrink-0" style={{ color: 'var(--text-3)' }}>
+                  {relTime(((t as Record<string,unknown>).published_at ?? (t as Record<string,unknown>).timestamp) as string)}
+                </span>
               </div>
             ))}
           </div>
