@@ -10,10 +10,9 @@ import {
   ChevronUp, ChevronDown, Minus, Key, Webhook,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { getMyTenantPerformance } from '../../api/dashboard';
+import { getDashboardOverview, getActivityLog } from '../../api/dashboard';
 import { getQualityScore } from '../../api/gaps';
-import type { QualityScoreResponse } from '../../types';
-import type { TenantPerformance } from '../../types';
+import type { QualityScoreResponse, DashboardOverview, ActivityLogEntry } from '../../types';
 
 // ─── Shared tooltip style ─────────────────────────────────────────────────────
 
