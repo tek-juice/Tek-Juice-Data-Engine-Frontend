@@ -47,7 +47,7 @@ function GapRow({ doc }: { doc: DocumentListItem }) {
     if (data || loading) return;
     setLoading(true);
     // tenant_id resolved server-side from Bearer token — not passed explicitly
-    getCloseActions(doc.document_id)
+    getCloseActions(doc.id)
       .then(setData)
       .catch(() => setErr('Could not load gap detail.'))
       .finally(() => setLoading(false));
@@ -148,7 +148,11 @@ export default function GapDetection() {
   const load = useCallback(() => {
     setLoading(true); setError('');
     listDocuments({ page: 1, page_size: 100, status: 'completed' })
-      .then(setDocs)
+      .then(res => {
+        // API returns either an array or a paginated envelope { items, total, ... }
+        const arr = Array.isArray(res) ? res : ((res as Record<string,unknown>).items as typeof res ?? []);
+        setDocs(arr);
+      })
       .catch(() => setError('Could not load documents from the backend.'))
       .finally(() => setLoading(false));
   }, []);
