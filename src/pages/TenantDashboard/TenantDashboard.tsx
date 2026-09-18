@@ -366,11 +366,11 @@ export default function TenantDashboard() {
                   <div className="mt-3 grid grid-cols-2 gap-1.5 text-xs" style={{ fontFamily: 'ui-monospace, monospace' }}>
                     <div>
                       <span style={{ color: 'var(--text-3)' }}>CTR</span>
-                      <span className="ml-1" style={{ color: 'var(--text)' }}>{(qsData.rank_simulation.estimated_ctr * 100).toFixed(1)}%</span>
+                      <span className="ml-1" style={{ color: 'var(--text)' }}>{((qsData.rank_simulation?.estimated_ctr ?? 0) * 100).toFixed(1)}%</span>
                     </div>
                     <div>
                       <span style={{ color: 'var(--text-3)' }}>Ads beaten</span>
-                      <span className="ml-1" style={{ color: 'var(--text)' }}>{qsData.rank_simulation.paid_ads_beaten}/4</span>
+                      <span className="ml-1" style={{ color: 'var(--text)' }}>{qsData.rank_simulation?.paid_ads_beaten ?? 0}/4</span>
                     </div>
                   </div>
                 </div>
@@ -421,7 +421,7 @@ export default function TenantDashboard() {
                 <div>
                   <div className="text-xs mb-2" style={{ color: 'var(--text-3)', fontFamily: 'ui-monospace, monospace' }}>vs Paid Ad Positions</div>
                   <div className="space-y-1.5">
-                    {qsData.rank_simulation.ad_benchmarks.map(b => (
+                    {(qsData.rank_simulation?.ad_benchmarks ?? []).map(b => (
                       <div key={b.ad_position} className="flex items-center gap-2 text-xs" style={{ fontFamily: 'ui-monospace, monospace' }}>
                         <span
                           className="w-1.5 h-1.5 rounded-full flex-shrink-0"
@@ -440,7 +440,7 @@ export default function TenantDashboard() {
                 <div>
                   <div className="text-xs mb-2" style={{ color: 'var(--text-3)', fontFamily: 'ui-monospace, monospace' }}>Uplift Path to #1</div>
                   <div className="space-y-1.5">
-                    {qsData.rank_simulation.uplift_steps.slice(0, 4).map((s, i) => (
+                    {(qsData.rank_simulation?.uplift_steps ?? []).slice(0, 4).map((s, i) => (
                       <div key={i} className="flex items-center gap-2 text-xs" style={{ fontFamily: 'ui-monospace, monospace' }}>
                         <span style={{ color: 'var(--text-3)' }}>{s.from_qs}→{s.to_qs}</span>
                         <span className="flex-1" style={{ color: 'var(--text-2)' }}>{s.milestone}</span>
