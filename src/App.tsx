@@ -20,6 +20,7 @@ import Dashboard       from './pages/Dashboard/Dashboard';
 import WebsiteSetup    from './pages/WebsiteSetup/WebsiteSetup';
 import Monitor         from './pages/Monitor/Monitor';
 import TenantDashboard from './pages/TenantDashboard/TenantDashboard';
+import SchemaFactory      from './pages/SchemaFactory/SchemaFactory';
 import AdminTenants    from './pages/AdminTenants/AdminTenants';
 import GapDetection    from './pages/GapDetection/GapDetection';
 import Drafts          from './pages/Drafts/Drafts';
@@ -78,7 +79,7 @@ function App() {
             {/* Intelligence */}
             <Route path="/gaps"           element={page(<GapDetection />)} />
             <Route path="/trends"         element={page(<Trends />)} />
-            <Route path="/schema-factory" element={page(<TenantDashboard />)} />
+            <Route path="/schema-factory" element={page(<SchemaFactory />)} />
 
             {/* Visibility */}
             <Route path="/seo"            element={page(<SEO />)} />
