@@ -127,8 +127,8 @@ export default function SchemaFactory() {
 
       {/* Document list */}
       <div className="space-y-3">
-        {docs.map(doc => (
-          <div key={doc.id} style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+        {docs.map((doc) => (
+          <div key={String(doc.id)} style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
             {/* Doc header */}
             <div className="flex items-center gap-3 px-4 py-3" style={{ borderBottom: '1px solid var(--border)' }}>
               <CheckCircle2 size={13} style={{ color: 'var(--success)', flexShrink: 0 }} />
