@@ -8,7 +8,10 @@ import {
   getVisibilityPublished,
   getVisibilityGaps,
   getVisibilityQualityScores,
+  getDashboardOverview,
+  getDashboardDocuments,
 } from '../../api/dashboard';
+import { getCrawlStatus } from '../../api/ingest';
 import { getRankings } from '../../api/seo';
 import type {
   VisibilityOverview,
@@ -16,6 +19,8 @@ import type {
   VisibilityGapItem,
   VisibilityQualityScore,
   RankSnapshot,
+  DashboardOverview,
+  DocumentListItem,
 } from '../../types';
 
 // ─── Primitives ───────────────────────────────────────────────────────────────
@@ -287,7 +292,10 @@ function NextActions({ gaps, loading }: { gaps: VisibilityGapItem[]; loading: bo
 
 function PublishedList({ items, loading }: { items: VisibilityPublishedItem[]; loading: boolean }) {
   const cutoff = Date.now() - 7 * 24 * 60 * 60 * 1000;
-  const recent = items.filter(it => new Date(it.published_at).getTime() > cutoff);
+  // Support both VisibilityPublishedItem (published_at) and DocumentListItem (created_at)
+  const getDate = (it: VisibilityPublishedItem) =>
+    (it.published_at ?? (it as unknown as { created_at?: string }).created_at ?? '') as string;
+  const recent = items.filter(it => new Date(getDate(it)).getTime() > cutoff);
 
   if (loading) {
     return (
@@ -301,11 +309,46 @@ function PublishedList({ items, loading }: { items: VisibilityPublishedItem[]; l
   }
 
   if (!recent.length) {
+    // Show all items (not just last-7-days) if no recent ones but we have data
+    const allItems = items.length > 0 ? items : [];
+    if (!allItems.length) {
+      return (
+        <EmptyCard
+          title="No documents processed yet"
+          body="The engine processes documents once a crawl completes. Connect your product to start."
+        />
+      );
+    }
     return (
-      <EmptyCard
-        title="No content published this week"
-        body="The engine publishes optimised content automatically once a crawl completes."
-      />
+      <Card className="overflow-hidden">
+        <div className="px-5 py-4" style={{ borderBottom: '1px solid var(--border)' }}>
+          <p className="text-sm font-bold" style={{ color: 'var(--text)' }}>
+            Documents processed
+            <span className="ml-2 text-xs font-medium" style={{ color: 'var(--text-3)' }}>
+              {allItems.length} total
+            </span>
+          </p>
+        </div>
+        <table className="w-full">
+          <tbody>
+            {allItems.slice(0, 8).map((it, i) => (
+              <tr
+                key={it.document_id}
+                style={{ borderTop: i === 0 ? undefined : '1px solid var(--border-subtle)' }}
+                onMouseEnter={e => (e.currentTarget.style.background = 'var(--surface-2)')}
+                onMouseLeave={e => (e.currentTarget.style.background = '')}
+              >
+                <td className="py-3 px-5 text-sm font-medium truncate max-w-xs" style={{ color: 'var(--text)' }}>
+                  {it.title ?? (it as unknown as { filename?: string }).filename ?? it.document_id}
+                </td>
+                <td className="py-3 px-5 text-sm text-right tabular-nums" style={{ color: 'var(--text-3)', whiteSpace: 'nowrap' }}>
+                  {(it as unknown as { status?: string }).status ?? '—'}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </Card>
     );
   }
 
@@ -313,7 +356,7 @@ function PublishedList({ items, loading }: { items: VisibilityPublishedItem[]; l
     <Card className="overflow-hidden">
       <div className="px-5 py-4" style={{ borderBottom: '1px solid var(--border)' }}>
         <p className="text-sm font-bold" style={{ color: 'var(--text)' }}>
-          Content published this week
+          Recent documents
           <span className="ml-2 text-xs font-medium" style={{ color: 'var(--text-3)' }}>
             {recent.length} item{recent.length !== 1 ? 's' : ''}
           </span>
@@ -322,22 +365,22 @@ function PublishedList({ items, loading }: { items: VisibilityPublishedItem[]; l
       <table className="w-full">
         <tbody>
           {recent.slice(0, 6).map((it, i) => (
-            <tr
-              key={it.document_id}
-              style={{ borderTop: i === 0 ? undefined : '1px solid var(--border-subtle)' }}
-              onMouseEnter={e => (e.currentTarget.style.background = 'var(--surface-2)')}
-              onMouseLeave={e => (e.currentTarget.style.background = '')}
-            >
-              <td className="py-3 px-5 text-sm font-medium truncate max-w-xs" style={{ color: 'var(--text)' }}>
-                {it.url ? (
-                  <a href={it.url} target="_blank" rel="noreferrer" style={{ color: 'inherit', textDecoration: 'none' }}>
-                    {it.title}
-                  </a>
-                ) : it.title}
-              </td>
-              <td className="py-3 px-5 text-sm text-right tabular-nums" style={{ color: 'var(--text-3)', whiteSpace: 'nowrap' }}>
-                {new Date(it.published_at).toLocaleDateString([], { month: 'short', day: 'numeric' })}
-              </td>
+                <tr
+                  key={it.document_id}
+                  style={{ borderTop: i === 0 ? undefined : '1px solid var(--border-subtle)' }}
+                  onMouseEnter={e => (e.currentTarget.style.background = 'var(--surface-2)')}
+                  onMouseLeave={e => (e.currentTarget.style.background = '')}
+                >
+                  <td className="py-3 px-5 text-sm font-medium truncate max-w-xs" style={{ color: 'var(--text)' }}>
+                    {it.url ? (
+                      <a href={it.url} target="_blank" rel="noreferrer" style={{ color: 'inherit', textDecoration: 'none' }}>
+                        {it.title ?? (it as unknown as { filename?: string }).filename ?? it.document_id}
+                      </a>
+                    ) : (it.title ?? (it as unknown as { filename?: string }).filename ?? it.document_id)}
+                  </td>
+                  <td className="py-3 px-5 text-sm text-right tabular-nums" style={{ color: 'var(--text-3)', whiteSpace: 'nowrap' }}>
+                    {getDate(it) ? new Date(getDate(it)).toLocaleDateString([], { month: 'short', day: 'numeric' }) : '—'}
+                  </td>
               {it.quality_score != null && (
                 <td className="py-3 px-5 text-right">
                   <span
@@ -525,37 +568,53 @@ function FirstRunBanner() {
 // ─── Root Dashboard ───────────────────────────────────────────────────────────
 
 export default function Dashboard() {
+  // Visibility endpoints (may 404 until backend builds them)
   const [overview,  setOverview]  = useState<VisibilityOverview | null>(null);
   const [published, setPublished] = useState<VisibilityPublishedItem[]>([]);
   const [gaps,      setGaps]      = useState<VisibilityGapItem[]>([]);
   const [scores,    setScores]    = useState<VisibilityQualityScore[]>([]);
   const [rankings,  setRankings]  = useState<RankSnapshot[]>([]);
 
+  // Fallback: working endpoints (always available)
+  const [coreStats,  setCoreStats]  = useState<DashboardOverview | null>(null);
+  const [coreDocs,   setCoreDocs]   = useState<DocumentListItem[]>([]);
+  const [crawlUrl,   setCrawlUrl]   = useState<string | null>(null);
+  const [lastCrawled, setLastCrawled] = useState<string | null>(null);
+
   const [loading,    setLoading]    = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [lastUpdated, setLastUpdated] = useState(new Date());
 
   const fetchAll = useCallback(async () => {
+    // ── Always-working endpoints — load unconditionally ───────────────────────
+    const [coreOv, coreDc, crawlSt] = await Promise.allSettled([
+      getDashboardOverview(),
+      getDashboardDocuments({ page_size: 50 }),
+      getCrawlStatus(),
+    ]);
+    if (coreOv.status  === 'fulfilled') setCoreStats(coreOv.value);
+    if (coreDc.status  === 'fulfilled') setCoreDocs(coreDc.value);
+    if (crawlSt.status === 'fulfilled') {
+      setCrawlUrl(crawlSt.value.website_url);
+      setLastCrawled(crawlSt.value.last_crawled_at);
+    }
+
+    // ── Visibility endpoints — optional enrichment, may 404 ──────────────────
     const [ov, pub, g, sc] = await Promise.allSettled([
       getVisibilityOverview(),
       getVisibilityPublished({ page: 1, page_size: 20 }),
       getVisibilityGaps(),
       getVisibilityQualityScores(),
     ]);
-
     if (ov.status  === 'fulfilled') setOverview(ov.value);
     if (pub.status === 'fulfilled') setPublished(pub.value);
     if (g.status   === 'fulfilled') setGaps(g.value);
     if (sc.status  === 'fulfilled') setScores(sc.value);
 
-    // Attempt rankings using domain from overview
-    if (ov.status === 'fulfilled' && ov.value?.platform_type) {
-      const domain =
-        (ov.value['website_url'] as string | undefined)?.replace(/^https?:\/\//, '').split('/')[0]
-        ?? import.meta.env.VITE_DEFAULT_DOMAIN ?? '';
-      if (domain) {
-        getRankings(domain, '', 30).then(setRankings).catch(() => {});
-      }
+    // ── Rankings: try domain from crawl status ────────────────────────────────
+    if (crawlSt.status === 'fulfilled' && crawlSt.value.website_url) {
+      const domain = crawlSt.value.website_url.replace(/^https?:\/\//, '').split('/')[0];
+      if (domain) getRankings(domain, '', 30).then(setRankings).catch(() => {});
     }
 
     setLastUpdated(new Date());
@@ -572,22 +631,37 @@ export default function Dashboard() {
     setRefreshing(false);
   }, [fetchAll]);
 
-  // Derived
-  const injectionStatus = overview?.injection_status;
-  const isConnected     = injectionStatus === 'live' || injectionStatus === 'configuring';
-  const noData          = !loading && !overview;
+  // ── Derived values: prefer visibility data, fall back to core stats ──────────
+  const isConnected = !!(crawlUrl || overview?.injection_status === 'live' || overview?.injection_status === 'configuring');
+  const hasAnyData  = !!(coreStats || overview);
+  // Show first-run banner only when truly no data at all
+  const noData      = !loading && !hasAnyData;
 
-  const publishedCount  = overview?.published_count ?? 0;
-  const openGaps        = overview?.open_gaps ?? 0;
-  const coveragePct     = overview?.coverage_pct ?? 0;
-  const crawlProgress   = overview?.crawl_progress ?? 0;
-  const rank1Count      = rankings.filter(r => r.position === 1).length;
-  const avgQuality      = scores.length
+  // Use visibility counts if available, otherwise derive from core stats
+  const publishedCount = overview?.published_count ?? coreStats?.documents_completed ?? 0;
+  const openGaps       = overview?.open_gaps       ?? coreStats?.open_gaps           ?? 0;
+  const coveragePct    = overview?.coverage_pct    ?? coreStats?.coverage_percentage ?? 0;
+  const crawlProgress  = overview?.crawl_progress  ?? (coreDocs.length > 0 ? 100 : 0);
+  const rank1Count     = rankings.filter(r => r.position === 1).length;
+
+  // Quality: from visibility scores, or fall back to avg from core stats
+  const avgQuality = scores.length
     ? scores.reduce((s, x) => s + x.quality_score, 0) / scores.length
-    : null;
-  const avgCoverage     = scores.length
+    : coreStats?.avg_aeo_score != null
+      ? coreStats.avg_aeo_score / 10   // convert 0-100 to 0-10
+      : null;
+
+  const avgCoverage = scores.length
     ? scores.reduce((s, x) => s + (x['coverage_pct'] as number ?? 0), 0) / scores.length
     : null;
+
+  // Documents list: prefer published (visibility) else core doc list
+  const displayedDocs: Array<VisibilityPublishedItem | DocumentListItem> =
+    published.length > 0 ? published : coreDocs;
+
+  // Effective last crawled
+  const effectiveLastCrawled = overview?.last_crawled_at ?? lastCrawled;
+  const effectiveCrawlUrl    = (overview?.['website_url'] as string | undefined) ?? crawlUrl;
 
   return (
     <div className="h-full flex flex-col overflow-hidden" style={{ background: 'var(--bg)', color: 'var(--text)' }}>
@@ -596,8 +670,35 @@ export default function Dashboard() {
       <div className="flex-1 overflow-y-auto">
         <div className="px-7 py-6 space-y-7">
 
-          {/* ── First-run banner ── */}
+          {/* ── First-run banner — only when ZERO data from ALL endpoints ── */}
           {noData && <FirstRunBanner />}
+
+          {/* ── Product/crawl status bar (shown whenever a crawl URL is known) ── */}
+          {!loading && effectiveCrawlUrl && (
+            <div
+              className="flex items-center gap-3 px-4 py-2.5 text-xs rounded"
+              style={{ background: 'rgba(34,197,94,0.06)', border: '1px solid rgba(34,197,94,0.2)' }}
+            >
+              <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: 'var(--success)' }} />
+              <span style={{ color: 'var(--success)', fontWeight: 600, fontFamily: 'ui-monospace, monospace' }}>
+                Connected
+              </span>
+              <a
+                href={effectiveCrawlUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="ml-1"
+                style={{ color: 'var(--text-3)', textDecoration: 'none', fontFamily: 'ui-monospace, monospace' }}
+              >
+                {effectiveCrawlUrl.replace(/^https?:\/\//, '')}
+              </a>
+              {effectiveLastCrawled && (
+                <span style={{ color: 'var(--text-3)', marginLeft: 'auto' }}>
+                  Last crawled {new Date(effectiveLastCrawled).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                </span>
+              )}
+            </div>
+          )}
 
           {/* ── KPI strip ── */}
           <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
@@ -608,19 +709,19 @@ export default function Dashboard() {
               loading={loading}
             />
             <StatCard
-              label="Published this week"
-              value={loading ? '—' : published.filter(p => new Date(p.published_at).getTime() > Date.now() - 7 * 24 * 3600 * 1000).length}
+              label="Documents processed"
+              value={loading ? '—' : (coreStats?.documents_completed ?? publishedCount)}
+              sub={coreStats ? `${coreStats.documents_failed ?? 0} failed` : undefined}
               loading={loading}
             />
             <StatCard
-              label="AI citations"
-              value={loading ? '—' : (overview?.['ai_citation_count'] as number | undefined) ?? '—'}
+              label="Gap analyses run"
+              value={loading ? '—' : (coreStats?.gap_analyses_run ?? '—')}
               loading={loading}
             />
             <StatCard
-              label="Traffic growth"
-              value={loading ? '—' : (overview?.['traffic_growth_pct'] as number | undefined) != null ? `${(overview!['traffic_growth_pct'] as number).toFixed(0)}%` : '—'}
-              delta={(overview?.['traffic_growth_pct'] as number | undefined)}
+              label="Total embeddings"
+              value={loading ? '—' : (coreStats?.total_embeddings ?? '—')}
               loading={loading}
             />
             <StatCard
@@ -631,49 +732,59 @@ export default function Dashboard() {
             <StatCard
               label="Open gaps"
               value={loading ? '—' : openGaps}
-              sub={openGaps === 0 && !loading ? 'All resolved' : undefined}
+              sub={openGaps === 0 && !loading && hasAnyData ? 'All resolved' : undefined}
               loading={loading}
             />
           </div>
 
           {/* ── Engine status + scores ── */}
-          {(isConnected || loading) && (
+          {(isConnected || hasAnyData || loading) && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               {/* Bridge status */}
               <Card className="p-5 flex flex-col gap-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-bold" style={{ color: 'var(--text)' }}>Engine status</span>
+                  <span className="text-sm font-bold" style={{ color: 'var(--text)' }}>Pipeline health</span>
                   {loading
                     ? <Skeleton className="h-5 w-16" />
-                    : <StatusPill status={injectionStatus ?? 'unknown'} />
+                    : <StatusPill status={overview?.injection_status ?? (isConnected ? 'live' : 'not_installed')} />
                   }
                 </div>
                 <div className="space-y-3">
-                  <ScoreBar label="Coverage"     score={coveragePct}  loading={loading} />
-                  <ScoreBar label="Crawl progress" score={crawlProgress} loading={loading} />
-                  <ScoreBar label="Avg quality"   score={avgQuality != null ? avgQuality * 10 : 0} loading={loading} />
-                  <ScoreBar label="Gap closure"   score={avgCoverage != null ? avgCoverage * 100 : 0} loading={loading} />
+                  <ScoreBar label="Coverage"       score={coveragePct}  loading={loading} />
+                  <ScoreBar label="Crawl progress"  score={crawlProgress} loading={loading} />
+                  <ScoreBar label="Avg quality"     score={avgQuality != null ? avgQuality * 10 : 0} loading={loading} />
+                  <ScoreBar label="Gap closure"     score={avgCoverage != null ? avgCoverage * 100 : 0} loading={loading} />
                 </div>
+                {coreStats && !loading && (
+                  <div className="pt-3 grid grid-cols-3 gap-2 text-xs" style={{ borderTop: '1px solid var(--border)', fontFamily: 'ui-monospace, monospace' }}>
+                    <div><span style={{ color: 'var(--text-3)' }}>Chunks</span><div style={{ color: 'var(--text)' }}>{coreStats.total_chunks?.toLocaleString() ?? '—'}</div></div>
+                    <div><span style={{ color: 'var(--text-3)' }}>Schemas</span><div style={{ color: 'var(--text)' }}>{coreStats.schemas_generated?.toLocaleString() ?? '—'}</div></div>
+                    <div><span style={{ color: 'var(--text-3)' }}>Trends</span><div style={{ color: 'var(--text)' }}>{coreStats.trends_today?.toLocaleString() ?? '—'}</div></div>
+                  </div>
+                )}
               </Card>
 
-              {/* Published */}
+              {/* Published / Documents */}
               <Card className="p-5 flex flex-col gap-3">
-                <span className="text-sm font-bold" style={{ color: 'var(--text)' }}>Content published</span>
+                <span className="text-sm font-bold" style={{ color: 'var(--text)' }}>Documents processed</span>
                 <div className="flex items-baseline gap-2">
                   <span className="text-[40px] font-bold leading-none tabular-nums" style={{ color: 'var(--text)' }}>
-                    {loading ? '—' : publishedCount}
+                    {loading ? '—' : (coreStats?.documents_completed ?? publishedCount)}
                   </span>
-                  <span className="text-base" style={{ color: 'var(--text-3)' }}>total items</span>
+                  <span className="text-base" style={{ color: 'var(--text-3)' }}>completed</span>
                 </div>
-                <p className="text-sm" style={{ color: 'var(--text-3)' }}>
-                  {loading ? '' : `${published.filter(p => new Date(p.published_at).getTime() > Date.now() - 7 * 24 * 3600 * 1000).length} published in the last 7 days`}
-                </p>
+                {coreStats && !loading && (
+                  <div className="flex gap-4 text-xs" style={{ fontFamily: 'ui-monospace, monospace' }}>
+                    <span style={{ color: 'var(--danger)'  }}>{coreStats.documents_failed ?? 0} failed</span>
+                    <span style={{ color: 'var(--warning)' }}>{coreStats.documents_queued ?? 0} queued</span>
+                  </div>
+                )}
                 {!loading && (
                   <div className="mt-auto pt-3" style={{ borderTop: '1px solid var(--border)' }}>
                     <span className="text-xs" style={{ color: 'var(--text-3)' }}>
-                      {overview?.last_crawled_at
-                        ? `Last crawled ${new Date(overview.last_crawled_at).toLocaleDateString([], { month: 'short', day: 'numeric' })}`
-                        : 'Crawl not yet run'}
+                      {effectiveLastCrawled
+                        ? `Last crawled ${new Date(effectiveLastCrawled).toLocaleDateString([], { month: 'short', day: 'numeric' })}`
+                        : 'No crawl recorded yet'}
                     </span>
                   </div>
                 )}
@@ -684,8 +795,8 @@ export default function Dashboard() {
           {/* ── Rankings ── */}
           <RankingsPanel rankings={rankings} loading={loading} />
 
-          {/* ── Published this week list ── */}
-          <PublishedList items={published} loading={loading} />
+          {/* ── Documents / Published list ── */}
+          <PublishedList items={displayedDocs as VisibilityPublishedItem[]} loading={loading} />
 
           {/* ── Quality scores ── */}
           <QualityList scores={scores} loading={loading} />
