@@ -7,12 +7,12 @@ import {
   TrendingUp, Search, Globe, Bot, CheckCircle2, Target,
   RefreshCw, Loader2, AlertTriangle, FileText,
   Activity, Zap, Eye, BarChart2, Shield, ArrowRight,
-  ChevronUp, ChevronDown, Minus, Key, Webhook,
+  ChevronUp, ChevronDown, Minus, Key, Webhook, Link2, Link2Off,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { getDashboardOverview, getActivityLog } from '../../api/dashboard';
+import { getDashboardOverview, getActivityLog, getVisibilityConnection, getMyTenantPerformance } from '../../api/dashboard';
 import { getQualityScore } from '../../api/gaps';
-import type { QualityScoreResponse, DashboardOverview, ActivityLogEntry } from '../../types';
+import type { QualityScoreResponse, DashboardOverview, ActivityLogEntry, VisibilityConnection, TenantPerformance } from '../../types';
 
 // ─── Shared tooltip style ─────────────────────────────────────────────────────
 
@@ -148,22 +148,31 @@ function SH({ title, sub, icon }: { title: string; sub?: string; icon?: React.Re
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function TenantDashboard() {
-  const [overview, setOverview]       = useState<DashboardOverview | null>(null);
-  const [activity, setActivity]       = useState<ActivityLogEntry[]>([]);
-  const [loading, setLoading]         = useState(true);
-  const [error, setError]             = useState('');
-  const [refreshing, setRefreshing]   = useState(false);
-  const [lastUpdated, setLastUpdated] = useState(new Date());
-  const [qsData, setQsData]           = useState<QualityScoreResponse | null>(null);
-  const [qsLoading, setQsLoading]     = useState(false);
+  const [overview, setOverview]         = useState<DashboardOverview | null>(null);
+  const [activity, setActivity]         = useState<ActivityLogEntry[]>([]);
+  const [loading, setLoading]           = useState(true);
+  const [error, setError]               = useState('');
+  const [refreshing, setRefreshing]     = useState(false);
+  const [lastUpdated, setLastUpdated]   = useState(new Date());
+  const [qsData, setQsData]             = useState<QualityScoreResponse | null>(null);
+  const [qsLoading, setQsLoading]       = useState(false);
+  const [connection, setConnection]     = useState<VisibilityConnection | null>(null);
+  const [tenantMe, setTenantMe]         = useState<TenantPerformance | null>(null);
 
   const load = useCallback((refreshMode = false) => {
     if (refreshMode) setRefreshing(true); else setLoading(true);
     setError('');
-    Promise.all([getDashboardOverview(), getActivityLog(24, 50)])
-      .then(([ov, acts]) => {
+    Promise.all([
+      getDashboardOverview(),
+      getActivityLog(24, 50),
+      getVisibilityConnection().catch(() => null),
+      getMyTenantPerformance().catch(() => null),
+    ])
+      .then(([ov, acts, conn, me]) => {
         setOverview(ov);
         setActivity(acts);
+        if (conn) setConnection(conn);
+        if (me)   setTenantMe(me);
         setLastUpdated(new Date());
       })
       .catch(() => setError('Could not load performance data from the backend.'))
@@ -172,19 +181,22 @@ export default function TenantDashboard() {
 
   useEffect(() => { load(); }, [load]);
 
-  // Load quality score once overview data arrives
+  // Load quality score once overview + connection data arrives
   useEffect(() => {
     if (!overview) return;
     setQsLoading(true);
+    const pName = tenantMe?.tenant.name ?? connection?.website_url ?? 'My Product';
     getQualityScore({
-      content: 'website content analysis',
-      title: 'My Product',
+      content: connection?.website_url
+        ? `Website: ${connection.website_url}`
+        : 'website content analysis',
+      title: pName,
       query: 'product analysis',
     })
       .then(res => setQsData(res))
       .catch(() => {})
       .finally(() => setQsLoading(false));
-  }, [overview]);
+  }, [overview, connection, tenantMe]);
 
   const fmt    = new Intl.NumberFormat().format;
   const fmtPct = (n: number) => `${n.toFixed(1)}%`;
@@ -210,6 +222,12 @@ export default function TenantDashboard() {
     );
   }
 
+  // Resolve product identity from backend (falls back gracefully)
+  const productName = tenantMe?.tenant.name ?? connection?.website_url ?? 'My Product';
+  const websiteUrl  = connection?.website_url ?? null;
+  const bridgeOk    = connection?.bridge_status === 'connected';
+  const lastCrawled = connection?.last_crawled_at ?? null;
+
   // Map DashboardOverview → display values
   const seo     = overview.avg_seo_score ?? 0;
   const geo     = overview.avg_geo_score ?? 0;
@@ -218,9 +236,9 @@ export default function TenantDashboard() {
 
   // Tenant display object built from overview
   const t = {
-    name:              'My Product',
-    tenant_id:         '',
-    plan:              'free',
+    name:              productName,
+    tenant_id:         tenantMe?.tenant.tenant_id ?? '',
+    plan:              tenantMe?.tenant.plan ?? 'free',
     status:            'active' as const,
     avg_seo_score:     seo,
     avg_geo_score:     geo,
@@ -252,6 +270,17 @@ export default function TenantDashboard() {
               <Zap size={10} style={{ color: 'var(--bg)' }} />
             </div>
             <h1 className="text-sm font-semibold" style={{ color: 'var(--text)' }}>{t.name}</h1>
+            {websiteUrl && (
+              <a
+                href={websiteUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs"
+                style={{ color: 'var(--text-3)', fontFamily: 'ui-monospace, monospace', textDecoration: 'none' }}
+              >
+                {websiteUrl.replace(/^https?:\/\//, '')}
+              </a>
+            )}
             <span className="text-sm" style={{ color: 'var(--text-3)' }}>/</span>
             <span className="text-sm" style={{ color: 'var(--text-2)' }}>Performance</span>
             <span
@@ -269,7 +298,7 @@ export default function TenantDashboard() {
             </span>
           </div>
           <p className="text-xs ml-7" style={{ color: 'var(--text-3)', fontFamily: 'ui-monospace, monospace' }}>
-            Tenant <span style={{ color: 'var(--text-2)' }}>{t.tenant_id}</span>
+            Tenant <span style={{ color: 'var(--text-2)' }}>{t.tenant_id || '—'}</span>
             <span className="mx-2" style={{ color: 'var(--border)' }}>·</span>
             Plan <span style={{ color: 'var(--text-2)' }}>{t.plan ?? 'free'}</span>
             <span className="mx-2" style={{ color: 'var(--border)' }}>·</span>
@@ -285,6 +314,40 @@ export default function TenantDashboard() {
           <RefreshCw size={12} className={refreshing ? 'animate-spin' : ''} /> Refresh
         </button>
       </div>
+
+      {/* ── Connection status banner ── */}
+      {connection && (
+        <div
+          className="px-6 py-2 flex items-center gap-3 text-xs"
+          style={bridgeOk
+            ? { background: 'rgba(34,197,94,0.06)', borderBottom: '1px solid rgba(34,197,94,0.18)' }
+            : { background: 'rgba(239,68,68,0.06)', borderBottom: '1px solid rgba(239,68,68,0.18)' }
+          }
+        >
+          {bridgeOk
+            ? <Link2    size={12} style={{ color: 'var(--success)', flexShrink: 0 }} />
+            : <Link2Off size={12} style={{ color: 'var(--danger)',  flexShrink: 0 }} />
+          }
+          <span style={{ color: bridgeOk ? 'var(--success)' : 'var(--danger)', fontWeight: 600, fontFamily: 'ui-monospace, monospace' }}>
+            Bridge {connection.bridge_status}
+          </span>
+          {connection.platform_type && (
+            <span style={{ color: 'var(--text-3)' }}>· {connection.platform_type}</span>
+          )}
+          {lastCrawled && (
+            <span style={{ color: 'var(--text-3)' }}>· Last crawled {relTime(lastCrawled)}</span>
+          )}
+          {!bridgeOk && (
+            <Link
+              to="/connect"
+              className="ml-auto flex items-center gap-1"
+              style={{ color: 'var(--danger)', fontWeight: 600, textDecoration: 'none' }}
+            >
+              Reconnect <ArrowRight size={10} />
+            </Link>
+          )}
+        </div>
+      )}
 
       <div className="px-6 py-6 space-y-6 max-w-6xl">
 
@@ -587,8 +650,8 @@ export default function TenantDashboard() {
                 />
                 <span className="text-xs flex-1 min-w-0 truncate" style={{ color: 'var(--text)', fontFamily: 'ui-monospace, monospace' }}>{ev.event_type}</span>
                 <span className="text-xs flex-shrink-0" style={{ color: 'var(--text-3)', fontFamily: 'ui-monospace, monospace' }}>{ev.service}</span>
-                {ev.document_id && (
-                  <span className="text-xs flex-shrink-0 hidden md:inline" style={{ color: 'var(--text-3)', fontFamily: 'ui-monospace, monospace' }}>{ev.document_id}</span>
+                {!!ev.payload?.document_id && (
+                  <span className="text-xs flex-shrink-0 hidden md:inline" style={{ color: 'var(--text-3)', fontFamily: 'ui-monospace, monospace' }}>{String(ev.payload.document_id)}</span>
                 )}
                 {ev.duration_ms && (
                   <span className="text-xs tabular-nums flex-shrink-0" style={{ color: 'var(--text-3)', fontFamily: 'ui-monospace, monospace' }}>{ev.duration_ms}ms</span>
