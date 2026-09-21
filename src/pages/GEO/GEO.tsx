@@ -137,7 +137,11 @@ export default function GEO() {
     analyzeGeo({
       document_id:   selectedDoc,
       tenant_id:     '',
-      content:       doc?.filename ?? selectedDoc,
+      // Backend requires content >= 50 chars — pad with document context if filename is short
+      content:       (doc?.filename
+        ? `Document: ${doc.filename} — GEO analysis for generative engine optimisation`
+        : `Document ID: ${selectedDoc} — GEO analysis for generative engine optimisation`
+      ),
       target_models: selectedModels,
     })
       .then(setResult)

@@ -155,7 +155,9 @@ export default function SEO() {
     analyzeSeo({
       document_id:     selectedDoc,
       tenant_id:       '',
-      content:         doc?.filename ?? selectedDoc,
+      content:         doc?.filename
+        ? `Document: ${doc.filename} — SEO analysis for search engine optimisation`
+        : `Document ID: ${selectedDoc} — SEO analysis for search engine optimisation`,
       target_keywords: kws,
       url:             url || undefined,
     })

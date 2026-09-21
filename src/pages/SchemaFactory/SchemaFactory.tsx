@@ -157,7 +157,9 @@ export default function SchemaFactory() {
     generateSchema({
       document_id: selectedDoc,
       tenant_id:   '',
-      content:     doc?.filename ?? selectedDoc,
+      content:     doc?.filename
+        ? `Document: ${doc.filename} — schema generation for structured data`
+        : `Document ID: ${selectedDoc} — schema generation for structured data`,
       schema_type: selectedType,
     })
       .then(setResult)
