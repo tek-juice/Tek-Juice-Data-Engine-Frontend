@@ -8,8 +8,8 @@ import type { SyncRun, SyncType } from '../types';
  * Recent sync run history — useful for admin status panel.
  */
 export async function getSyncStatus(): Promise<SyncRun[]> {
-  const { data } = await apiClient.get<SyncRun[]>('/api/v1/sync/status');
-  return data;
+  const { data } = await apiClient.get<SyncRun[] | { items: SyncRun[] }>('/api/v1/sync/status');
+  return Array.isArray(data) ? data : (data as { items: SyncRun[] }).items ?? [];
 }
 
 export interface TriggerSyncPayload {

@@ -51,11 +51,11 @@ export async function getTelemetryTimeseries(
   hours = 24,
   interval_minutes = 60,
 ): Promise<TelemetryTimeseriesPoint[]> {
-  const { data } = await apiClient.get<TelemetryTimeseriesPoint[]>(
+  const { data } = await apiClient.get<TelemetryTimeseriesPoint[] | { items: TelemetryTimeseriesPoint[] }>(
     '/api/v1/telemetry/timeseries',
     { params: { hours, interval_minutes } },
   );
-  return data;
+  return Array.isArray(data) ? data : (data as { items: TelemetryTimeseriesPoint[] }).items ?? [];
 }
 
 /**
@@ -65,11 +65,11 @@ export async function getTelemetryTimeseries(
 export async function getTelemetryErrors(
   limit = 100,
 ): Promise<TelemetryError[]> {
-  const { data } = await apiClient.get<TelemetryError[]>(
+  const { data } = await apiClient.get<TelemetryError[] | { items: TelemetryError[] }>(
     '/api/v1/telemetry/errors',
     { params: { limit } },
   );
-  return data;
+  return Array.isArray(data) ? data : (data as { items: TelemetryError[] }).items ?? [];
 }
 
 /**

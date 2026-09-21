@@ -64,11 +64,11 @@ export async function getDocumentStatus(
 export async function listDocuments(
   params?: PaginatedQuery & { status?: DocumentStatus },
 ): Promise<DocumentListItem[]> {
-  const { data } = await apiClient.get<DocumentListItem[]>(
+  const { data } = await apiClient.get<DocumentListItem[] | { items: DocumentListItem[] }>(
     '/api/v1/ingest/documents',
     { params: { page: 1, page_size: 20, ...params } },
   );
-  return data;
+  return Array.isArray(data) ? data : (data as { items: DocumentListItem[] }).items ?? [];
 }
 
 /**

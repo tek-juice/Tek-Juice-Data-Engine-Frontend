@@ -22,10 +22,10 @@ export async function runScrape(payload: ScrapeRunPayload): Promise<unknown> {
  * Fetch latest scraped trending topics for the dashboard trend feed.
  */
 export async function getTrendingTopics(): Promise<TrendingTopic[]> {
-  const { data } = await apiClient.get<TrendingTopic[]>(
+  const { data } = await apiClient.get<TrendingTopic[] | { items: TrendingTopic[] }>(
     '/api/v1/scrape/trending',
   );
-  return data;
+  return Array.isArray(data) ? data : (data as { items: TrendingTopic[] }).items ?? [];
 }
 
 export interface IndirectScrapePayload {
@@ -49,8 +49,8 @@ export async function runIndirectScrape(
  * List all supported platforms and their enabled/disabled status.
  */
 export async function getScraperPlatforms(): Promise<Platform[]> {
-  const { data } = await apiClient.get<Platform[]>('/api/v1/scrape/platforms');
-  return data;
+  const { data } = await apiClient.get<Platform[] | { items: Platform[] }>('/api/v1/scrape/platforms');
+  return Array.isArray(data) ? data : (data as { items: Platform[] }).items ?? [];
 }
 
 /**
@@ -61,9 +61,9 @@ export async function getDeadLetterItems(
   platform?: string,
   limit = 50,
 ): Promise<DeadLetterItem[]> {
-  const { data } = await apiClient.get<DeadLetterItem[]>(
+  const { data } = await apiClient.get<DeadLetterItem[] | { items: DeadLetterItem[] }>(
     '/api/v1/scrape/dead-letter',
     { params: { ...(platform && { platform }), limit } },
   );
-  return data;
+  return Array.isArray(data) ? data : (data as { items: DeadLetterItem[] }).items ?? [];
 }
