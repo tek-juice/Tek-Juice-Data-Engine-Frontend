@@ -580,7 +580,7 @@ export default function Monitor() {
   // ── Derived values ──────────────────────────────────────────────────────────
 
   const errorRate   = telemetry?.error_rate ?? 0;
-  const totalEvents = telemetry ? Object.values(telemetry.event_counts).reduce((a, b) => a + b, 0) : 0;
+  const totalEvents = telemetry?.event_counts ? Object.values(telemetry.event_counts).reduce((a: number, b: unknown) => a + (Number(b) || 0), 0) : 0;
   const queueDepth  = queue?.queue_depth ?? (queue as Record<string, unknown> | null)?.['depth'] as number ?? 0;
   const activeHooks = webhooks.filter(w => w.is_active !== false).length;
 
