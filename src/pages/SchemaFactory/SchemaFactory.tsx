@@ -40,9 +40,9 @@ function SchemaResult({ result }: { result: SchemaGenerateResponse }) {
           <div className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>Citation score</div>
           <div
             className="text-3xl font-bold tabular-nums"
-            style={{ color: result.citation_score >= 70 ? 'var(--success)' : result.citation_score >= 40 ? 'var(--warning)' : 'var(--danger)', fontFamily: 'ui-monospace, monospace' }}
+            style={{ color: (result.citation_score ?? 0) >= 70 ? 'var(--success)' : (result.citation_score ?? 0) >= 40 ? 'var(--warning)' : 'var(--danger)', fontFamily: 'ui-monospace, monospace' }}
           >
-            {result.citation_score.toFixed(0)}
+            {(result.citation_score ?? 0).toFixed(0)}
             <span className="text-sm font-normal ml-1" style={{ color: 'var(--text-3)' }}>/100</span>
           </div>
         </div>
@@ -50,9 +50,9 @@ function SchemaResult({ result }: { result: SchemaGenerateResponse }) {
           <div className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>Zero-click score</div>
           <div
             className="text-3xl font-bold tabular-nums"
-            style={{ color: result.zero_click_score >= 70 ? 'var(--success)' : result.zero_click_score >= 40 ? 'var(--warning)' : 'var(--danger)', fontFamily: 'ui-monospace, monospace' }}
+            style={{ color: (result.zero_click_score ?? 0) >= 70 ? 'var(--success)' : (result.zero_click_score ?? 0) >= 40 ? 'var(--warning)' : 'var(--danger)', fontFamily: 'ui-monospace, monospace' }}
           >
-            {result.zero_click_score.toFixed(0)}
+            {(result.zero_click_score ?? 0).toFixed(0)}
             <span className="text-sm font-normal ml-1" style={{ color: 'var(--text-3)' }}>/100</span>
           </div>
         </div>

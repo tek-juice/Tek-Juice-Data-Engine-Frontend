@@ -113,19 +113,19 @@ function DocRow({ doc }: { doc: DocumentListItem }) {
                 <div className="p-3" style={{ border: '1px solid var(--border)' }}>
                   <div className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>Gap score</div>
                   <div className="text-2xl font-bold tabular-nums" style={{ color: severityColor(analysis.severity), fontFamily: 'ui-monospace, monospace' }}>
-                    {(analysis.gap_score * 100).toFixed(0)}%
+                    {((analysis.gap_score ?? 0) * 100).toFixed(0)}%
                   </div>
                 </div>
                 <div className="p-3" style={{ border: '1px solid var(--border)' }}>
                   <div className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>Before coverage</div>
                   <div className="text-2xl font-bold tabular-nums" style={{ color: 'var(--text)', fontFamily: 'ui-monospace, monospace' }}>
-                    {(analysis.before_coverage * 100).toFixed(0)}%
+                    {analysis.before_coverage != null ? `${(analysis.before_coverage * 100).toFixed(0)}%` : '—'}
                   </div>
                 </div>
                 <div className="p-3" style={{ border: '1px solid var(--border)' }}>
                   <div className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>After coverage</div>
                   <div className="text-2xl font-bold tabular-nums" style={{ color: 'var(--success)', fontFamily: 'ui-monospace, monospace' }}>
-                    {(analysis.after_coverage * 100).toFixed(0)}%
+                    {analysis.after_coverage != null ? `${(analysis.after_coverage * 100).toFixed(0)}%` : '—'}
                   </div>
                 </div>
               </div>

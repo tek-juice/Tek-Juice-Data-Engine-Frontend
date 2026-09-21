@@ -188,8 +188,8 @@ export default function TenantDashboard() {
     const pName = tenantMe?.tenant.name ?? connection?.website_url ?? 'My Product';
     getQualityScore({
       content: connection?.website_url
-        ? `Website: ${connection.website_url}`
-        : 'website content analysis',
+        ? `Website: ${connection.website_url} — product content quality analysis for SEO and GEO optimisation`
+        : 'Product website content quality analysis for SEO and GEO visibility optimisation score',
       title: pName,
       query: 'product analysis',
     })

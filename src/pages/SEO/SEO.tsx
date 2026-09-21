@@ -6,8 +6,8 @@ import type { DocumentListItem, SeoAnalysisResponse } from '../../types';
 
 // ── Score bar ─────────────────────────────────────────────────────────────────
 
-function ScoreBar({ label, score }: { label: string; score: number }) {
-  const pct   = Math.min(100, Math.max(0, score));
+function ScoreBar({ label, score }: { label: string; score: number | null }) {
+  const pct   = Math.min(100, Math.max(0, score ?? 0));
   const color = pct >= 80 ? 'var(--success)' : pct >= 60 ? 'var(--info)' : pct >= 40 ? 'var(--warning)' : 'var(--danger)';
   return (
     <div className="flex items-center gap-3">
@@ -23,6 +23,8 @@ function ScoreBar({ label, score }: { label: string; score: number }) {
 // ── Result panel ──────────────────────────────────────────────────────────────
 
 function SeoResult({ result }: { result: SeoAnalysisResponse }) {
+  const overall     = result.overall_score     ?? 0;
+  const readability = result.readability_score ?? null;
   return (
     <div className="space-y-5">
       <div className="grid grid-cols-2 gap-3">
@@ -31,26 +33,26 @@ function SeoResult({ result }: { result: SeoAnalysisResponse }) {
           <div
             className="text-4xl font-bold tabular-nums"
             style={{
-              color: result.overall_score >= 80 ? 'var(--success)' : result.overall_score >= 60 ? 'var(--info)' : result.overall_score >= 40 ? 'var(--warning)' : 'var(--danger)',
+              color: overall >= 80 ? 'var(--success)' : overall >= 60 ? 'var(--info)' : overall >= 40 ? 'var(--warning)' : 'var(--danger)',
               fontFamily: 'ui-monospace, monospace',
             }}
           >
-            {result.overall_score.toFixed(0)}
+            {overall.toFixed(0)}
             <span className="text-base font-normal ml-1" style={{ color: 'var(--text-3)' }}>/100</span>
           </div>
         </div>
         <div className="p-3" style={{ border: '1px solid var(--border)', background: 'var(--surface)' }}>
           <div className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>Readability</div>
           <div className="text-4xl font-bold tabular-nums" style={{ color: 'var(--info)', fontFamily: 'ui-monospace, monospace' }}>
-            {result.readability_score.toFixed(0)}
-            <span className="text-base font-normal ml-1" style={{ color: 'var(--text-3)' }}>/100</span>
+            {readability !== null ? readability.toFixed(0) : '—'}
+            {readability !== null && <span className="text-base font-normal ml-1" style={{ color: 'var(--text-3)' }}>/100</span>}
           </div>
         </div>
       </div>
 
       <div className="space-y-2">
-        <ScoreBar label="SEO score"    score={result.overall_score} />
-        <ScoreBar label="Readability"  score={result.readability_score} />
+        <ScoreBar label="SEO score"    score={overall} />
+        <ScoreBar label="Readability"  score={readability} />
       </div>
 
       {result.matched_keywords.length > 0 && (
