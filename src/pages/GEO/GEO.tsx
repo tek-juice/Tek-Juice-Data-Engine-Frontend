@@ -38,22 +38,32 @@ function ScoreRing({ score, label }: { score: number; label: string }) {
 function GeoResult({ result }: { result: GeoAnalysisResponse }) {
   const [showContent, setShowContent] = useState(false);
 
+  // Backend returns citation_readiness as bool or number — normalise to number
+  const citationScore = typeof result.citation_readiness === 'boolean'
+    ? (result.citation_readiness ? 100 : 0)
+    : (result.citation_readiness ?? 0);
+
+  // Backend returns extracted_entities as objects {text, entity_type, ...} or strings
+  const entityLabels: string[] = (result.extracted_entities ?? []).map((e: unknown) =>
+    typeof e === 'string' ? e : (e as { text?: string }).text ?? ''
+  ).filter(Boolean);
+
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap gap-6 justify-center py-4" style={{ border: '1px solid var(--border)', background: 'var(--surface)' }}>
-        <ScoreRing score={result.llm_visibility_score}     label="LLM visibility" />
-        <ScoreRing score={result.entity_coverage}          label="Entity coverage" />
-        <ScoreRing score={result.citation_readiness}       label="Citation readiness" />
-        <ScoreRing score={result.context_richness_score}   label="Context richness" />
+        <ScoreRing score={result.llm_visibility_score ?? 0}   label="LLM visibility" />
+        <ScoreRing score={result.entity_coverage ?? 0}        label="Entity coverage" />
+        <ScoreRing score={citationScore}                       label="Citation readiness" />
+        <ScoreRing score={result.context_richness_score ?? 0} label="Context richness" />
       </div>
 
-      {result.extracted_entities.length > 0 && (
+      {entityLabels.length > 0 && (
         <div>
           <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: 'var(--text-3)' }}>Extracted entities</p>
           <div className="flex flex-wrap gap-1.5">
-            {result.extracted_entities.map((e, i) => (
+            {entityLabels.map((label, i) => (
               <span key={i} className="text-xs px-2 py-0.5" style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', color: 'var(--text-2)' }}>
-                {e}
+                {label}
               </span>
             ))}
           </div>
