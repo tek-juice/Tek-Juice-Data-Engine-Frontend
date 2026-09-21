@@ -16,12 +16,19 @@ import Onboarding    from './pages/Onboarding/Onboarding';
 import Connect       from './pages/Connect/Connect';
 
 // ── App pages ─────────────────────────────────────────────────────────────────
-import Dashboard      from './pages/Dashboard/Dashboard';
-import Credentials    from './pages/Credentials/Credentials';
-import WebsiteSetup   from './pages/WebsiteSetup/WebsiteSetup';
+import Dashboard       from './pages/Dashboard/Dashboard';
+import Credentials     from './pages/Credentials/Credentials';
+import WebsiteSetup    from './pages/WebsiteSetup/WebsiteSetup';
 import TenantDashboard from './pages/TenantDashboard/TenantDashboard';
-import Monitor        from './pages/Monitor/Monitor';
-import AdminTenants   from './pages/AdminTenants/AdminTenants';
+import Monitor         from './pages/Monitor/Monitor';
+import AdminTenants    from './pages/AdminTenants/AdminTenants';
+import GapDetection    from './pages/GapDetection/GapDetection';
+import Trends          from './pages/Trends/Trends';
+import SchemaFactory   from './pages/SchemaFactory/SchemaFactory';
+import SEO             from './pages/SEO/SEO';
+import GEO             from './pages/GEO/GEO';
+import Sync            from './pages/Sync/Sync';
+import Telemetry       from './pages/Telemetry/Telemetry';
 
 // ── Placeholder for pages not yet built ──────────────────────────────────────
 function Placeholder({ name }: { name: string }) {
@@ -84,17 +91,17 @@ function App() {
             <Route path="/search"         element={page(<Placeholder name="Search" />)} />
 
             {/* Intelligence */}
-            <Route path="/gaps"           element={page(<Placeholder name="Gap Detection" />)} />
-            <Route path="/trends"         element={page(<Placeholder name="Trends" />)} />
-            <Route path="/schema-factory" element={page(<Placeholder name="Schema Factory" />)} />
+            <Route path="/gaps"           element={page(<GapDetection />)} />
+            <Route path="/trends"         element={page(<Trends />)} />
+            <Route path="/schema-factory" element={page(<SchemaFactory />)} />
 
             {/* Visibility */}
-            <Route path="/seo"            element={page(<Placeholder name="SEO" />)} />
-            <Route path="/geo"            element={page(<Placeholder name="GEO" />)} />
+            <Route path="/seo"            element={page(<SEO />)} />
+            <Route path="/geo"            element={page(<GEO />)} />
 
             {/* System */}
-            <Route path="/sync"           element={page(<Placeholder name="Sync" />)} />
-            <Route path="/telemetry"      element={page(<Placeholder name="Telemetry" />)} />
+            <Route path="/sync"           element={page(<Sync />)} />
+            <Route path="/telemetry"      element={page(<Telemetry />)} />
 
             {/* Access */}
             <Route path="/credentials"    element={page(<Credentials />)} />
