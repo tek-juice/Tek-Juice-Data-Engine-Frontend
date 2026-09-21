@@ -39,11 +39,11 @@ export async function getVisibilityOverview(): Promise<VisibilityOverview> {
 export async function getVisibilityPublished(
   params?: PaginatedQuery,
 ): Promise<VisibilityPublishedItem[]> {
-  const { data } = await apiClient.get<VisibilityPublishedItem[]>(
+  const { data } = await apiClient.get<VisibilityPublishedItem[] | { items: VisibilityPublishedItem[] }>(
     '/api/v1/dashboard/visibility/published',
     { params: { page: 1, page_size: 20, ...params } },
   );
-  return data;
+  return Array.isArray(data) ? data : (data as { items: VisibilityPublishedItem[] }).items ?? [];
 }
 
 /**
@@ -62,10 +62,10 @@ export async function getVisibilityConnection(): Promise<VisibilityConnection> {
  * Gap closure progress per document — coverage before/after per item.
  */
 export async function getVisibilityGaps(): Promise<VisibilityGapItem[]> {
-  const { data } = await apiClient.get<VisibilityGapItem[]>(
+  const { data } = await apiClient.get<VisibilityGapItem[] | { items: VisibilityGapItem[] }>(
     '/api/v1/dashboard/visibility/gaps',
   );
-  return data;
+  return Array.isArray(data) ? data : (data as { items: VisibilityGapItem[] }).items ?? [];
 }
 
 /**
@@ -73,10 +73,10 @@ export async function getVisibilityGaps(): Promise<VisibilityGapItem[]> {
  * Quality score distribution across all published content.
  */
 export async function getVisibilityQualityScores(): Promise<VisibilityQualityScore[]> {
-  const { data } = await apiClient.get<VisibilityQualityScore[]>(
+  const { data } = await apiClient.get<VisibilityQualityScore[] | { items: VisibilityQualityScore[] }>(
     '/api/v1/dashboard/visibility/quality-scores',
   );
-  return data;
+  return Array.isArray(data) ? data : (data as { items: VisibilityQualityScore[] }).items ?? [];
 }
 
 // ── Authenticated Proxy ───────────────────────────────────────────────────────

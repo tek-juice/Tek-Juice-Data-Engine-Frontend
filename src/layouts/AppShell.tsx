@@ -18,20 +18,30 @@ const NAV: NavGroup[] = [
   {
     heading: 'Overview',
     items: [
-      { label: 'Dashboard',       to: '/dashboard' },
+      { label: 'Dashboard',      to: '/dashboard' },
+      { label: 'My Performance', to: '/my-performance' },
     ],
   },
   {
-    heading: 'Access',
+    heading: 'Intelligence',
     items: [
-      { label: 'API Credentials', to: '/credentials' },
-      { label: 'Settings',        to: '/settings' },
+      { label: 'Gap Detection',    to: '/gaps' },
+      { label: 'Trends',           to: '/trends' },
+      { label: 'Schema Factory',   to: '/schema-factory' },
     ],
   },
   {
-    heading: 'Performance',
+    heading: 'Visibility',
     items: [
-      { label: 'My Performance',  to: '/my-performance' },
+      { label: 'SEO',  to: '/seo' },
+      { label: 'GEO',  to: '/geo' },
+    ],
+  },
+  {
+    heading: 'System',
+    items: [
+      { label: 'Sync',      to: '/sync' },
+      { label: 'Telemetry', to: '/telemetry' },
     ],
   },
 ];
