@@ -702,6 +702,7 @@ export default function Dashboard() {
 
           {/* ── KPI strip ── */}
           <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
+            {/* Plan section 16: keywords #1, content published this week, AI citations, traffic growth, avg quality, open gaps */}
             <StatCard
               label="Keywords #1"
               value={loading ? '—' : rank1Count}
@@ -709,19 +710,25 @@ export default function Dashboard() {
               loading={loading}
             />
             <StatCard
-              label="Documents processed"
-              value={loading ? '—' : (coreStats?.documents_completed ?? publishedCount)}
-              sub={coreStats ? `${coreStats.documents_failed ?? 0} failed` : undefined}
+              label="Published this week"
+              value={loading ? '—' : (() => {
+                const cutoff = Date.now() - 7 * 24 * 3600 * 1000;
+                if (published.length) return published.filter(p => new Date(p.published_at).getTime() > cutoff).length;
+                return coreDocs.filter(d => new Date((d.created_at ?? '') as string).getTime() > cutoff).length;
+              })()}
               loading={loading}
             />
             <StatCard
-              label="Gap analyses run"
-              value={loading ? '—' : (coreStats?.gap_analyses_run ?? '—')}
+              label="AI citations"
+              value={loading ? '—' : ((overview?.['ai_citation_count'] as number | undefined) ?? '—')}
               loading={loading}
             />
             <StatCard
-              label="Total embeddings"
-              value={loading ? '—' : (coreStats?.total_embeddings ?? '—')}
+              label="Traffic growth"
+              value={loading ? '—' : (overview?.['traffic_growth_pct'] as number | undefined) != null
+                ? `${(overview!['traffic_growth_pct'] as number).toFixed(0)}%`
+                : '—'}
+              delta={(overview?.['traffic_growth_pct'] as number | undefined)}
               loading={loading}
             />
             <StatCard

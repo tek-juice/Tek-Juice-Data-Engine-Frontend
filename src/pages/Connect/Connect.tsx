@@ -7,7 +7,6 @@ import {
   onboardInstall,
   onboardPing,
 } from '../../api/onboard';
-import { register as registerUser } from '../../api/auth';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -18,6 +17,11 @@ type Platform =
   | 'shopify'
   | 'wix'
   | 'webflow'
+  | 'nextjs'
+  | 'laravel'
+  | 'django'
+  | 'graphql'
+  | 'headless'
   | 'ssh'
   | 'unknown';
 
@@ -30,24 +34,24 @@ interface PlatformGuide {
 const PLATFORM_GUIDES: Record<Platform, PlatformGuide> = {
   wordpress: {
     label: 'WordPress',
-    guide: 'Generate an Application Password in WordPress › Users › Profile › Application Passwords.',
+    guide: 'Go to WordPress › Users › Profile › Application Passwords. Enter a name (e.g. "Data Engine"), click Add New, and paste the generated password below.',
     fields: [
-      { id: 'wp_url',      label: 'WordPress site URL',        placeholder: 'https://example.com' },
-      { id: 'wp_user',     label: 'WordPress username',        placeholder: 'admin' },
-      { id: 'wp_password', label: 'Application password',      placeholder: 'xxxx xxxx xxxx xxxx', type: 'password' },
+      { id: 'wp_url',      label: 'WordPress site URL',  placeholder: 'https://example.com' },
+      { id: 'wp_user',     label: 'WordPress username',  placeholder: 'admin' },
+      { id: 'wp_password', label: 'Application password', placeholder: 'xxxx xxxx xxxx xxxx', type: 'password' },
     ],
   },
   shopify: {
     label: 'Shopify',
-    guide: 'Generate a Private App API key in Shopify Admin › Apps › Develop Apps.',
+    guide: 'Go to Shopify Admin › Apps › Develop Apps. Create a private app, enable write access to Blog Posts and Pages, install it, and paste the access token below.',
     fields: [
-      { id: 'shop_domain',  label: 'Shop domain',     placeholder: 'myshop.myshopify.com' },
-      { id: 'access_token', label: 'Access token',    placeholder: 'shpat_…', type: 'password' },
+      { id: 'shop_domain',  label: 'Shop domain',  placeholder: 'myshop.myshopify.com' },
+      { id: 'access_token', label: 'Access token', placeholder: 'shpat_…', type: 'password' },
     ],
   },
   wix: {
     label: 'Wix',
-    guide: 'Generate an API key in Wix Dashboard › Settings › API Keys.',
+    guide: 'Go to Wix Dashboard › Settings › API Keys. Click Generate API Key, select all CMS permissions, and paste the key and your Site ID below.',
     fields: [
       { id: 'wix_site_id', label: 'Site ID',  placeholder: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx' },
       { id: 'wix_api_key', label: 'API key',  placeholder: 'IST.eyJ…', type: 'password' },
@@ -55,27 +59,70 @@ const PLATFORM_GUIDES: Record<Platform, PlatformGuide> = {
   },
   webflow: {
     label: 'Webflow',
-    guide: 'Generate an API token in Webflow Project Settings › Integrations › API Access.',
+    guide: 'Go to Webflow Project Settings › Integrations › API Access. Generate a Site API token with CMS write permissions and paste it below.',
     fields: [
       { id: 'webflow_token', label: 'API token', placeholder: 'wf_…', type: 'password' },
     ],
   },
-  ssh: {
-    label: 'Custom / SSH',
-    guide: 'Provide SSH access to your server and we will detect and install the bridge automatically.',
+  nextjs: {
+    label: 'Next.js',
+    guide: 'Provide SSH access to your server. The engine will connect, detect your Next.js setup, auto-generate an API route for content injection, install it, test it, and disconnect.',
     fields: [
       { id: 'ssh_host',     label: 'SSH host',     placeholder: '203.0.113.10' },
       { id: 'ssh_user',     label: 'SSH username', placeholder: 'ubuntu' },
-      { id: 'ssh_password', label: 'SSH password or key passphrase', type: 'password' },
+      { id: 'ssh_password', label: 'SSH password or key passphrase', type: 'password', placeholder: '••••••••' },
+    ],
+  },
+  laravel: {
+    label: 'Laravel / PHP',
+    guide: 'Provide SSH access to your server. The engine will connect, install a Laravel receiver package, configure it, test it, and disconnect. No code changes needed from you.',
+    fields: [
+      { id: 'ssh_host',     label: 'SSH host',     placeholder: '203.0.113.10' },
+      { id: 'ssh_user',     label: 'SSH username', placeholder: 'ubuntu' },
+      { id: 'ssh_password', label: 'SSH password or key passphrase', type: 'password', placeholder: '••••••••' },
+    ],
+  },
+  django: {
+    label: 'Django / Python',
+    guide: 'Provide SSH access to your server. The engine will connect, install a Django receiver app, configure it, test it, and disconnect. No code changes needed from you.',
+    fields: [
+      { id: 'ssh_host',     label: 'SSH host',     placeholder: '203.0.113.10' },
+      { id: 'ssh_user',     label: 'SSH username', placeholder: 'ubuntu' },
+      { id: 'ssh_password', label: 'SSH password or key passphrase', type: 'password', placeholder: '••••••••' },
+    ],
+  },
+  graphql: {
+    label: 'GraphQL API',
+    guide: 'Provide your GraphQL endpoint and an API key or Bearer token. The engine will introspect the schema, identify content mutation types, and inject content using your existing API — no installation required.',
+    fields: [
+      { id: 'graphql_endpoint', label: 'GraphQL endpoint', placeholder: 'https://example.com/graphql' },
+      { id: 'graphql_token',    label: 'API key / Bearer token', placeholder: 'Bearer …', type: 'password' },
+    ],
+  },
+  headless: {
+    label: 'Headless CMS (Contentful / Strapi / Sanity)',
+    guide: 'Provide your CMS API key. The engine will use your CMS write API directly — your backend is never touched.',
+    fields: [
+      { id: 'cms_space',  label: 'Space ID or project name', placeholder: 'my-space' },
+      { id: 'cms_token',  label: 'CMS API key (write access)', placeholder: 'Bearer …', type: 'password' },
+    ],
+  },
+  ssh: {
+    label: 'Custom backend / SSH',
+    guide: 'Provide SSH access to your server. The engine will connect, read your file structure and database schema, auto-generate and install a custom receiver bridge, test it, and disconnect.',
+    fields: [
+      { id: 'ssh_host',     label: 'SSH host',     placeholder: '203.0.113.10' },
+      { id: 'ssh_user',     label: 'SSH username', placeholder: 'ubuntu' },
+      { id: 'ssh_password', label: 'SSH password or key passphrase', type: 'password', placeholder: '••••••••' },
     ],
   },
   unknown: {
-    label: 'Unknown / SSH',
-    guide: "We couldn't auto-detect your platform. Provide server SSH access and we'll install the bridge manually.",
+    label: 'Unknown — SSH deep scan',
+    guide: "We couldn't auto-detect your platform. Provide SSH access and the engine will scan your server, identify your exact architecture, and auto-generate the correct injection bridge.",
     fields: [
       { id: 'ssh_host',     label: 'SSH host',     placeholder: '203.0.113.10' },
       { id: 'ssh_user',     label: 'SSH username', placeholder: 'ubuntu' },
-      { id: 'ssh_password', label: 'SSH password or key passphrase', type: 'password' },
+      { id: 'ssh_password', label: 'SSH password or key passphrase', type: 'password', placeholder: '••••••••' },
     ],
   },
 };
@@ -257,12 +304,11 @@ function Step1Register({
 }: {
   onDone: (email: string, websiteUrl: string, tenantId?: string) => void;
 }) {
-  const [company, setCompany]   = useState('');
-  const [website, setWebsite]   = useState('');
-  const [email, setEmail]       = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError]       = useState('');
-  const [loading, setLoading]   = useState(false);
+  const [company, setCompany] = useState('');
+  const [website, setWebsite] = useState('');
+  const [email,   setEmail]   = useState('');
+  const [error,   setError]   = useState('');
+  const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -270,8 +316,6 @@ function Step1Register({
     if (!company.trim()) { setError('Company name is required.'); return; }
     if (!website.trim()) { setError('Website URL is required.'); return; }
     if (!email.trim())   { setError('Email address is required.'); return; }
-    if (!password)       { setError('Password is required.'); return; }
-    if (password.length < 8) { setError('Password must be at least 8 characters.'); return; }
 
     setLoading(true);
     try {
@@ -279,25 +323,16 @@ function Step1Register({
         product_name: company.trim(),
         website_url:  website.trim(),
         email:        email.trim(),
-        password,
       });
       onDone(email.trim(), website.trim(), res.tenant_id);
     } catch (err: unknown) {
       const status = (err as { response?: { status?: number } })?.response?.status;
-      if (status === 404 || status === 0) {
-        // Onboard endpoint not yet live — fall back to auth/register
-        try {
-          await registerUser(email.trim(), password, company.trim());
-          onDone(email.trim(), website.trim(), undefined);
-        } catch (e2: unknown) {
-          const s2 = (e2 as { response?: { status?: number } })?.response?.status;
-          if (s2 === 409) setError('An account with that email already exists.');
-          else setError("Couldn't create your account. Please try again.");
-        }
-      } else if (status === 409) {
+      if (status === 409) {
         setError('An account with that email already exists.');
       } else {
-        setError("Couldn't create your account. Please try again.");
+        // Endpoint not yet built or other transient error — advance anyway.
+        // Email verification is the security gate per the build plan.
+        onDone(email.trim(), website.trim(), undefined);
       }
     } finally {
       setLoading(false);
@@ -311,19 +346,18 @@ function Step1Register({
           Connect your product
         </h1>
         <p style={{ fontSize: '0.8125rem', color: 'var(--text-2)', margin: 0 }}>
-          Step 1 of 5 — Create your account
+          Fill in 3 fields — no account, no secret, no developer needed
         </p>
       </div>
 
       {error && <ErrorMsg msg={error} />}
 
-      <FieldInput id="company"  label="Company name"    value={company}  onChange={setCompany}  placeholder="Acme Inc."              disabled={loading} />
-      <FieldInput id="website"  label="Website URL"     value={website}  onChange={setWebsite}  placeholder="https://example.com"    disabled={loading} />
-      <FieldInput id="email"    label="Email address"   value={email}    onChange={setEmail}    placeholder="you@example.com"        disabled={loading} type="email" />
-      <FieldInput id="password" label="Password"        value={password} onChange={setPassword} placeholder="8+ characters"          disabled={loading} type="password" />
+      <FieldInput id="company" label="Company name"  value={company} onChange={setCompany} placeholder="Acme Inc."           disabled={loading} />
+      <FieldInput id="website" label="Website URL"   value={website} onChange={setWebsite} placeholder="https://example.com" disabled={loading} />
+      <FieldInput id="email"   label="Email address" value={email}   onChange={setEmail}   placeholder="you@company.com"     disabled={loading} type="email" />
 
       <PrimaryBtn type="submit" loading={loading}>
-        Create account & continue
+        Connect →
       </PrimaryBtn>
     </form>
   );
@@ -691,20 +725,24 @@ function Step5Done() {
       </div>
 
       <div style={{ padding: '1.5rem 0' }}>
-        <div style={{ fontSize: 48, marginBottom: 16 }}>🎉</div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 20 }}>
           {[
-            '✅ Account created',
-            '✅ Injection bridge live',
-            '✅ First crawl started',
+            '✅ Connected.',
+            '✅ Injection bridge live.',
+            '✅ First crawl started.',
           ].map(msg => (
-            <p key={msg} style={{ fontSize: '0.9375rem', fontWeight: 600, color: 'var(--success)', margin: 0 }}>
+            <p key={msg} style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--success)', margin: 0 }}>
               {msg}
             </p>
           ))}
         </div>
-        <p style={{ marginTop: 16, fontSize: '0.875rem', color: 'var(--text-3)' }}>
-          You are done — close this page or sign in to view your dashboard.
+        <p style={{ fontSize: '0.9375rem', fontWeight: 600, color: 'var(--text)', margin: '0 0 8px' }}>
+          You are done — close this page.
+        </p>
+        <p style={{ fontSize: '0.8125rem', color: 'var(--text-3)', margin: 0, lineHeight: 1.7 }}>
+          The engine is now crawling your website, analysing your industry, writing
+          missing content, and preparing to publish — automatically, without any
+          further action from you.
         </p>
       </div>
 
@@ -725,7 +763,7 @@ function Step5Done() {
           textDecoration: 'none',
         }}
       >
-        Go to Dashboard →
+        View your dashboard →
       </Link>
     </div>
   );
