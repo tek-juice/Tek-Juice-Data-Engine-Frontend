@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Loader2, Globe, ChevronDown, ChevronUp } from 'lucide-react';
 import { getDashboardDocuments } from '../../api/dashboard';
 import { analyzeGeo } from '../../api/geo';
+import { getTenantId } from '../../services/auth.service';
 import type { DocumentListItem, GeoAnalysisResponse } from '../../types';
 
 // ── Score ring ────────────────────────────────────────────────────────────────
@@ -146,7 +147,7 @@ export default function GEO() {
     setResult(null);
     analyzeGeo({
       document_id:   selectedDoc,
-      tenant_id:     '',
+      tenant_id:     getTenantId(),
       // Backend requires content >= 50 chars — pad with document context if filename is short
       content:       (doc?.filename
         ? `Document: ${doc.filename} — GEO analysis for generative engine optimisation`

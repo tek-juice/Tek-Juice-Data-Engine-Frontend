@@ -12,7 +12,8 @@ import {
   getDashboardDocuments,
 } from '../../api/dashboard';
 import { getCrawlStatus } from '../../api/ingest';
-import { getRankings } from '../../api/seo';
+import { getRankings, registerRankConfig } from '../../api/seo';
+import { getTenantId } from '../../services/auth.service';
 import type {
   VisibilityOverview,
   VisibilityPublishedItem,
@@ -614,7 +615,23 @@ export default function Dashboard() {
     // ── Rankings: try domain from crawl status ────────────────────────────────
     if (crawlSt.status === 'fulfilled' && crawlSt.value.website_url) {
       const domain = crawlSt.value.website_url.replace(/^https?:\/\//, '').split('/')[0];
-      if (domain) getRankings(domain, '', 30).then(setRankings).catch(() => {});
+      if (domain) {
+        getRankings(domain, '', 30)
+          .then(r => {
+            setRankings(r);
+            // Auto-register tracking for this domain if no keywords tracked yet
+            if ((!r || r.length === 0)) {
+              const tenantId = getTenantId();
+              // Derive seed keywords from the product domain name
+              const name = domain.split('.')[0];
+              const seedKws = [`${name}`, `${name} review`, `${name} features`];
+              seedKws.forEach(kw =>
+                registerRankConfig({ tenant_id: tenantId, domain, keyword: kw }).catch(() => {}),
+              );
+            }
+          })
+          .catch(() => {});
+      }
     }
 
     setLastUpdated(new Date());

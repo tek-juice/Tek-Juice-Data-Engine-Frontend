@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { RefreshCw, Loader2, AlertTriangle, ChevronDown, ChevronUp, Zap, Target } from 'lucide-react';
 import { getDashboardDocuments } from '../../api/dashboard';
 import { analyzeGaps, getCloseActions } from '../../api/gaps';
+import { getTenantId } from '../../services/auth.service';
 import type { DocumentListItem, GapAnalysisResponse, GapCloseActionsResponse, GapSeverity } from '../../types';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -53,8 +54,8 @@ function DocRow({ doc }: { doc: DocumentListItem }) {
   const [loading,  setLoading]  = useState(false);
   const [error,    setError]    = useState('');
 
-  const docId   = (doc.document_id ?? doc.id ?? '') as string;
-  const tenantId = '';
+  const docId    = (doc.document_id ?? doc.id ?? '') as string;
+  const tenantId = getTenantId();
 
   function toggleOpen() {
     if (!open && !analysis) {

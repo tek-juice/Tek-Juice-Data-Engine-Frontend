@@ -1,9 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
   Globe, CheckCircle2, Loader2, RefreshCw,
-  AlertTriangle, ArrowRight, Clock, Zap,
+  AlertTriangle, ArrowRight, Clock, Zap, Upload,
 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { registerWebsiteCrawl, getCrawlStatus } from '../../api/ingest';
+import { getDashboardDocuments } from '../../api/dashboard';
 import type { CrawlStatusResponse } from '../../api/ingest';
 
 function relTime(iso: string | null | undefined) {
@@ -25,6 +27,7 @@ export default function WebsiteSetup() {
   const [maxDepth, setMaxDepth]     = useState(3);
   const [recrawlHours, setRecrawlHours] = useState(24);
   const [status, setStatus]         = useState<CrawlStatusResponse | null>(null);
+  const [docCount, setDocCount]     = useState<number | null>(null);
   const [loading, setLoading]       = useState(true);
   const [saving, setSaving]         = useState(false);
   const [error, setError]           = useState('');
@@ -46,6 +49,10 @@ export default function WebsiteSetup() {
       })
       .catch(() => {})
       .finally(() => setLoading(false));
+    // Also fetch document count to detect SPA crawl issues
+    getDashboardDocuments({ page_size: 50 })
+      .then(docs => setDocCount(docs.length))
+      .catch(() => {});
   }, []);
 
   useEffect(() => { loadStatus(); }, [loadStatus]);
@@ -148,6 +155,40 @@ export default function WebsiteSetup() {
           >
             <RefreshCw size={13} />
           </button>
+        </div>
+      )}
+
+      {/* SPA crawl warning — shown when crawl is registered but very few unique docs exist */}
+      {status?.registered && docCount !== null && docCount < 5 && (
+        <div
+          className="px-4 py-3 mb-6 flex items-start gap-3 rounded"
+          style={{
+            border:     '1px solid rgba(251,191,36,0.35)',
+            background: 'rgba(251,191,36,0.06)',
+          }}
+        >
+          <AlertTriangle size={14} className="flex-shrink-0 mt-0.5" style={{ color: '#d97706' }} />
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-semibold mb-0.5" style={{ color: '#d97706' }}>
+              Low content detected — possible JavaScript SPA issue
+            </p>
+            <p className="text-xs" style={{ color: 'var(--text-2)', lineHeight: 1.6 }}>
+              Only <strong>{docCount}</strong> document{docCount !== 1 ? 's' : ''} found after crawling.
+              If your site is a JavaScript SPA (React, Next.js, Vue, etc.), the crawler
+              may have fetched the same HTML shell repeatedly without executing JS.
+            </p>
+            <p className="text-xs mt-1.5" style={{ color: 'var(--text-2)', lineHeight: 1.6 }}>
+              <strong>Solution:</strong> Manually upload your key pages as HTML or text files
+              to seed the engine with real content while you troubleshoot the crawl.
+            </p>
+            <Link
+              to="/upload"
+              className="inline-flex items-center gap-1.5 mt-2 text-xs font-semibold"
+              style={{ color: '#d97706', textDecoration: 'none' }}
+            >
+              <Upload size={11} /> Upload content manually
+            </Link>
+          </div>
         </div>
       )}
 

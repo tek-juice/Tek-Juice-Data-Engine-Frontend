@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
-import { RefreshCw, Loader2, AlertTriangle, TrendingUp, Play, AlertCircle } from 'lucide-react';
+import { RefreshCw, Loader2, AlertTriangle, TrendingUp, Play, CheckCircle2, AlertCircle } from 'lucide-react';
 import { getTrendingTopics, getScraperPlatforms, runIndirectScrape, getDeadLetterItems } from '../../api/scraper';
+import { getCrawlStatus } from '../../api/ingest';
 import type { TrendingTopic, Platform, DeadLetterItem } from '../../types';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -65,6 +66,20 @@ export default function Trends() {
   const [refreshing, setRefreshing] = useState(false);
   const [running,    setRunning]    = useState(false);
   const [runMsg,     setRunMsg]     = useState('');
+  // Product domain derived from crawl config — used to build relevant scrape queries
+  const [productDomain, setProductDomain] = useState<string>('');
+
+  // Load crawl status on mount to know the product domain for targeted queries
+  useEffect(() => {
+    getCrawlStatus()
+      .then(s => {
+        if (s.website_url) {
+          const domain = s.website_url.replace(/^https?:\/\//, '').split('/')[0];
+          setProductDomain(domain);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const load = useCallback((refresh = false) => {
     if (refresh) setRefreshing(true); else setLoading(true);
@@ -84,10 +99,26 @@ export default function Trends() {
 
   useEffect(() => { load(); }, [load]);
 
+  function buildQueries(): string[] {
+    // Build product-relevant queries so the scraper collects targeted signals
+    // rather than generic Wikipedia trending topics
+    const base: string[] = [];
+    if (productDomain) {
+      // Strip TLD for cleaner query e.g. "ultimatemove" from "ultimatemove.co.uk"
+      const name = productDomain.split('.')[0];
+      base.push(name);
+      base.push(`${name} product`);
+      base.push(`${name} reviews`);
+    }
+    // Generic content / SEO signals relevant to any SaaS product
+    base.push('content marketing trends', 'SEO optimisation 2025', 'AI content generation');
+    return base;
+  }
+
   function handleRun() {
     setRunning(true);
     setRunMsg('');
-    runIndirectScrape({ queries: [] })
+    runIndirectScrape({ queries: buildQueries() })
       .then(() => { setRunMsg('Scrape triggered — results will appear shortly.'); load(true); })
       .catch(() => setRunMsg('Could not trigger scrape. Check backend connectivity.'))
       .finally(() => setRunning(false));
@@ -218,8 +249,9 @@ export default function Trends() {
           <div style={{ border: '1px solid var(--border)' }}>
             {deadItems.length === 0 ? (
               <div className="text-center py-16">
-                <AlertCircle size={20} className="mx-auto mb-3" style={{ color: 'var(--text-3)' }} />
-                <p className="text-sm" style={{ color: 'var(--text-3)' }}>No failed scrape items.</p>
+                <CheckCircle2 size={20} className="mx-auto mb-3" style={{ color: 'var(--success)' }} />
+                <p className="text-sm font-semibold mb-1" style={{ color: 'var(--text)' }}>No failed scrape items</p>
+                <p className="text-sm" style={{ color: 'var(--text-3)' }}>All scrapers are running cleanly — system is healthy.</p>
               </div>
             ) : deadItems.map((d, i) => (
               <div key={i} className="px-4 py-3 flex items-start gap-3" style={{ borderBottom: '1px solid var(--border)' }}>

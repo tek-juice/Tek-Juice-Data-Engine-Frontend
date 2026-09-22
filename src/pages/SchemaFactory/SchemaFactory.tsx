@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { RefreshCw, Loader2, AlertTriangle, Code2, Copy, Check } from 'lucide-react';
 import { getDashboardDocuments } from '../../api/dashboard';
 import { generateSchema, getSchemaTypes } from '../../api/schemas';
+import { getTenantId } from '../../services/auth.service';
 import type { DocumentListItem, SchemaType, SchemaGenerateResponse } from '../../types';
 
 // ── Copy button ───────────────────────────────────────────────────────────────
@@ -156,7 +157,7 @@ export default function SchemaFactory() {
     setResult(null);
     generateSchema({
       document_id: selectedDoc,
-      tenant_id:   '',
+      tenant_id:   getTenantId(),
       content:     doc?.filename
         ? `Document: ${doc.filename} — schema generation for structured data`
         : `Document ID: ${selectedDoc} — schema generation for structured data`,

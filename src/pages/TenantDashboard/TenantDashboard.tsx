@@ -12,6 +12,7 @@ import {
 import { Link } from 'react-router-dom';
 import { getDashboardOverview, getActivityLog, getVisibilityConnection, getMyTenantPerformance } from '../../api/dashboard';
 import { getQualityScore } from '../../api/gaps';
+import { getTenantId } from '../../services/auth.service';
 import type { QualityScoreResponse, DashboardOverview, ActivityLogEntry, VisibilityConnection, TenantPerformance } from '../../types';
 
 // ─── Shared tooltip style ─────────────────────────────────────────────────────
@@ -237,7 +238,7 @@ export default function TenantDashboard() {
   // Tenant display object built from overview
   const t = {
     name:              productName,
-    tenant_id:         tenantMe?.tenant.tenant_id ?? '',
+    tenant_id:         tenantMe?.tenant.tenant_id ?? getTenantId(),
     plan:              tenantMe?.tenant.plan ?? 'free',
     status:            'active' as const,
     avg_seo_score:     seo,

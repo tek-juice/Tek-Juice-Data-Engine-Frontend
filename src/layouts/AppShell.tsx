@@ -25,23 +25,25 @@ const NAV: NavGroup[] = [
   {
     heading: 'Intelligence',
     items: [
-      { label: 'Gap Detection',    to: '/gaps' },
-      { label: 'Trends',           to: '/trends' },
-      { label: 'Schema Factory',   to: '/schema-factory' },
+      { label: 'Gap Detection',  to: '/gaps' },
+      { label: 'Trends',         to: '/trends' },
+      { label: 'Schema Factory', to: '/schema-factory' },
     ],
   },
   {
     heading: 'Visibility',
     items: [
-      { label: 'SEO',  to: '/seo' },
-      { label: 'GEO',  to: '/geo' },
+      { label: 'SEO', to: '/seo' },
+      { label: 'GEO', to: '/geo' },
     ],
   },
   {
     heading: 'System',
     items: [
-      { label: 'Sync',      to: '/sync' },
-      { label: 'Telemetry', to: '/telemetry' },
+      { label: 'Website Setup',    to: '/website-setup' },
+      { label: 'Connect Product',  to: '/connect' },
+      { label: 'Sync',             to: '/sync' },
+      { label: 'Telemetry',        to: '/telemetry' },
     ],
   },
 ];

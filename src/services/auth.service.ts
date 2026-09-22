@@ -143,3 +143,12 @@ export function getCurrentUserId(): string | null {
   const payload = parseJwt(token);
   return payload?.sub ?? null;
 }
+
+/**
+ * Returns the tenant ID (JWT sub claim) for the current user.
+ * Used as the tenant_id parameter for all analysis API calls.
+ * Returns empty string if not authenticated.
+ */
+export function getTenantId(): string {
+  return getCurrentUserId() ?? '';
+}

@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Loader2, AlertTriangle, Search, BarChart2 } from 'lucide-react';
 import { getDashboardDocuments } from '../../api/dashboard';
 import { analyzeSeo, registerRankConfig } from '../../api/seo';
+import { getTenantId } from '../../services/auth.service';
 import type { DocumentListItem, SeoAnalysisResponse } from '../../types';
 
 // ── Score bar ─────────────────────────────────────────────────────────────────
@@ -156,7 +157,7 @@ export default function SEO() {
     setResult(null);
     analyzeSeo({
       document_id:     selectedDoc,
-      tenant_id:       '',
+      tenant_id:       getTenantId(),
       content:         doc?.filename
         ? `Document: ${doc.filename} — SEO analysis for search engine optimisation`
         : `Document ID: ${selectedDoc} — SEO analysis for search engine optimisation`,
@@ -172,7 +173,7 @@ export default function SEO() {
     if (!domain || !keyword) return;
     setTracking(true);
     setTrackMsg('');
-    registerRankConfig({ tenant_id: '', domain, keyword })
+    registerRankConfig({ tenant_id: getTenantId(), domain, keyword })
       .then(() => setTrackMsg(`Tracking registered: "${keyword}" on ${domain}`))
       .catch(() => setTrackMsg('Could not register rank tracking. Check backend.'))
       .finally(() => setTracking(false));

@@ -29,6 +29,7 @@ import SEO             from './pages/SEO/SEO';
 import GEO             from './pages/GEO/GEO';
 import Sync            from './pages/Sync/Sync';
 import Telemetry       from './pages/Telemetry/Telemetry';
+import Upload          from './pages/Upload/Upload';
 
 // ── Placeholder for pages not yet built ──────────────────────────────────────
 function Placeholder({ name }: { name: string }) {
@@ -87,6 +88,8 @@ function App() {
 
             {/* Content */}
             <Route path="/website"        element={page(<WebsiteSetup />)} />
+            <Route path="/website-setup"  element={page(<WebsiteSetup />)} />
+            <Route path="/upload"         element={page(<Upload />)} />
             <Route path="/drafts"         element={page(<Placeholder name="Drafts" />)} />
             <Route path="/search"         element={page(<Placeholder name="Search" />)} />
 
