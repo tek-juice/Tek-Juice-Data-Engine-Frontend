@@ -47,10 +47,13 @@ function Pill({ label, color }: { label: string; color: string }) {
 
 // ── Document row ──────────────────────────────────────────────────────────────
 
-function DocRow({ doc }: { doc: DocumentListItem }) {
+function DocRow({ doc, prefetched }: {
+  doc: DocumentListItem;
+  prefetched?: { analysis: GapAnalysisResponse | null; actions: GapCloseActionsResponse | null };
+}) {
   const [open,     setOpen]    = useState(false);
-  const [analysis, setAnalysis] = useState<GapAnalysisResponse | null>(null);
-  const [actions,  setActions]  = useState<GapCloseActionsResponse | null>(null);
+  const [analysis, setAnalysis] = useState<GapAnalysisResponse | null>(prefetched?.analysis ?? null);
+  const [actions,  setActions]  = useState<GapCloseActionsResponse | null>(prefetched?.actions ?? null);
   const [loading,  setLoading]  = useState(false);
   const [error,    setError]    = useState('');
 
@@ -185,17 +188,57 @@ export default function GapDetection() {
   const [loading,    setLoading]    = useState(true);
   const [error,      setError]      = useState('');
   const [refreshing, setRefreshing] = useState(false);
+  // Pre-fetched gap data keyed by document_id — loaded in background after docs arrive
+  const [prefetch, setPrefetch]     = useState<Record<string, { analysis: GapAnalysisResponse | null; actions: GapCloseActionsResponse | null }>>({});
+  const [prefetching, setPrefetching] = useState(false);
+
+  const tenantId = getTenantId();
 
   const load = useCallback((refresh = false) => {
     if (refresh) setRefreshing(true); else setLoading(true);
     setError('');
     getDashboardDocuments({ status: 'completed', page_size: 50 })
-      .then(setDocs)
+      .then(docs => {
+        setDocs(docs);
+        // Background-fetch gap summary for the top 10 worst docs so the page
+        // shows severity badges immediately without requiring a click.
+        const top10 = docs.slice(0, 10);
+        if (top10.length === 0) return;
+        setPrefetching(true);
+        Promise.allSettled(
+          top10.map(doc => {
+            const docId = (doc.document_id ?? doc.id ?? '') as string;
+            return Promise.all([
+              analyzeGaps({ document_id: docId, tenant_id: tenantId }).catch(() => null),
+              getCloseActions(docId, tenantId).catch(() => null),
+            ]).then(([analysis, actions]) => ({ docId, analysis, actions }));
+          })
+        ).then(results => {
+          const map: typeof prefetch = {};
+          for (const r of results) {
+            if (r.status === 'fulfilled') {
+              map[r.value.docId] = { analysis: r.value.analysis, actions: r.value.actions };
+            }
+          }
+          setPrefetch(map);
+        }).finally(() => setPrefetching(false));
+      })
       .catch(() => setError('Could not load documents from the backend.'))
       .finally(() => { setLoading(false); setRefreshing(false); });
-  }, []);
+  }, [tenantId]);
 
   useEffect(() => { load(); }, [load]);
+
+  // Sort docs: worst gap score first (using prefetched data when available)
+  const sortedDocs = [...docs].sort((a, b) => {
+    const aId = (a.document_id ?? a.id ?? '') as string;
+    const bId = (b.document_id ?? b.id ?? '') as string;
+    const aScore = prefetch[aId]?.analysis?.gap_score ?? 0;
+    const bScore = prefetch[bId]?.analysis?.gap_score ?? 0;
+    return bScore - aScore;
+  });
+
+  const criticalCount = Object.values(prefetch).filter(p => p.analysis?.severity === 'critical' || p.analysis?.severity === 'high').length;
 
   return (
     <div style={{ background: 'var(--bg)', color: 'var(--text)', minHeight: '100vh' }}>
@@ -208,7 +251,12 @@ export default function GapDetection() {
             Gap Detection
           </h1>
           <p className="text-sm mt-0.5" style={{ color: 'var(--text-3)' }}>
-            Missing topics and coverage analysis per document
+            {prefetching
+              ? 'Analysing gaps…'
+              : criticalCount > 0
+                ? `${criticalCount} document${criticalCount !== 1 ? 's' : ''} with critical/high gaps`
+                : 'Missing topics and coverage analysis per document'
+            }
           </p>
         </div>
         <button
@@ -249,11 +297,15 @@ export default function GapDetection() {
         {!loading && !error && docs.length > 0 && (
           <div>
             <p className="text-xs mb-4" style={{ color: 'var(--text-3)' }}>
-              {docs.length} document{docs.length !== 1 ? 's' : ''} — click any row to run gap analysis
+              {docs.length} document{docs.length !== 1 ? 's' : ''} — sorted by gap severity · click any row to expand details
+              {prefetching && <span className="ml-2" style={{ color: 'var(--brand)' }}>(analysing…)</span>}
             </p>
-            {docs.map(doc => (
-              <DocRow key={(doc.document_id ?? doc.id) as string} doc={doc} />
-            ))}
+            {sortedDocs.map(doc => {
+              const docId = (doc.document_id ?? doc.id ?? '') as string;
+              return (
+                <DocRow key={docId} doc={doc} prefetched={prefetch[docId]} />
+              );
+            })}
           </div>
         )}
       </div>

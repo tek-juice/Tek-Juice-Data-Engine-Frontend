@@ -617,17 +617,37 @@ export default function Dashboard() {
       const domain = crawlSt.value.website_url.replace(/^https?:\/\//, '').split('/')[0];
       if (domain) {
         getRankings(domain, '', 30)
-          .then(r => {
+          .then(async r => {
             setRankings(r);
-            // Auto-register tracking for this domain if no keywords tracked yet
-            if ((!r || r.length === 0)) {
+            // Auto-register tracking for this domain if no keywords tracked yet.
+            // Seed from gap analysis missing_topics — real content gaps — not from
+            // the domain name which produces generic, useless keywords.
+            if (!r || r.length === 0) {
               const tenantId = getTenantId();
-              // Derive seed keywords from the product domain name
-              const name = domain.split('.')[0];
-              const seedKws = [`${name}`, `${name} review`, `${name} features`];
-              seedKws.forEach(kw =>
-                registerRankConfig({ tenant_id: tenantId, domain, keyword: kw }).catch(() => {}),
-              );
+              try {
+                // Pull the first completed doc and use its missing topics as keywords
+                const { getDashboardDocuments } = await import('../../api/dashboard');
+                const { getCloseActions } = await import('../../api/gaps');
+                const docs = await getDashboardDocuments({ status: 'completed', page_size: 5 });
+                const seedKws: string[] = [];
+                for (const doc of docs.slice(0, 3)) {
+                  const docId = (doc.document_id ?? doc.id ?? '') as string;
+                  const actions = await getCloseActions(docId, tenantId).catch(() => null);
+                  if (actions?.missing_topics) {
+                    seedKws.push(...actions.missing_topics.slice(0, 5));
+                  }
+                  if (seedKws.length >= 10) break;
+                }
+                // Fallback to domain-derived keywords only if no gap topics found
+                if (seedKws.length === 0) {
+                  const name = domain.split('.')[0];
+                  seedKws.push(name, `${name} review`, `${name} features`);
+                }
+                const unique = [...new Set(seedKws)].slice(0, 10);
+                unique.forEach(kw =>
+                  registerRankConfig({ tenant_id: tenantId, domain, keyword: kw }).catch(() => {}),
+                );
+              } catch { /* non-critical — rank seeding is best-effort */ }
             }
           })
           .catch(() => {});

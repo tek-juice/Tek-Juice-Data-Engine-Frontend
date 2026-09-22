@@ -30,18 +30,10 @@ import GEO             from './pages/GEO/GEO';
 import Sync            from './pages/Sync/Sync';
 import Telemetry       from './pages/Telemetry/Telemetry';
 import Upload          from './pages/Upload/Upload';
-
-// ── Placeholder for pages not yet built ──────────────────────────────────────
-function Placeholder({ name }: { name: string }) {
-  return (
-    <div className="flex items-center justify-center h-full min-h-64">
-      <div className="text-center">
-        <div className="text-sm font-semibold" style={{ color: 'var(--text-2)' }}>{name}</div>
-        <div className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>Coming soon</div>
-      </div>
-    </div>
-  );
-}
+import Drafts          from './pages/Drafts/Drafts';
+import SearchPage      from './pages/Search/Search';
+import SettingsPage    from './pages/Settings/Settings';
+import ProfilePage     from './pages/Profile/Profile';
 
 // ── Helper: wrap element in an error boundary ─────────────────────────────────
 function page(el: ReactElement) {
@@ -90,8 +82,8 @@ function App() {
             <Route path="/website"        element={page(<WebsiteSetup />)} />
             <Route path="/website-setup"  element={page(<WebsiteSetup />)} />
             <Route path="/upload"         element={page(<Upload />)} />
-            <Route path="/drafts"         element={page(<Placeholder name="Drafts" />)} />
-            <Route path="/search"         element={page(<Placeholder name="Search" />)} />
+            <Route path="/drafts"         element={page(<Drafts />)} />
+            <Route path="/search"         element={page(<SearchPage />)} />
 
             {/* Intelligence */}
             <Route path="/gaps"           element={page(<GapDetection />)} />
@@ -108,8 +100,8 @@ function App() {
 
             {/* Access */}
             <Route path="/credentials"    element={page(<Credentials />)} />
-            <Route path="/settings"       element={page(<Placeholder name="Settings" />)} />
-            <Route path="/profile"        element={page(<Placeholder name="Profile" />)} />
+            <Route path="/settings"       element={page(<SettingsPage />)} />
+            <Route path="/profile"        element={page(<ProfilePage />)} />
 
             {/* Performance */}
             <Route path="/my-performance"   element={page(<TenantDashboard />)} />
