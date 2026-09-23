@@ -33,7 +33,7 @@ export async function onboardRegister(
 ): Promise<OnboardRegisterResponse> {
   try {
     const { data } = await apiClient.post<OnboardRegisterResponse>(
-      '/onboard',
+      '/api/v1/onboard',
       payload,
     );
     return data;
@@ -56,7 +56,7 @@ export async function onboardVerifyEmail(
 ): Promise<OnboardVerifyEmailResponse> {
   try {
     const { data } = await apiClient.post<OnboardVerifyEmailResponse>(
-      '/onboard/verify-email',
+      '/api/v1/onboard/verify-email',
       payload,
     );
     return data;
@@ -79,7 +79,7 @@ export async function onboardScan(
 ): Promise<OnboardScanResponse> {
   try {
     const { data } = await apiClient.post<OnboardScanResponse>(
-      '/onboard/scan',
+      '/api/v1/onboard/scan',
       payload,
     );
     return data;
@@ -102,7 +102,7 @@ export async function onboardInstall(
 ): Promise<OnboardInstallResponse> {
   try {
     const { data } = await apiClient.post<OnboardInstallResponse>(
-      '/onboard/install',
+      '/api/v1/onboard/install',
       payload,
     );
     return data;
@@ -125,7 +125,7 @@ export async function onboardPing(
 ): Promise<OnboardPingResponse> {
   try {
     const { data } = await apiClient.get<OnboardPingResponse>(
-      '/onboard/ping',
+      '/api/v1/onboard/ping',
       { params: { tenant_id } },
     );
     return data;
