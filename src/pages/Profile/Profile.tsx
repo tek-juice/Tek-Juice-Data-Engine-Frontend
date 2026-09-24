@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { User, Key, CheckCircle2, AlertTriangle, Loader2, Eye, EyeOff } from 'lucide-react';
-import { getTenantId, getCurrentUserId } from '../../services/auth.service';
+import { getTenantId, getCurrentUserId, getAccessToken } from '../../services/auth.service';
 import apiClient from '../../api/axios';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
