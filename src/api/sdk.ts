@@ -1,7 +1,6 @@
 import apiClient from './axios';
+import { API_BASE_URL } from '../config';
 import type { SdkSignalPayload } from '../types';
-
-const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000';
 
 // ── SDK Bridge ────────────────────────────────────────────────────────────────
 
@@ -11,7 +10,7 @@ const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000';
  * Public — authenticated via the `key` query parameter.
  */
 export function getSdkScriptUrl(api_key: string): string {
-  return `${BASE_URL}/sdk.js?key=${encodeURIComponent(api_key)}`;
+  return `${API_BASE_URL}/sdk.js?key=${encodeURIComponent(api_key)}`;
 }
 
 /**

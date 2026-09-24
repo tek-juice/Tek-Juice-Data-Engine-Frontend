@@ -1,13 +1,9 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
-
-const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000';
-const TIMEOUT = Number(import.meta.env.VITE_API_TIMEOUT ?? 30000);
-const TOKEN_KEY = import.meta.env.VITE_TOKEN_STORAGE_KEY ?? 'data_engine_token';
-const REFRESH_KEY = import.meta.env.VITE_REFRESH_TOKEN_STORAGE_KEY ?? 'data_engine_refresh_token';
+import { API_BASE_URL, API_TIMEOUT, TOKEN_KEY, REFRESH_KEY } from '../config';
 
 export const apiClient = axios.create({
-  baseURL: BASE_URL,
-  timeout: TIMEOUT,
+  baseURL: API_BASE_URL,
+  timeout: API_TIMEOUT,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -76,7 +72,7 @@ apiClient.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        const { data } = await axios.post(`${BASE_URL}/api/v1/auth/refresh`, {
+        const { data } = await axios.post(`${API_BASE_URL}/api/v1/auth/refresh`, {
           refresh_token: refreshToken,
         });
         const newToken: string = data.access_token;

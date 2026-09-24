@@ -1,13 +1,10 @@
 import type { WsActivityEvent } from '../types';
-
-const WS_BASE_URL =
-  import.meta.env.VITE_WS_BASE_URL ?? 'ws://localhost:8011';
-const RECONNECT_INTERVAL = Number(
-  import.meta.env.VITE_WS_RECONNECT_INTERVAL ?? 5000,
-);
-const MAX_RECONNECT_ATTEMPTS = Number(
-  import.meta.env.VITE_WS_MAX_RECONNECT_ATTEMPTS ?? 10,
-);
+import {
+  WS_BASE_URL,
+  WS_ACTIVITY_PATH,
+  WS_RECONNECT_INTERVAL as RECONNECT_INTERVAL,
+  WS_MAX_RECONNECT_ATTEMPTS as MAX_RECONNECT_ATTEMPTS,
+} from '../config';
 
 type EventHandler = (event: WsActivityEvent) => void;
 type StatusHandler = (status: 'connected' | 'disconnected' | 'error') => void;
@@ -15,7 +12,7 @@ type StatusHandler = (status: 'connected' | 'disconnected' | 'error') => void;
 /**
  * ActivityFeedSocket
  *
- * Connects to ws://localhost:8011/ws/activity?token=<jwt>
+ * Connects to {WS_BASE_URL}{WS_ACTIVITY_PATH}?token=<jwt>
  * and provides auto-reconnect, typed message delivery, and clean teardown.
  *
  * Usage:
@@ -74,7 +71,7 @@ export class ActivityFeedSocket {
   // ── Private helpers ─────────────────────────────────────────────────────────
 
   private openSocket(): void {
-    const url = `${WS_BASE_URL}/ws/activity?token=${encodeURIComponent(this.token)}`;
+    const url = `${WS_BASE_URL}${WS_ACTIVITY_PATH}?token=${encodeURIComponent(this.token)}`;
 
     try {
       this.socket = new WebSocket(url);

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { User, Key, CheckCircle2, AlertTriangle, Loader2, Eye, EyeOff } from 'lucide-react';
-import { getAccessToken, getTenantId, getCurrentUserId } from '../../services/auth.service';
+import { getTenantId, getCurrentUserId } from '../../services/auth.service';
+import apiClient from '../../api/axios';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -97,29 +98,15 @@ function ChangePassword() {
 
     setSaving(true);
     try {
-      // The backend password-change endpoint is at POST /api/v1/auth/change-password
-      // We call it directly via fetch here to avoid circular imports
-      const token = getAccessToken();
-      const resp = await fetch(
-        `${import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000'}/api/v1/auth/change-password`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          },
-          body: JSON.stringify({ current_password: current, new_password: next }),
-        },
-      );
-      if (resp.ok) {
-        setOk(true); setMsg('Password changed successfully.');
-        setCurrent(''); setNext(''); setConfirm('');
-      } else {
-        const data = await resp.json().catch(() => ({}));
-        setOk(false); setMsg((data as { detail?: string }).detail ?? 'Password change failed.');
-      }
-    } catch {
-      setOk(false); setMsg('Network error. Please try again.');
+      await apiClient.post('/api/v1/auth/change-password', {
+        current_password: current,
+        new_password: next,
+      });
+      setOk(true); setMsg('Password changed successfully.');
+      setCurrent(''); setNext(''); setConfirm('');
+    } catch (err: unknown) {
+      const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
+      setOk(false); setMsg(detail ?? 'Password change failed. Please try again.');
     } finally {
       setSaving(false);
     }

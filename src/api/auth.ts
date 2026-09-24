@@ -1,4 +1,5 @@
 import apiClient from './axios';
+import { API_BASE_URL, API_PREFIX } from '../config';
 import type {
   TokenResponse,
   ApiKeyResponse,
@@ -6,8 +7,6 @@ import type {
   WebhookEventType,
   WebhookLogEntry,
 } from '../types';
-
-const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000';
 
 // ── Auth ──────────────────────────────────────────────────────────────────────
 
@@ -70,7 +69,7 @@ export type OAuthProvider = 'google' | 'github' | 'builderid';
  */
 export function redirectToOAuth(provider: OAuthProvider): void {
   const callbackUrl = `${window.location.origin}/auth/callback`;
-  window.location.href = `${BASE_URL}/api/v1/auth/oauth/${provider}?redirect_uri=${encodeURIComponent(callbackUrl)}`;
+  window.location.href = `${API_BASE_URL}${API_PREFIX}/auth/oauth/${provider}?redirect_uri=${encodeURIComponent(callbackUrl)}`;
 }
 
 /**
