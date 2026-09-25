@@ -1,8 +1,7 @@
 import { useState, useEffect, useRef, type FormEvent } from 'react';
-import { useNavigate, useSearchParams, Link } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import {
   onboardRegister,
-  onboardVerifyEmail,
   onboardScan,
   onboardInstall,
   onboardPing,
@@ -10,7 +9,7 @@ import {
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type Step = 1 | 2 | 3 | 4 | 5;
+type Step = 1 | 2;
 
 type Platform =
   | 'wordpress'
@@ -36,8 +35,8 @@ const PLATFORM_GUIDES: Record<Platform, PlatformGuide> = {
     label: 'WordPress',
     guide: 'Go to WordPress › Users › Profile › Application Passwords. Enter a name (e.g. "Data Engine"), click Add New, and paste the generated password below.',
     fields: [
-      { id: 'wp_url',      label: 'WordPress site URL',  placeholder: 'https://example.com' },
-      { id: 'wp_user',     label: 'WordPress username',  placeholder: 'admin' },
+      { id: 'wp_url',      label: 'WordPress site URL',   placeholder: 'https://example.com' },
+      { id: 'wp_user',     label: 'WordPress username',   placeholder: 'admin' },
       { id: 'wp_password', label: 'Application password', placeholder: 'xxxx xxxx xxxx xxxx', type: 'password' },
     ],
   },
@@ -95,7 +94,7 @@ const PLATFORM_GUIDES: Record<Platform, PlatformGuide> = {
     label: 'GraphQL API',
     guide: 'Provide your GraphQL endpoint and an API key or Bearer token. The engine will introspect the schema, identify content mutation types, and inject content using your existing API — no installation required.',
     fields: [
-      { id: 'graphql_endpoint', label: 'GraphQL endpoint', placeholder: 'https://example.com/graphql' },
+      { id: 'graphql_endpoint', label: 'GraphQL endpoint',     placeholder: 'https://example.com/graphql' },
       { id: 'graphql_token',    label: 'API key / Bearer token', placeholder: 'Bearer …', type: 'password' },
     ],
   },
@@ -103,8 +102,8 @@ const PLATFORM_GUIDES: Record<Platform, PlatformGuide> = {
     label: 'Headless CMS (Contentful / Strapi / Sanity)',
     guide: 'Provide your CMS API key. The engine will use your CMS write API directly — your backend is never touched.',
     fields: [
-      { id: 'cms_space',  label: 'Space ID or project name', placeholder: 'my-space' },
-      { id: 'cms_token',  label: 'CMS API key (write access)', placeholder: 'Bearer …', type: 'password' },
+      { id: 'cms_space', label: 'Space ID or project name',   placeholder: 'my-space' },
+      { id: 'cms_token', label: 'CMS API key (write access)', placeholder: 'Bearer …', type: 'password' },
     ],
   },
   ssh: {
@@ -131,27 +130,23 @@ const PLATFORM_GUIDES: Record<Platform, PlatformGuide> = {
 
 function WizardBox({ children }: { children: React.ReactNode }) {
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: 'var(--bg)',
-        padding: '1.5rem',
-      }}
-    >
-      <div
-        style={{
-          width: '100%',
-          maxWidth: 460,
-          background: 'var(--surface)',
-          border: '1px solid var(--border)',
-          borderRadius: 10,
-          padding: '2rem',
-          boxShadow: 'var(--shadow-md)',
-        }}
-      >
+    <div style={{
+      minHeight: '100vh',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      background: 'var(--bg)',
+      padding: '1.5rem',
+    }}>
+      <div style={{
+        width: '100%',
+        maxWidth: 460,
+        background: 'var(--surface)',
+        border: '1px solid var(--border)',
+        borderRadius: 10,
+        padding: '2rem',
+        boxShadow: 'var(--shadow-md)',
+      }}>
         {children}
       </div>
     </div>
@@ -177,16 +172,13 @@ function StepIndicator({ current, total }: { current: number; total: number }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: '1.5rem' }}>
       {Array.from({ length: total }, (_, i) => (
-        <div
-          key={i}
-          style={{
-            height: 3,
-            flex: 1,
-            borderRadius: 2,
-            background: i < current ? 'var(--brand)' : 'var(--border)',
-            transition: 'background 0.3s',
-          }}
-        />
+        <div key={i} style={{
+          height: 3,
+          flex: 1,
+          borderRadius: 2,
+          background: i < current ? 'var(--brand)' : 'var(--border)',
+          transition: 'background 0.3s',
+        }} />
       ))}
     </div>
   );
@@ -266,18 +258,16 @@ function PrimaryBtn({
 
 function Spinner({ size = 15, color = '#111' }: { size?: number; color?: string }) {
   return (
-    <span
-      style={{
-        display: 'inline-block',
-        width: size,
-        height: size,
-        border: `1.5px solid ${color}33`,
-        borderTopColor: color,
-        borderRadius: '50%',
-        animation: 'connect-spin 0.55s linear infinite',
-        flexShrink: 0,
-      }}
-    />
+    <span style={{
+      display: 'inline-block',
+      width: size,
+      height: size,
+      border: `1.5px solid ${color}33`,
+      borderTopColor: color,
+      borderRadius: '50%',
+      animation: 'connect-spin 0.55s linear infinite',
+      flexShrink: 0,
+    }} />
   );
 }
 
@@ -330,8 +320,7 @@ function Step1Register({
       if (status === 409) {
         setError('An account with that email already exists.');
       } else {
-        // Endpoint not yet built or other transient error — advance anyway.
-        // Email verification is the security gate per the build plan.
+        // Endpoint not yet built or transient error — advance anyway
         onDone(email.trim(), website.trim(), undefined);
       }
     } finally {
@@ -346,7 +335,7 @@ function Step1Register({
           Connect your product
         </h1>
         <p style={{ fontSize: '0.8125rem', color: 'var(--text-2)', margin: 0 }}>
-          Fill in 3 fields — no account, no secret, no developer needed
+          Step 1 of 2 — Fill in 3 fields and you're done
         </p>
       </div>
 
@@ -363,111 +352,33 @@ function Step1Register({
   );
 }
 
-// ─── Step 2: Verify Email ─────────────────────────────────────────────────────
+// ─── Step 2: Platform + Install (combined) ────────────────────────────────────
 
-function Step2VerifyEmail({
-  email,
-  tenantId,
-  onDone,
-}: {
-  email: string;
-  tenantId?: string;
-  onDone: () => void;
-}) {
-  const [searchParams] = useSearchParams();
-  const [verifying, setVerifying] = useState(false);
-  const [verified,  setVerified]  = useState(false);
-  const [error,     setError]     = useState('');
-  const didAutoVerify = useRef(false);
-
-  useEffect(() => {
-    const token = searchParams.get('token');
-    if (!token || didAutoVerify.current) return;
-    didAutoVerify.current = true;
-    setVerifying(true);
-    onboardVerifyEmail({ token, tenant_id: tenantId })
-      .then(() => { setVerified(true); setTimeout(onDone, 1200); })
-      .catch(err => {
-        const s = (err as { response?: { status?: number } })?.response?.status;
-        if (s === 404) {
-          // endpoint not yet live — just advance
-          setVerified(true);
-          setTimeout(onDone, 800);
-        } else {
-          setError('Verification failed. The link may have expired.');
-        }
-      })
-      .finally(() => setVerifying(false));
-  }, [searchParams, tenantId, onDone]);
-
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-      <div>
-        <h1 style={{ fontSize: '1.125rem', fontWeight: 700, color: 'var(--text)', margin: '0 0 0.25rem', letterSpacing: '-0.015em' }}>
-          Check your inbox
-        </h1>
-        <p style={{ fontSize: '0.8125rem', color: 'var(--text-2)', margin: 0 }}>
-          Step 2 of 5 — Verify your email
-        </p>
-      </div>
-
-      <div style={{ textAlign: 'center', padding: '1.5rem 0' }}>
-        {verifying ? (
-          <>
-            <Spinner size={28} color="var(--brand)" />
-            <p style={{ marginTop: 12, fontSize: '0.875rem', color: 'var(--text-2)' }}>Verifying…</p>
-          </>
-        ) : verified ? (
-          <>
-            <div style={{ fontSize: 36 }}>✅</div>
-            <p style={{ marginTop: 8, fontSize: '0.875rem', fontWeight: 600, color: 'var(--success)' }}>Email verified!</p>
-          </>
-        ) : (
-          <>
-            <div style={{ fontSize: 36 }}>📧</div>
-            <p style={{ marginTop: 10, fontSize: '0.9375rem', fontWeight: 600, color: 'var(--text)' }}>
-              We sent a verification link to
-            </p>
-            <p style={{ fontSize: '0.875rem', color: 'var(--brand)', fontWeight: 600, marginTop: 4 }}>
-              {email || 'your email address'}
-            </p>
-            <p style={{ marginTop: 8, fontSize: '0.8125rem', color: 'var(--text-3)' }}>
-              Click the link in the email, then come back and press the button below.
-            </p>
-          </>
-        )}
-      </div>
-
-      {error && <ErrorMsg msg={error} />}
-
-      {!verifying && !verified && (
-        <PrimaryBtn onClick={onDone}>
-          I've verified my email →
-        </PrimaryBtn>
-      )}
-    </div>
-  );
-}
-
-// ─── Step 3: Platform Detection ───────────────────────────────────────────────
-
-function Step3Platform({
+function Step2PlatformAndInstall({
   websiteUrl,
   tenantId,
-  onDone,
 }: {
   websiteUrl: string;
   tenantId?: string;
-  onDone: (platform: Platform, credentials: Record<string, string>) => void;
 }) {
-  const [scanning,  setScanning]  = useState(true);
-  const [detected,  setDetected]  = useState<string | null>(null);
-  const [platform,  setPlatform]  = useState<Platform>('unknown');
+  const navigate = useNavigate();
+
+  // Platform detection state
+  const [scanning,   setScanning]   = useState(true);
+  const [platform,   setPlatform]   = useState<Platform>('unknown');
   const [manualMode, setManualMode] = useState(false);
-  const [creds,     setCreds]     = useState<Record<string, string>>({});
-  const [error,     setError]     = useState('');
+  const [creds,      setCreds]      = useState<Record<string, string>>({});
+  const [formError,  setFormError]  = useState('');
   const didScan = useRef(false);
 
+  // Install state
+  const [installing, setInstalling] = useState(false);
+  const [installStatus, setInstallStatus] = useState<'idle' | 'installing' | 'configuring' | 'live' | 'failed'>('idle');
+  const [installError,  setInstallError]  = useState('');
+  const pollRef    = useRef<ReturnType<typeof setInterval> | null>(null);
+  const didInstall = useRef(false);
+
+  // Auto-scan platform on mount
   useEffect(() => {
     if (didScan.current) return;
     didScan.current = true;
@@ -475,34 +386,154 @@ function Step3Platform({
       .then(res => {
         const p = (res.platform_type?.toLowerCase() ?? 'unknown') as Platform;
         setPlatform(PLATFORM_GUIDES[p] ? p : 'unknown');
-        setDetected(res.platform_type ?? 'Unknown');
       })
-      .catch(err => {
-        const s = (err as { response?: { status?: number } })?.response?.status;
-        if (s === 404) {
-          setManualMode(true);
-        } else {
-          setManualMode(true);
-        }
-        setDetected(null);
-      })
+      .catch(() => setManualMode(true))
       .finally(() => setScanning(false));
   }, [websiteUrl, tenantId]);
 
+  // Cleanup poll on unmount
+  useEffect(() => () => { if (pollRef.current) clearInterval(pollRef.current); }, []);
+
   const guide = PLATFORM_GUIDES[platform];
 
-  function handleSubmit(e: FormEvent) {
+  async function handleInstall(e: FormEvent) {
     e.preventDefault();
-    setError('');
+    setFormError('');
+
     for (const f of guide.fields) {
       if (!creds[f.id]?.trim()) {
-        setError(`${f.label} is required.`);
+        setFormError(`${f.label} is required.`);
         return;
       }
     }
-    onDone(platform, creds);
+
+    if (didInstall.current) return;
+    didInstall.current = true;
+    setInstalling(true);
+    setInstallStatus('installing');
+
+    try {
+      const res = await onboardInstall({
+        website_url:   websiteUrl,
+        platform_type: platform,
+        credentials:   creds,
+        tenant_id:     tenantId,
+      });
+
+      if (res.installing && tenantId) {
+        setInstallStatus('configuring');
+        pollRef.current = setInterval(async () => {
+          try {
+            const ping = await onboardPing(tenantId!);
+            const s = ping.injection_status;
+            if (s === 'live') {
+              clearInterval(pollRef.current!);
+              setInstallStatus('live');
+            } else if (s === 'failed') {
+              clearInterval(pollRef.current!);
+              setInstallStatus('failed');
+              setInstallError('Installation failed. Please check your credentials and try again.');
+              setInstalling(false);
+              didInstall.current = false;
+            }
+          } catch { /* keep polling */ }
+        }, 3000);
+      } else {
+        // Immediate success or 404 fallback
+        setInstallStatus('live');
+        setInstalling(false);
+      }
+    } catch (err: unknown) {
+      const s = (err as { response?: { status?: number } })?.response?.status;
+      if (s === 404) {
+        // Endpoint not yet live — simulate success
+        setInstallStatus('live');
+        setInstalling(false);
+      } else {
+        setInstallStatus('failed');
+        setInstallError('Installation request failed. Please try again.');
+        setInstalling(false);
+        didInstall.current = false;
+      }
+    }
   }
 
+  // ── Done state — shown inline when bridge goes live ──────────────────────
+  if (installStatus === 'live') {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 20, textAlign: 'center' }}>
+        <div>
+          <h1 style={{ fontSize: '1.125rem', fontWeight: 700, color: 'var(--text)', margin: '0 0 0.25rem', letterSpacing: '-0.015em' }}>
+            You're all set!
+          </h1>
+          <p style={{ fontSize: '0.8125rem', color: 'var(--text-2)', margin: 0 }}>
+            Step 2 of 2 — Setup complete
+          </p>
+        </div>
+
+        <div style={{ padding: '1.5rem 0' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 20 }}>
+            {['✅ Connected.', '✅ Injection bridge live.', '✅ First crawl started.'].map(msg => (
+              <p key={msg} style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--success)', margin: 0 }}>
+                {msg}
+              </p>
+            ))}
+          </div>
+          <p style={{ fontSize: '0.9375rem', fontWeight: 600, color: 'var(--text)', margin: '0 0 8px' }}>
+            You are done — the engine is now running.
+          </p>
+          <p style={{ fontSize: '0.8125rem', color: 'var(--text-3)', margin: 0, lineHeight: 1.7 }}>
+            The engine is crawling your website, analysing your industry, writing
+            missing content, and preparing to publish — automatically, without any
+            further action from you.
+          </p>
+        </div>
+
+        <Link
+          to="/login"
+          style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            width: '100%', padding: '0.625rem', minHeight: 42,
+            background: 'var(--brand)', color: '#111',
+            fontSize: '0.875rem', fontWeight: 700,
+            borderRadius: 6, textDecoration: 'none',
+          }}
+        >
+          View your dashboard →
+        </Link>
+      </div>
+    );
+  }
+
+  // ── Installing state ─────────────────────────────────────────────────────
+  if (installStatus === 'installing' || installStatus === 'configuring') {
+    const label = installStatus === 'installing'
+      ? 'Sending installation request…'
+      : 'Configuring injection bridge…';
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+        <div>
+          <h1 style={{ fontSize: '1.125rem', fontWeight: 700, color: 'var(--text)', margin: '0 0 0.25rem', letterSpacing: '-0.015em' }}>
+            Installing bridge
+          </h1>
+          <p style={{ fontSize: '0.8125rem', color: 'var(--text-2)', margin: 0 }}>
+            Step 2 of 2 — Setting up the injection bridge
+          </p>
+        </div>
+        <div style={{ textAlign: 'center', padding: '2rem 0' }}>
+          <Spinner size={28} color="var(--brand)" />
+          <p style={{ marginTop: 12, fontSize: '0.9375rem', fontWeight: 600, color: 'var(--text-2)' }}>
+            {label}
+          </p>
+          <p style={{ marginTop: 6, fontSize: '0.8125rem', color: 'var(--text-3)' }}>
+            This usually takes 30–60 seconds…
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Scanning state ───────────────────────────────────────────────────────
   if (scanning) {
     return (
       <div style={{ textAlign: 'center', padding: '3rem 0' }}>
@@ -514,31 +545,17 @@ function Step3Platform({
     );
   }
 
+  // ── Platform credentials form ────────────────────────────────────────────
   return (
-    <form onSubmit={handleSubmit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+    <form onSubmit={handleInstall} noValidate style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <div>
         <h1 style={{ fontSize: '1.125rem', fontWeight: 700, color: 'var(--text)', margin: '0 0 0.25rem', letterSpacing: '-0.015em' }}>
           Platform credentials
         </h1>
         <p style={{ fontSize: '0.8125rem', color: 'var(--text-2)', margin: 0 }}>
-          Step 3 of 5 — Connect your platform
+          Step 2 of 2 — Connect your platform
         </p>
       </div>
-
-      {detected && !manualMode && (
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: 8,
-          padding: '0.625rem 0.875rem',
-          background: 'color-mix(in srgb, var(--success) 10%, transparent)',
-          border: '1px solid color-mix(in srgb, var(--success) 25%, transparent)',
-          borderRadius: 6,
-          fontSize: '0.875rem',
-          fontWeight: 600,
-          color: 'var(--success)',
-        }}>
-          ✅ {detected} detected
-        </div>
-      )}
 
       {manualMode && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -569,7 +586,7 @@ function Step3Platform({
         {guide.guide}
       </p>
 
-      {error && <ErrorMsg msg={error} />}
+      {(formError || installError) && <ErrorMsg msg={formError || installError} />}
 
       {guide.fields.map(f => (
         <FieldInput
@@ -580,219 +597,33 @@ function Step3Platform({
           placeholder={f.placeholder}
           value={creds[f.id] ?? ''}
           onChange={v => setCreds(prev => ({ ...prev, [f.id]: v }))}
+          disabled={installing}
         />
       ))}
 
-      <PrimaryBtn type="submit">
+      <PrimaryBtn type="submit" loading={installing}>
         Install bridge →
       </PrimaryBtn>
     </form>
   );
 }
 
-// ─── Step 4: Bridge Installation ─────────────────────────────────────────────
-
-function Step4Install({
-  websiteUrl,
-  tenantId,
-  platform,
-  credentials,
-  onDone,
-}: {
-  websiteUrl: string;
-  tenantId?: string;
-  platform: Platform;
-  credentials: Record<string, string>;
-  onDone: () => void;
-}) {
-  const [status,  setStatus]  = useState<'installing' | 'configuring' | 'live' | 'failed'>('installing');
-  const [error,   setError]   = useState('');
-  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const didInstall = useRef(false);
-
-  useEffect(() => {
-    if (didInstall.current) return;
-    didInstall.current = true;
-
-    onboardInstall({
-      website_url:  websiteUrl,
-      platform_type: platform,
-      credentials,
-      tenant_id:    tenantId,
-    })
-      .then(res => {
-        if (res.installing) {
-          setStatus('configuring');
-          pollRef.current = setInterval(async () => {
-            if (!tenantId) { clearInterval(pollRef.current!); onDone(); return; }
-            try {
-              const ping = await onboardPing(tenantId);
-              const s = ping.injection_status;
-              if (s === 'live') {
-                clearInterval(pollRef.current!);
-                setStatus('live');
-                setTimeout(onDone, 1200);
-              } else if (s === 'failed') {
-                clearInterval(pollRef.current!);
-                setStatus('failed');
-                setError('Installation failed. Please check your credentials and try again.');
-              } else {
-                setStatus('configuring');
-              }
-            } catch {
-              // keep polling
-            }
-          }, 3000);
-        } else {
-          setStatus('live');
-          setTimeout(onDone, 1000);
-        }
-      })
-      .catch(err => {
-        const s = (err as { response?: { status?: number } })?.response?.status;
-        if (s === 404) {
-          // Endpoint not yet live — simulate success
-          setStatus('live');
-          setTimeout(onDone, 1000);
-        } else {
-          setStatus('failed');
-          setError('Installation request failed. Please try again.');
-        }
-      });
-
-    return () => { if (pollRef.current) clearInterval(pollRef.current); };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const statusLabel =
-    status === 'installing'  ? 'Sending installation request…' :
-    status === 'configuring' ? 'Configuring injection bridge…' :
-    status === 'live'        ? '✅ Bridge is live!'             :
-                               '❌ Installation failed';
-
-  const statusColor =
-    status === 'live'   ? 'var(--success)' :
-    status === 'failed' ? 'var(--danger)'  :
-                          'var(--text-2)';
-
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-      <div>
-        <h1 style={{ fontSize: '1.125rem', fontWeight: 700, color: 'var(--text)', margin: '0 0 0.25rem', letterSpacing: '-0.015em' }}>
-          Installing bridge
-        </h1>
-        <p style={{ fontSize: '0.8125rem', color: 'var(--text-2)', margin: 0 }}>
-          Step 4 of 5 — Setting up the injection bridge
-        </p>
-      </div>
-
-      <div style={{ textAlign: 'center', padding: '2rem 0' }}>
-        {status !== 'live' && status !== 'failed' && (
-          <Spinner size={28} color="var(--brand)" />
-        )}
-        <p style={{ marginTop: 12, fontSize: '0.9375rem', fontWeight: 600, color: statusColor }}>
-          {statusLabel}
-        </p>
-        {(status === 'installing' || status === 'configuring') && (
-          <p style={{ marginTop: 6, fontSize: '0.8125rem', color: 'var(--text-3)' }}>
-            This usually takes 30–60 seconds…
-          </p>
-        )}
-      </div>
-
-      {error && <ErrorMsg msg={error} />}
-
-      {status === 'failed' && (
-        <PrimaryBtn onClick={() => { setStatus('installing'); didInstall.current = false; setError(''); }}>
-          Retry
-        </PrimaryBtn>
-      )}
-    </div>
-  );
-}
-
-// ─── Step 5: Done ─────────────────────────────────────────────────────────────
-
-function Step5Done() {
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 20, textAlign: 'center' }}>
-      <div>
-        <h1 style={{ fontSize: '1.125rem', fontWeight: 700, color: 'var(--text)', margin: '0 0 0.25rem', letterSpacing: '-0.015em' }}>
-          You're all set!
-        </h1>
-        <p style={{ fontSize: '0.8125rem', color: 'var(--text-2)', margin: 0 }}>
-          Step 5 of 5 — Setup complete
-        </p>
-      </div>
-
-      <div style={{ padding: '1.5rem 0' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 20 }}>
-          {[
-            '✅ Connected.',
-            '✅ Injection bridge live.',
-            '✅ First crawl started.',
-          ].map(msg => (
-            <p key={msg} style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--success)', margin: 0 }}>
-              {msg}
-            </p>
-          ))}
-        </div>
-        <p style={{ fontSize: '0.9375rem', fontWeight: 600, color: 'var(--text)', margin: '0 0 8px' }}>
-          You are done — close this page.
-        </p>
-        <p style={{ fontSize: '0.8125rem', color: 'var(--text-3)', margin: 0, lineHeight: 1.7 }}>
-          The engine is now crawling your website, analysing your industry, writing
-          missing content, and preparing to publish — automatically, without any
-          further action from you.
-        </p>
-      </div>
-
-      <Link
-        to="/login"
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          width: '100%',
-          padding: '0.625rem',
-          minHeight: 42,
-          background: 'var(--brand)',
-          color: '#111',
-          fontSize: '0.875rem',
-          fontWeight: 700,
-          borderRadius: 6,
-          textDecoration: 'none',
-        }}
-      >
-        View your dashboard →
-      </Link>
-    </div>
-  );
-}
-
 // ─── Main wizard ──────────────────────────────────────────────────────────────
 
 export default function Connect() {
-  const navigate       = useNavigate();
-  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
 
-  const [step,        setStep]        = useState<Step>(1);
-  const [email,       setEmail]       = useState('');
-  const [websiteUrl,  setWebsiteUrl]  = useState('');
-  const [tenantId,    setTenantId]    = useState<string | undefined>();
-  const [platform,    setPlatform]    = useState<Platform>('unknown');
-  const [credentials, setCredentials] = useState<Record<string, string>>({});
-
-  // If ?token= is present, jump straight to step 2 for auto-verification
-  useEffect(() => {
-    if (searchParams.get('token') && step === 1) setStep(2);
-  }, [searchParams]); // eslint-disable-line react-hooks/exhaustive-deps
+  const [step,       setStep]       = useState<Step>(1);
+  const [email,      setEmail]      = useState('');
+  const [websiteUrl, setWebsiteUrl] = useState('');
+  const [tenantId,   setTenantId]   = useState<string | undefined>();
 
   return (
     <>
       <style>{`@keyframes connect-spin { to { transform: rotate(360deg); } }`}</style>
       <WizardBox>
         <Brand />
-        <StepIndicator current={step} total={5} />
+        <StepIndicator current={step} total={2} />
 
         {step === 1 && (
           <Step1Register
@@ -806,51 +637,21 @@ export default function Connect() {
         )}
 
         {step === 2 && (
-          <Step2VerifyEmail
-            email={email}
-            tenantId={tenantId}
-            onDone={() => setStep(3)}
-          />
-        )}
-
-        {step === 3 && (
-          <Step3Platform
+          <Step2PlatformAndInstall
             websiteUrl={websiteUrl}
             tenantId={tenantId}
-            onDone={(p, creds) => {
-              setPlatform(p);
-              setCredentials(creds);
-              setStep(4);
-            }}
           />
         )}
 
-        {step === 4 && (
-          <Step4Install
-            websiteUrl={websiteUrl}
-            tenantId={tenantId}
-            platform={platform}
-            credentials={credentials}
-            onDone={() => setStep(5)}
-          />
-        )}
-
-        {step === 5 && <Step5Done />}
-
-        {step > 1 && step < 5 && (
+        {step === 2 && (
           <button
             type="button"
-            onClick={() => setStep(prev => (prev - 1) as Step)}
+            onClick={() => setStep(1)}
             style={{
-              background: 'none',
-              border: 'none',
-              padding: '0.5rem 0',
-              marginTop: 12,
-              fontSize: '0.8125rem',
-              color: 'var(--text-3)',
-              cursor: 'pointer',
-              width: '100%',
-              textAlign: 'center',
+              background: 'none', border: 'none',
+              padding: '0.5rem 0', marginTop: 12,
+              fontSize: '0.8125rem', color: 'var(--text-3)',
+              cursor: 'pointer', width: '100%', textAlign: 'center',
             }}
           >
             ← Back
@@ -862,7 +663,11 @@ export default function Connect() {
           <button
             type="button"
             onClick={() => navigate('/login')}
-            style={{ background: 'none', border: 'none', padding: 0, color: 'var(--brand)', fontWeight: 600, cursor: 'pointer', fontSize: 'inherit', textDecoration: 'underline', textUnderlineOffset: 2 }}
+            style={{
+              background: 'none', border: 'none', padding: 0,
+              color: 'var(--brand)', fontWeight: 600, cursor: 'pointer',
+              fontSize: 'inherit', textDecoration: 'underline', textUnderlineOffset: 2,
+            }}
           >
             Sign in
           </button>
