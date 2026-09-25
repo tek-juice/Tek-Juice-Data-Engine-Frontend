@@ -361,7 +361,6 @@ function Step2PlatformAndInstall({
   websiteUrl: string;
   tenantId?: string;
 }) {
-  const navigate = useNavigate();
 
   // Platform detection state
   const [scanning,   setScanning]   = useState(true);
@@ -614,7 +613,6 @@ export default function Connect() {
   const navigate = useNavigate();
 
   const [step,       setStep]       = useState<Step>(1);
-  const [email,      setEmail]      = useState('');
   const [websiteUrl, setWebsiteUrl] = useState('');
   const [tenantId,   setTenantId]   = useState<string | undefined>();
 
@@ -628,7 +626,7 @@ export default function Connect() {
         {step === 1 && (
           <Step1Register
             onDone={(em, url, tid) => {
-              setEmail(em);
+              void em;
               setWebsiteUrl(url);
               if (tid) setTenantId(tid);
               setStep(2);
