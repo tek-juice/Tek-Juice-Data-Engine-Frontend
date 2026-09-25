@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, type FormEvent } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import {
   onboardRegister,
   onboardScan,
@@ -610,7 +610,7 @@ function Step2PlatformAndInstall({
 // ─── Main wizard ──────────────────────────────────────────────────────────────
 
 export default function Connect() {
-  const navigate = useNavigate();
+  
 
   const [step,       setStep]       = useState<Step>(1);
   const [websiteUrl, setWebsiteUrl] = useState('');
@@ -660,7 +660,7 @@ export default function Connect() {
           Already have an account?{' '}
           <button
             type="button"
-            onClick={() => navigate('/login')}
+            onClick={() => window.location.href="/login"}
             style={{
               background: 'none', border: 'none', padding: 0,
               color: 'var(--brand)', fontWeight: 600, cursor: 'pointer',
