@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
   RefreshCw, Loader2, AlertTriangle, ChevronDown, ChevronUp,
-  FileText, Zap, CheckCircle2, Copy, Check,
+  FileText, Zap, CheckCircle2, XCircle, Copy, Check,
 } from 'lucide-react';
-import { getDrafts } from '../../api/gaps';
+import { getDrafts, approveDraft, rejectDraft } from '../../api/gaps';
 import { getDashboardDocuments } from '../../api/dashboard';
 import { getTenantId } from '../../services/auth.service';
 import { copyToClipboard } from '../../utils/clipboard';
@@ -47,6 +47,24 @@ function Pill({ label, color }: { label: string; color: string }) {
 function DraftCard({ draft }: { draft: DraftItem }) {
   const [open, setOpen]       = useState(false);
   const [copied, setCopied]   = useState(false);
+  const [status, setStatus]   = useState(draft.status);
+  const [reviewing, setReviewing] = useState(false);
+  const [reviewError, setReviewError] = useState('');
+
+  async function handleReview(next: 'approved' | 'rejected') {
+    if (!draft.id || reviewing) return;
+    setReviewing(true);
+    setReviewError('');
+    try {
+      if (next === 'approved') await approveDraft(draft.id);
+      else await rejectDraft(draft.id);
+      setStatus(next);
+    } catch {
+      setReviewError('Could not update status.');
+    } finally {
+      setReviewing(false);
+    }
+  }
 
   const qs    = draft.quality_score;
   const words = draft.word_count ?? draft.draft_text?.split(/\s+/).length ?? 0;
@@ -87,8 +105,8 @@ function DraftCard({ draft }: { draft: DraftItem }) {
           {draft.beats_paid_ads && (
             <Pill label="Beats ads" color="var(--success)" />
           )}
-          {draft.status && (
-            <Pill label={draft.status} color={statusColor(draft.status)} />
+          {status && (
+            <Pill label={status} color={statusColor(status)} />
           )}
           {draft.projected_position && (
             <span className="text-xs" style={{ color: 'var(--brand)' }}>
@@ -107,6 +125,30 @@ function DraftCard({ draft }: { draft: DraftItem }) {
           className="px-4 pb-4 pt-3 space-y-4"
           style={{ borderTop: '1px solid var(--border)', background: 'var(--bg)' }}
         >
+          {/* Review actions */}
+          {draft.id && (
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => handleReview('approved')}
+                disabled={reviewing || status === 'approved'}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold transition-colors disabled:opacity-40"
+                style={{ border: '1px solid var(--success)', color: 'var(--success)', background: 'transparent' }}
+              >
+                <CheckCircle2 size={12} /> {status === 'approved' ? 'Approved' : 'Approve'}
+              </button>
+              <button
+                onClick={() => handleReview('rejected')}
+                disabled={reviewing || status === 'rejected'}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold transition-colors disabled:opacity-40"
+                style={{ border: '1px solid var(--danger)', color: 'var(--danger)', background: 'transparent' }}
+              >
+                <XCircle size={12} /> {status === 'rejected' ? 'Rejected' : 'Reject'}
+              </button>
+              {reviewing && <Loader2 size={12} className="animate-spin" style={{ color: 'var(--text-3)' }} />}
+              {reviewError && <span className="text-xs" style={{ color: 'var(--danger)' }}>{reviewError}</span>}
+            </div>
+          )}
+
           {/* QS breakdown */}
           {(draft.geo_score != null || draft.aeo_score != null || draft.composite_score != null) && (
             <div className="grid grid-cols-3 gap-3">

@@ -162,3 +162,36 @@ export async function getQualityScore(
   );
   return data;
 }
+
+// ── Draft review actions ──────────────────────────────────────────────────────
+
+export interface DraftStatusUpdateResponse {
+  id: string;
+  document_id: string;
+  tenant_id: string;
+  status: string;
+}
+
+/**
+ * PATCH /api/v1/gaps/drafts/{draft_id}/status
+ * Approve a content draft for publishing.
+ */
+export async function approveDraft(draft_id: string): Promise<DraftStatusUpdateResponse> {
+  const { data } = await apiClient.patch<DraftStatusUpdateResponse>(
+    `/api/v1/gaps/drafts/${draft_id}/status`,
+    { status: 'approved' },
+  );
+  return data;
+}
+
+/**
+ * PATCH /api/v1/gaps/drafts/{draft_id}/status
+ * Reject a content draft — the writing agent will regenerate it next cycle.
+ */
+export async function rejectDraft(draft_id: string): Promise<DraftStatusUpdateResponse> {
+  const { data } = await apiClient.patch<DraftStatusUpdateResponse>(
+    `/api/v1/gaps/drafts/${draft_id}/status`,
+    { status: 'rejected' },
+  );
+  return data;
+}

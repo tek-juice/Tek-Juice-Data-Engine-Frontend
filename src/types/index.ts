@@ -747,3 +747,135 @@ export interface VisibilityQualityScore {
   beats_paid_ads: boolean;
   [key: string]: unknown;
 }
+
+// ── AEO (Answer Engine Optimisation) ──────────────────────────────────────────
+
+export interface AEOScoreBreakdown {
+  overall_aeo_score: number;
+  answer_readiness: number;
+  voice_readiness: number;
+  snippet_readiness: number;
+  pz_readiness: number;
+}
+
+export interface AEOAnalysisResponse {
+  document_id: string;
+  tenant_id: string;
+  scores: AEOScoreBreakdown;
+  snippet_ready: boolean;
+  spoken_answer: string;
+  optimised_intro: string;
+  pz_opportunities: number;
+  questions_mapped: number;
+  questions_answered: number;
+  priority_actions: string[];
+  quick_wins: string[];
+  recommendations: string[];
+  engine_targets: string[];
+  analysed_at: string;
+  word_count: number;
+}
+
+export interface AnswerScoreResponse {
+  overall_score: number;
+  directness_score: number;
+  completeness_score: number;
+  conciseness_score: number;
+  verifiability_score: number;
+  answer_type: string;
+  word_count: number;
+  starts_directly: boolean;
+  has_filler_opener: boolean;
+  snippet_ready: boolean;
+  has_statistics: boolean;
+  has_named_sources: boolean;
+  completeness_signals: string[];
+  issues: string[];
+  recommendations: string[];
+}
+
+export interface QuestionMapItem {
+  text: string;
+  intent: string;
+  is_voice_search: boolean;
+  is_long_tail?: boolean;
+  has_direct_answer: boolean;
+  answer_excerpt?: string;
+  answer_quality: number;
+}
+
+export interface QuestionMapResponse {
+  total_questions: number;
+  answered_count: number;
+  unanswered_count: number;
+  coverage_score: number;
+  voice_search_count: number;
+  long_tail_count: number;
+  intent_distribution: Record<string, number>;
+  explicit_questions: QuestionMapItem[];
+  implicit_questions: QuestionMapItem[];
+  recommendations: string[];
+}
+
+export interface SnippetCandidate {
+  text?: string;
+  snippet_type: string;
+  word_count: number;
+  snippet_score: number;
+  starts_with_direct_answer?: boolean;
+  has_trigger_phrase?: boolean;
+  readability_score?: number;
+  optimised_text: string;
+  issues?: string[];
+}
+
+export interface FeaturedSnippetResponse {
+  has_snippet_ready_content: boolean;
+  overall_snippet_score: number;
+  snippet_type_distribution: Record<string, number>;
+  best_candidate: SnippetCandidate | null;
+  all_candidates: SnippetCandidate[];
+  recommendations: string[];
+}
+
+export interface VoiceSearchResponse {
+  overall_score: number;
+  conversational_score: number;
+  answer_length_score: number;
+  question_alignment_score: number;
+  local_intent_score: number;
+  word_count: number;
+  is_conversational: boolean;
+  has_local_intent: boolean;
+  has_filler_words: boolean;
+  detected_voice_patterns: string[];
+  spoken_answer: string;
+  optimised_for_voice: string;
+  recommendations: string[];
+}
+
+export interface PositionZeroOpportunity {
+  position_zero_type: string;
+  readiness_score: number;
+  content_block?: string;
+  required_changes: string[];
+  trigger_found?: boolean;
+}
+
+export interface PositionZeroResponse {
+  overall_pz_score: number;
+  total_opportunities: number;
+  high_readiness_count: number;
+  type_breakdown: Record<string, number>;
+  people_also_ask_questions: string[];
+  knowledge_panel_signals: string[];
+  best_opportunity: PositionZeroOpportunity | null;
+  all_opportunities: PositionZeroOpportunity[];
+  recommendations: string[];
+}
+
+export interface AEOEngineTarget {
+  id: string;
+  type: string;
+  description: string;
+}

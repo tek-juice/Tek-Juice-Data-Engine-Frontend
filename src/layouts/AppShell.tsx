@@ -35,6 +35,7 @@ const NAV: NavGroup[] = [
     items: [
       { label: 'SEO', to: '/seo' },
       { label: 'GEO', to: '/geo' },
+      { label: 'AEO', to: '/aeo' },
     ],
   },
   {

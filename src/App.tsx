@@ -27,6 +27,7 @@ import Trends          from './pages/Trends/Trends';
 import SchemaFactory   from './pages/SchemaFactory/SchemaFactory';
 import SEO             from './pages/SEO/SEO';
 import GEO             from './pages/GEO/GEO';
+import AEO             from './pages/AEO/AEO';
 import Sync            from './pages/Sync/Sync';
 import Telemetry       from './pages/Telemetry/Telemetry';
 import Upload          from './pages/Upload/Upload';
@@ -93,6 +94,7 @@ function App() {
             {/* Visibility */}
             <Route path="/seo"            element={page(<SEO />)} />
             <Route path="/geo"            element={page(<GEO />)} />
+            <Route path="/aeo"            element={page(<AEO />)} />
 
             {/* System */}
             <Route path="/sync"           element={page(<Sync />)} />
