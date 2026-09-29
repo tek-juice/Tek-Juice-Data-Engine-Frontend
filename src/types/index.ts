@@ -629,7 +629,7 @@ export interface QualityScoreRequest {
 
 export interface OnboardRegisterPayload {
   product_name: string;
-  email: string;
+  admin_email: string;
   website_url: string;
   password?: string;
   [key: string]: unknown;
@@ -699,53 +699,165 @@ export interface SdkSignalPayload {
 
 // ── Visibility Dashboard ──────────────────────────────────────────────────────
 
+export interface VisibilityWebsite {
+  id: string;
+  url: string;
+  domain: string;
+  status: string;
+  verified_at: string | null;
+  last_crawled_at: string | null;
+  page_count: number;
+}
+
+export interface VisibilityPipeline {
+  state: string;
+  stage: string | null;
+  run_id: string | null;
+  run_status: string | null;
+  progress: Record<string, unknown>;
+  error: string | null;
+  retry_count: number;
+  started_at: string | null;
+  completed_at: string | null;
+}
+
+export interface VisibilityIntelligence {
+  gaps_total: number;
+  gaps_open: number;
+  gaps_resolved: number;
+  avg_gap_score: number | null;
+  opportunities_total: number;
+  opportunities_open: number;
+  opportunities_progressed: number;
+  avg_priority_score: number | null;
+}
+
+export interface VisibilityContent {
+  strategies_total: number;
+  strategies_draft: number;
+  strategies_progressed: number;
+  executions_total: number;
+  awaiting_approval: number;
+  approved: number;
+  rejected: number;
+  awaiting_publication: number;
+  published: number;
+  failed: number;
+  published_this_week: number;
+  published_today: number;
+}
+
+export interface VisibilityFeedback {
+  total_measurements: number;
+  ranked_measurements: number;
+  avg_position: number | null;
+  improved: number;
+  declined: number;
+  unchanged: number;
+  last_measured_at: string | null;
+}
+
+export interface VisibilityRecentExecution {
+  id: string;
+  opportunity_id: string | null;
+  content_strategy_id: string | null;
+  action_type: string;
+  target_url: string | null;
+  target_title: string | null;
+  approval_status: string;
+  publication_status: string;
+  published_url: string | null;
+  published_at: string | null;
+  error: string | null;
+  created_at: string;
+  opportunity_title: string | null;
+  strategy_topic: string | null;
+}
+
 export interface VisibilityOverview {
-  injection_status: InjectionStatus | 'not_installed';
-  published_count: number;
-  open_gaps: number;
-  crawl_progress: number;
-  last_crawled_at?: string | null;
-  platform_type?: string | null;
-  coverage_pct?: number;
-  [key: string]: unknown;
+  website: VisibilityWebsite;
+  pipeline: VisibilityPipeline;
+  intelligence: VisibilityIntelligence;
+  content: VisibilityContent;
+  feedback: VisibilityFeedback;
+  recent_executions: VisibilityRecentExecution[];
 }
 
 export interface VisibilityPublishedItem {
-  document_id: string;
-  title: string;
-  url: string;
-  published_at: string;
-  quality_score?: number;
-  coverage_pct?: number;
-  [key: string]: unknown;
+  id: string;
+  website_id: string;
+  opportunity_id: string | null;
+  content_strategy_id: string | null;
+  action_type: string;
+  target_url: string | null;
+  target_title: string | null;
+  published_url: string | null;
+  published_at: string | null;
+  created_at: string;
+  opportunity_title: string | null;
+  primary_query: string | null;
+  topic: string | null;
+  content_type: string | null;
+  target_intent: string | null;
+}
+
+export interface VisibilityPublishedResponse {
+  items: VisibilityPublishedItem[];
+  total: number;
+  page: number;
+  page_size: number;
 }
 
 export interface VisibilityConnection {
-  bridge_status: 'connected' | 'disconnected' | 'error';
-  platform_type: string;
-  last_crawled_at?: string | null;
-  api_key_prefix?: string;
-  website_url?: string;
-  [key: string]: unknown;
+  website_id: string;
+  product_name: string | null;
+  website_url: string;
+  domain: string;
+  status: string;
+  verified_at: string | null;
+  last_crawled_at: string | null;
+  page_count: number;
+  crawl_config: Record<string, unknown> | null;
+  meta: Record<string, unknown> | null;
 }
 
 export interface VisibilityGapItem {
-  document_id: string;
+  id: string;
+  run_id: string | null;
+  gap_type: string;
   title: string;
-  coverage_before: number;
-  coverage_after: number;
-  gap_score: number;
-  status: 'pending' | 'drafts_ready' | 'resolved';
-  [key: string]: unknown;
+  description: string | null;
+  query_text: string | null;
+  topic: string | null;
+  intent: string | null;
+  severity: string | null;
+  gap_score: number | null;
+  competitor_domain: string | null;
+  tenant_position: number | null;
+  competitor_position: number | null;
+  status: string;
+  created_at: string;
+  updated_at: string;
+  opportunity_count: number;
+  strategy_count: number;
+  execution_count: number;
 }
 
-export interface VisibilityQualityScore {
-  document_id: string;
-  title: string;
-  quality_score: number;
-  label: string;
-  beats_paid_ads: boolean;
-  [key: string]: unknown;
+export interface VisibilitySearchPerformance {
+  rank_band: string;
+  measurement_count: number;
+  avg_position: number | null;
+  improved: number;
+  declined: number;
+}
+
+export interface VisibilitySearchPerformanceResponse {
+  execution_state: Array<{
+    approval_status: string;
+    publication_status: string;
+    content_count: number;
+  }>;
+  search_performance: VisibilitySearchPerformance[];
 }
 
 // ── AEO (Answer Engine Optimisation) ──────────────────────────────────────────

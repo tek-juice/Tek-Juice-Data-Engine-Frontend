@@ -312,7 +312,7 @@ function Step1Register({
       const res = await onboardRegister({
         product_name: company.trim(),
         website_url:  website.trim(),
-        email:        email.trim(),
+        admin_email:  email.trim(),
       });
       onDone(email.trim(), website.trim(), res.tenant_id);
     } catch (err: unknown) {
@@ -414,7 +414,7 @@ function Step2PlatformAndInstall({
     try {
       const res = await onboardInstall({
         website_url:   websiteUrl,
-        platform_type: platform,
+        platform:      platform,
         credentials:   creds,
         tenant_id:     tenantId,
       });

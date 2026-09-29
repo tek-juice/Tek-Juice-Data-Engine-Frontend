@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { getDashboardOverview, getActivityLog, getVisibilityConnection, getMyTenantPerformance } from '../../api/dashboard';
+import { listWebsites } from '../../api/websites';
 import { getQualityScore } from '../../api/gaps';
 import { getTenantId } from '../../services/auth.service';
 import type { QualityScoreResponse, DashboardOverview, ActivityLogEntry, VisibilityConnection, TenantPerformance } from '../../types';
@@ -166,7 +167,7 @@ export default function TenantDashboard() {
     Promise.all([
       getDashboardOverview(),
       getActivityLog(24, 50),
-      getVisibilityConnection().catch(() => null),
+        listWebsites().then(websites => { const website = websites[0]; return website ? getVisibilityConnection(website.id).catch(() => null) : null; }).catch(() => null),
       getMyTenantPerformance().catch(() => null),
     ])
       .then(([ov, acts, conn, me]) => {
@@ -226,7 +227,7 @@ export default function TenantDashboard() {
   // Resolve product identity from backend (falls back gracefully)
   const productName = tenantMe?.tenant.name ?? connection?.website_url ?? 'My Product';
   const websiteUrl  = connection?.website_url ?? null;
-  const bridgeOk    = connection?.bridge_status === 'connected';
+  const bridgeOk    = connection?.status === 'connected' || connection?.status === 'verified';
   const lastCrawled = connection?.last_crawled_at ?? null;
 
   // Map DashboardOverview → display values
@@ -330,11 +331,8 @@ export default function TenantDashboard() {
             : <Link2Off size={12} style={{ color: 'var(--danger)',  flexShrink: 0 }} />
           }
           <span style={{ color: bridgeOk ? 'var(--success)' : 'var(--danger)', fontWeight: 600, fontFamily: 'ui-monospace, monospace' }}>
-            Bridge {connection.bridge_status}
+              Website {connection.status}
           </span>
-          {connection.platform_type && (
-            <span style={{ color: 'var(--text-3)' }}>· {connection.platform_type}</span>
-          )}
           {lastCrawled && (
             <span style={{ color: 'var(--text-3)' }}>· Last crawled {relTime(lastCrawled)}</span>
           )}

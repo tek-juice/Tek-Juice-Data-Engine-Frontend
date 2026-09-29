@@ -7,21 +7,14 @@ import {
   getVisibilityOverview,
   getVisibilityPublished,
   getVisibilityGaps,
-  getVisibilityQualityScores,
-  getDashboardOverview,
-  getDashboardDocuments,
+  getVisibilitySearchPerformance,
 } from '../../api/dashboard';
-import { getCrawlStatus } from '../../api/ingest';
-import { getRankings, registerRankConfig } from '../../api/seo';
-import { getTenantId } from '../../services/auth.service';
+import { listWebsites } from '../../api/websites';
 import type {
   VisibilityOverview,
   VisibilityPublishedItem,
   VisibilityGapItem,
-  VisibilityQualityScore,
-  RankSnapshot,
-  DashboardOverview,
-  DocumentListItem,
+  VisibilitySearchPerformanceResponse,
 } from '../../types';
 
 // ─── Primitives ───────────────────────────────────────────────────────────────
@@ -228,12 +221,10 @@ function PageHeader({ lastUpdated, onRefresh, refreshing }: {
 // ─── What the engine is working on next ───────────────────────────────────────
 
 function NextActions({ gaps, loading }: { gaps: VisibilityGapItem[]; loading: boolean }) {
-  const pending = gaps.filter(g => g.status === 'pending' || g.status === 'drafts_ready');
-
   if (loading) {
     return (
       <Card className="p-5">
-        <Skeleton className="h-4 w-40 mb-4" />
+        <Skeleton className="h-4 w-48 mb-4" />
         <div className="space-y-2">
           {[1, 2, 3].map(i => <Skeleton key={i} className="h-10 w-full" />)}
         </div>
@@ -241,14 +232,16 @@ function NextActions({ gaps, loading }: { gaps: VisibilityGapItem[]; loading: bo
     );
   }
 
-  if (!pending.length) {
+  const openGaps = gaps.filter(g => g.status !== 'resolved');
+
+  if (!openGaps.length) {
     return (
       <Card className="p-5">
         <p className="text-sm font-bold mb-1" style={{ color: 'var(--text)' }}>
           What the engine is working on next
         </p>
         <p className="text-sm" style={{ color: 'var(--text-3)' }}>
-          All gaps resolved — the engine will monitor for new content.
+          All gaps resolved — the engine will monitor for new opportunities.
         </p>
       </Card>
     );
@@ -263,12 +256,10 @@ function NextActions({ gaps, loading }: { gaps: VisibilityGapItem[]; loading: bo
       </div>
       <table className="w-full">
         <tbody>
-          {pending.slice(0, 5).map((g, i) => (
+          {openGaps.slice(0, 5).map((g, i) => (
             <tr
-              key={g.document_id}
-              style={{
-                borderTop: i === 0 ? undefined : '1px solid var(--border-subtle)',
-              }}
+              key={g.id}
+              style={{ borderTop: i === 0 ? undefined : '1px solid var(--border-subtle)' }}
               onMouseEnter={e => (e.currentTarget.style.background = 'var(--surface-2)')}
               onMouseLeave={e => (e.currentTarget.style.background = '')}
             >
@@ -276,7 +267,10 @@ function NextActions({ gaps, loading }: { gaps: VisibilityGapItem[]; loading: bo
                 {g.title}
               </td>
               <td className="py-3 px-5 text-sm" style={{ color: 'var(--text-3)', whiteSpace: 'nowrap' }}>
-                Gap score: <span style={{ color: 'var(--text-2)', fontWeight: 600 }}>{(g.gap_score * 100).toFixed(0)}%</span>
+                Gap score:{' '}
+                <span style={{ color: 'var(--text-2)', fontWeight: 600 }}>
+                  {g.gap_score != null ? `${(g.gap_score * 100).toFixed(0)}%` : '—'}
+                </span>
               </td>
               <td className="py-3 px-5 text-right" style={{ whiteSpace: 'nowrap' }}>
                 <StatusPill status={g.status} />
@@ -289,15 +283,9 @@ function NextActions({ gaps, loading }: { gaps: VisibilityGapItem[]; loading: bo
   );
 }
 
-// ─── Published this week ──────────────────────────────────────────────────────
+// ─── Published content ────────────────────────────────────────────────────────
 
 function PublishedList({ items, loading }: { items: VisibilityPublishedItem[]; loading: boolean }) {
-  const cutoff = Date.now() - 7 * 24 * 60 * 60 * 1000;
-  // Support both VisibilityPublishedItem (published_at) and DocumentListItem (created_at)
-  const getDate = (it: VisibilityPublishedItem) =>
-    (it.published_at ?? (it as unknown as { created_at?: string }).created_at ?? '') as string;
-  const recent = items.filter(it => new Date(getDate(it)).getTime() > cutoff);
-
   if (loading) {
     return (
       <Card className="p-5">
@@ -309,47 +297,12 @@ function PublishedList({ items, loading }: { items: VisibilityPublishedItem[]; l
     );
   }
 
-  if (!recent.length) {
-    // Show all items (not just last-7-days) if no recent ones but we have data
-    const allItems = items.length > 0 ? items : [];
-    if (!allItems.length) {
-      return (
-        <EmptyCard
-          title="No documents processed yet"
-          body="The engine processes documents once a crawl completes. Connect your product to start."
-        />
-      );
-    }
+  if (!items.length) {
     return (
-      <Card className="overflow-hidden">
-        <div className="px-5 py-4" style={{ borderBottom: '1px solid var(--border)' }}>
-          <p className="text-sm font-bold" style={{ color: 'var(--text)' }}>
-            Documents processed
-            <span className="ml-2 text-xs font-medium" style={{ color: 'var(--text-3)' }}>
-              {allItems.length} total
-            </span>
-          </p>
-        </div>
-        <table className="w-full">
-          <tbody>
-            {allItems.slice(0, 8).map((it, i) => (
-              <tr
-                key={it.document_id}
-                style={{ borderTop: i === 0 ? undefined : '1px solid var(--border-subtle)' }}
-                onMouseEnter={e => (e.currentTarget.style.background = 'var(--surface-2)')}
-                onMouseLeave={e => (e.currentTarget.style.background = '')}
-              >
-                <td className="py-3 px-5 text-sm font-medium truncate max-w-xs" style={{ color: 'var(--text)' }}>
-                  {it.title ?? (it as unknown as { filename?: string }).filename ?? it.document_id}
-                </td>
-                <td className="py-3 px-5 text-sm text-right tabular-nums" style={{ color: 'var(--text-3)', whiteSpace: 'nowrap' }}>
-                  {(it as unknown as { status?: string }).status ?? '—'}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </Card>
+      <EmptyCard
+        title="No published content yet"
+        body="Published content will appear here after approved execution jobs are delivered to the connected product."
+      />
     );
   }
 
@@ -357,123 +310,77 @@ function PublishedList({ items, loading }: { items: VisibilityPublishedItem[]; l
     <Card className="overflow-hidden">
       <div className="px-5 py-4" style={{ borderBottom: '1px solid var(--border)' }}>
         <p className="text-sm font-bold" style={{ color: 'var(--text)' }}>
-          Recent documents
+          Published content
           <span className="ml-2 text-xs font-medium" style={{ color: 'var(--text-3)' }}>
-            {recent.length} item{recent.length !== 1 ? 's' : ''}
+            {items.length} item{items.length !== 1 ? 's' : ''}
           </span>
         </p>
       </div>
       <table className="w-full">
         <tbody>
-          {recent.slice(0, 6).map((it, i) => (
-                <tr
-                  key={it.document_id}
-                  style={{ borderTop: i === 0 ? undefined : '1px solid var(--border-subtle)' }}
-                  onMouseEnter={e => (e.currentTarget.style.background = 'var(--surface-2)')}
-                  onMouseLeave={e => (e.currentTarget.style.background = '')}
-                >
-                  <td className="py-3 px-5 text-sm font-medium truncate max-w-xs" style={{ color: 'var(--text)' }}>
-                    {it.url ? (
-                      <a href={it.url} target="_blank" rel="noreferrer" style={{ color: 'inherit', textDecoration: 'none' }}>
-                        {it.title ?? (it as unknown as { filename?: string }).filename ?? it.document_id}
-                      </a>
-                    ) : (it.title ?? (it as unknown as { filename?: string }).filename ?? it.document_id)}
-                  </td>
-                  <td className="py-3 px-5 text-sm text-right tabular-nums" style={{ color: 'var(--text-3)', whiteSpace: 'nowrap' }}>
-                    {getDate(it) ? new Date(getDate(it)).toLocaleDateString([], { month: 'short', day: 'numeric' }) : '—'}
-                  </td>
-              {it.quality_score != null && (
-                <td className="py-3 px-5 text-right">
-                  <span
-                    className="text-xs font-bold tabular-nums"
-                    style={{ color: it.quality_score >= 8 ? 'var(--success)' : it.quality_score >= 6 ? 'var(--warning)' : 'var(--danger)' }}
-                  >
-                    QS {it.quality_score.toFixed(1)}
-                  </span>
+          {items.slice(0, 8).map((it, i) => {
+            const label = it.target_title ?? it.primary_query ?? it.topic ?? it.id;
+
+            return (
+              <tr
+                key={it.id}
+                style={{ borderTop: i === 0 ? undefined : '1px solid var(--border-subtle)' }}
+                onMouseEnter={e => (e.currentTarget.style.background = 'var(--surface-2)')}
+                onMouseLeave={e => (e.currentTarget.style.background = '')}
+              >
+                <td className="py-3 px-5 text-sm font-medium truncate max-w-xs" style={{ color: 'var(--text)' }}>
+                  {it.published_url ? (
+                    <a
+                      href={it.published_url}
+                      target="_blank"
+                      rel="noreferrer"
+                      style={{ color: 'inherit', textDecoration: 'none' }}
+                    >
+                      {label}
+                    </a>
+                  ) : (
+                    label
+                  )}
                 </td>
-              )}
-            </tr>
-          ))}
+                <td
+                  className="py-3 px-5 text-xs text-right"
+                  style={{ color: 'var(--text-3)', whiteSpace: 'nowrap' }}
+                >
+                  {it.published_at
+                    ? new Date(it.published_at).toLocaleDateString([], {
+                        month: 'short',
+                        day: 'numeric',
+                      })
+                    : '—'}
+                </td>
+                <td
+                  className="py-3 px-5 text-xs text-right"
+                  style={{ color: 'var(--text-3)', whiteSpace: 'nowrap' }}
+                >
+                  {it.action_type}
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </Card>
   );
 }
 
-// ─── Quality scores ───────────────────────────────────────────────────────────
+// ─── Search performance ───────────────────────────────────────────────────────
 
-function QualityList({ scores, loading }: { scores: VisibilityQualityScore[]; loading: boolean }) {
+function RankingsPanel({
+  performance,
+  loading,
+}: {
+  performance: VisibilitySearchPerformanceResponse | null;
+  loading: boolean;
+}) {
   if (loading) {
     return (
       <Card className="p-5">
-        <Skeleton className="h-4 w-40 mb-4" />
-        <div className="space-y-3">
-          {[1, 2, 3].map(i => <Skeleton key={i} className="h-6 w-full" />)}
-        </div>
-      </Card>
-    );
-  }
-
-  if (!scores.length) {
-    return (
-      <EmptyCard
-        title="No quality scores yet"
-        body="Quality scores appear after the engine processes your first piece of content."
-      />
-    );
-  }
-
-  const avg = scores.reduce((s, x) => s + x.quality_score, 0) / scores.length;
-
-  return (
-    <Card className="overflow-hidden">
-      <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: '1px solid var(--border)' }}>
-        <p className="text-sm font-bold" style={{ color: 'var(--text)' }}>Quality scores</p>
-        <span
-          className="text-sm font-bold tabular-nums"
-          style={{ color: avg >= 8 ? 'var(--success)' : avg >= 6 ? 'var(--warning)' : 'var(--danger)' }}
-        >
-          avg {avg.toFixed(1)}/10
-        </span>
-      </div>
-      <div className="p-5 space-y-3">
-        {scores.slice(0, 6).map(s => (
-          <div key={s.document_id} className="flex items-center gap-3">
-            <span className="text-sm truncate flex-1" style={{ color: 'var(--text-2)' }}>{s.title}</span>
-            <div
-              className="h-1.5 w-20 flex-shrink-0 overflow-hidden"
-              style={{ background: 'var(--surface-2)', borderRadius: 2 }}
-            >
-              <div
-                className="h-full"
-                style={{
-                  width: `${s.quality_score * 10}%`,
-                  background: s.beats_paid_ads ? 'var(--success)' : s.quality_score >= 6 ? 'var(--warning)' : 'var(--danger)',
-                  borderRadius: 2,
-                  transition: 'width 0.7s',
-                }}
-              />
-            </div>
-            <span
-              className="text-xs font-bold tabular-nums w-10 text-right flex-shrink-0"
-              style={{ color: s.beats_paid_ads ? 'var(--success)' : s.quality_score >= 6 ? 'var(--warning)' : 'var(--danger)' }}
-            >
-              {s.quality_score.toFixed(1)}/10
-            </span>
-          </div>
-        ))}
-      </div>
-    </Card>
-  );
-}
-
-// ─── Rankings ─────────────────────────────────────────────────────────────────
-
-function RankingsPanel({ rankings, loading }: { rankings: RankSnapshot[]; loading: boolean }) {
-  if (loading) {
-    return (
-      <Card className="p-5">
-        <Skeleton className="h-4 w-40 mb-4" />
+        <Skeleton className="h-4 w-48 mb-4" />
         <div className="space-y-2">
           {[1, 2, 3].map(i => <Skeleton key={i} className="h-8 w-full" />)}
         </div>
@@ -481,51 +388,88 @@ function RankingsPanel({ rankings, loading }: { rankings: RankSnapshot[]; loadin
     );
   }
 
-  const rank1 = rankings.filter(r => r.position === 1).length;
+  const bands = performance?.search_performance ?? [];
 
-  if (!rankings.length) {
+  if (!bands.length) {
     return (
       <EmptyCard
-        title="No keyword rankings yet"
-        body="Rankings are tracked once content is published and indexed by search engines."
+        title="No search performance yet"
+        body="Search measurements will appear after the engine records ranking observations."
       />
     );
   }
 
+  const total = bands.reduce((sum, band) => sum + band.measurement_count, 0);
+  const improved = bands.reduce((sum, band) => sum + band.improved, 0);
+  const declined = bands.reduce((sum, band) => sum + band.declined, 0);
+
   return (
     <Card className="overflow-hidden">
-      <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: '1px solid var(--border)' }}>
-        <p className="text-sm font-bold" style={{ color: 'var(--text)' }}>Keyword rankings</p>
+      <div
+        className="flex items-center justify-between px-5 py-4"
+        style={{ borderBottom: '1px solid var(--border)' }}
+      >
+        <p className="text-sm font-bold" style={{ color: 'var(--text)' }}>
+          Search performance
+        </p>
         <span className="text-xs font-semibold" style={{ color: 'var(--text-3)' }}>
-          {rank1} ranking #1
+          {total} measurements
         </span>
       </div>
       <table className="w-full">
         <thead>
           <tr style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-            <th className="py-2 px-5 text-left text-xs font-bold uppercase" style={{ color: 'var(--text-3)', letterSpacing: '0.05em' }}>Keyword</th>
-            <th className="py-2 px-5 text-right text-xs font-bold uppercase" style={{ color: 'var(--text-3)', letterSpacing: '0.05em' }}>Position</th>
+            <th
+              className="py-2 px-5 text-left text-xs font-bold uppercase"
+              style={{ color: 'var(--text-3)', letterSpacing: '0.05em' }}
+            >
+              Rank band
+            </th>
+            <th
+              className="py-2 px-5 text-right text-xs font-bold uppercase"
+              style={{ color: 'var(--text-3)', letterSpacing: '0.05em' }}
+            >
+              Measurements
+            </th>
+            <th
+              className="py-2 px-5 text-right text-xs font-bold uppercase"
+              style={{ color: 'var(--text-3)', letterSpacing: '0.05em' }}
+            >
+              Avg position
+            </th>
           </tr>
         </thead>
         <tbody>
-          {rankings.slice(0, 8).map((r, i) => (
+          {bands.map((band, i) => (
             <tr
-              key={`${r.keyword}-${i}`}
+              key={band.rank_band}
               style={{ borderTop: i === 0 ? undefined : '1px solid var(--border-subtle)' }}
               onMouseEnter={e => (e.currentTarget.style.background = 'var(--surface-2)')}
               onMouseLeave={e => (e.currentTarget.style.background = '')}
             >
-              <td className="py-2.5 px-5 text-sm" style={{ color: 'var(--text)' }}>{r.keyword}</td>
-              <td
-                className="py-2.5 px-5 text-sm font-bold text-right tabular-nums"
-                style={{ color: r.position <= 3 ? 'var(--success)' : r.position <= 10 ? 'var(--warning)' : 'var(--text-3)' }}
-              >
-                #{r.position}
+              <td className="py-2.5 px-5 text-sm" style={{ color: 'var(--text)' }}>
+                {band.rank_band}
+              </td>
+              <td className="py-2.5 px-5 text-sm text-right tabular-nums" style={{ color: 'var(--text-2)' }}>
+                {band.measurement_count}
+              </td>
+              <td className="py-2.5 px-5 text-sm font-bold text-right tabular-nums" style={{ color: 'var(--text)' }}>
+                {band.avg_position != null ? `#${band.avg_position.toFixed(1)}` : '—'}
               </td>
             </tr>
           ))}
         </tbody>
       </table>
+      <div
+        className="px-5 py-3 text-xs"
+        style={{
+          borderTop: '1px solid var(--border)',
+          color: 'var(--text-3)',
+          fontFamily: 'ui-monospace, monospace',
+        }}
+      >
+        {improved} improved · {declined} declined
+      </div>
     </Card>
   );
 }
@@ -539,29 +483,18 @@ function FirstRunBanner() {
         Welcome to Data Engine
       </h2>
       <p className="text-sm mb-6" style={{ color: 'var(--text-2)', lineHeight: 1.7, maxWidth: 520 }}>
-        Your account is ready. Connect your product to start the first crawl —
-        keywords, content scores and traffic insights will appear here automatically.
+        Connect a website to start crawling, intelligence analysis, content execution,
+        publication and performance feedback.
       </p>
-      <div className="flex flex-col sm:flex-row gap-3">
-        <Link
-          to="/connect"
-          className="px-5 py-3 rounded text-sm font-bold transition-colors"
-          style={{ background: 'var(--brand)', color: '#111' }}
-          onMouseEnter={e => (e.currentTarget.style.background = 'var(--brand-light)')}
-          onMouseLeave={e => (e.currentTarget.style.background = 'var(--brand)')}
-        >
-          Connect your product
-        </Link>
-        <Link
-          to="/credentials"
-          className="px-5 py-3 rounded text-sm font-bold transition-colors"
-          style={{ background: 'var(--surface-2)', color: 'var(--text)', border: '1px solid var(--border)' }}
-          onMouseEnter={e => (e.currentTarget.style.background = 'var(--surface-3)')}
-          onMouseLeave={e => (e.currentTarget.style.background = 'var(--surface-2)')}
-        >
-          Manage API Keys
-        </Link>
-      </div>
+      <Link
+        to="/websites/connect"
+        className="inline-block px-5 py-3 rounded text-sm font-bold transition-colors"
+        style={{ background: 'var(--brand)', color: '#111' }}
+        onMouseEnter={e => (e.currentTarget.style.background = 'var(--brand-light)')}
+        onMouseLeave={e => (e.currentTarget.style.background = 'var(--brand)')}
+      >
+        Connect website
+      </Link>
     </Card>
   );
 }
@@ -569,266 +502,382 @@ function FirstRunBanner() {
 // ─── Root Dashboard ───────────────────────────────────────────────────────────
 
 export default function Dashboard() {
-  // Visibility endpoints (may 404 until backend builds them)
-  const [overview,  setOverview]  = useState<VisibilityOverview | null>(null);
+  const [website, setWebsite] = useState<{
+    id: string;
+    url: string;
+    domain: string;
+  } | null>(null);
+
+  const [overview, setOverview] = useState<VisibilityOverview | null>(null);
   const [published, setPublished] = useState<VisibilityPublishedItem[]>([]);
-  const [gaps,      setGaps]      = useState<VisibilityGapItem[]>([]);
-  const [scores,    setScores]    = useState<VisibilityQualityScore[]>([]);
-  const [rankings,  setRankings]  = useState<RankSnapshot[]>([]);
+  const [gaps, setGaps] = useState<VisibilityGapItem[]>([]);
+  const [searchPerformance, setSearchPerformance] =
+    useState<VisibilitySearchPerformanceResponse | null>(null);
 
-  // Fallback: working endpoints (always available)
-  const [coreStats,  setCoreStats]  = useState<DashboardOverview | null>(null);
-  const [coreDocs,   setCoreDocs]   = useState<DocumentListItem[]>([]);
-  const [crawlUrl,   setCrawlUrl]   = useState<string | null>(null);
-  const [lastCrawled, setLastCrawled] = useState<string | null>(null);
-
-  const [loading,    setLoading]    = useState(true);
+  const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [lastUpdated, setLastUpdated] = useState(new Date());
+  const [error, setError] = useState<string | null>(null);
 
   const fetchAll = useCallback(async () => {
-    // ── Always-working endpoints — load unconditionally ───────────────────────
-    const [coreOv, coreDc, crawlSt] = await Promise.allSettled([
-      getDashboardOverview(),
-      getDashboardDocuments({ page_size: 50 }),
-      getCrawlStatus(),
-    ]);
-    if (coreOv.status  === 'fulfilled') setCoreStats(coreOv.value);
-    if (coreDc.status  === 'fulfilled') setCoreDocs(coreDc.value);
-    if (crawlSt.status === 'fulfilled') {
-      setCrawlUrl(crawlSt.value.website_url);
-      setLastCrawled(crawlSt.value.last_crawled_at);
+    setError(null);
+
+    const websites = await listWebsites();
+
+    if (!websites.length) {
+      setWebsite(null);
+      setOverview(null);
+      setPublished([]);
+      setGaps([]);
+      setSearchPerformance(null);
+      setLastUpdated(new Date());
+      return;
     }
 
-    // ── Visibility endpoints — optional enrichment, may 404 ──────────────────
-    const [ov, pub, g, sc] = await Promise.allSettled([
-      getVisibilityOverview(),
-      getVisibilityPublished({ page: 1, page_size: 20 }),
-      getVisibilityGaps(),
-      getVisibilityQualityScores(),
+    const currentWebsite = websites[0];
+
+    setWebsite({
+      id: currentWebsite.id,
+      url: currentWebsite.url,
+      domain: currentWebsite.domain,
+    });
+
+    const [ov, pub, g, sp] = await Promise.all([
+      getVisibilityOverview(currentWebsite.id),
+      getVisibilityPublished(currentWebsite.id, { page: 1, page_size: 20 }),
+      getVisibilityGaps(currentWebsite.id, 20),
+      getVisibilitySearchPerformance(currentWebsite.id),
     ]);
-    if (ov.status  === 'fulfilled') setOverview(ov.value);
-    if (pub.status === 'fulfilled') setPublished(pub.value);
-    if (g.status   === 'fulfilled') setGaps(g.value);
-    if (sc.status  === 'fulfilled') setScores(sc.value);
 
-    // ── Rankings: try domain from crawl status ────────────────────────────────
-    if (crawlSt.status === 'fulfilled' && crawlSt.value.website_url) {
-      const domain = crawlSt.value.website_url.replace(/^https?:\/\//, '').split('/')[0];
-      if (domain) {
-        getRankings(domain, '', 30)
-          .then(async r => {
-            setRankings(r);
-            // Auto-register tracking for this domain if no keywords tracked yet.
-            // Seed from gap analysis missing_topics — real content gaps — not from
-            // the domain name which produces generic, useless keywords.
-            if (!r || r.length === 0) {
-              const tenantId = getTenantId();
-              try {
-                // Pull the first completed doc and use its missing topics as keywords
-                const { getDashboardDocuments } = await import('../../api/dashboard');
-                const { getCloseActions } = await import('../../api/gaps');
-                const docs = await getDashboardDocuments({ status: 'completed', page_size: 5 });
-                const seedKws: string[] = [];
-                for (const doc of docs.slice(0, 3)) {
-                  const docId = (doc.document_id ?? doc.id ?? '') as string;
-                  const actions = await getCloseActions(docId, tenantId).catch(() => null);
-                  if (actions?.missing_topics) {
-                    seedKws.push(...actions.missing_topics.slice(0, 5));
-                  }
-                  if (seedKws.length >= 10) break;
-                }
-                // Fallback to domain-derived keywords only if no gap topics found
-                if (seedKws.length === 0) {
-                  const name = domain.split('.')[0];
-                  seedKws.push(name, `${name} review`, `${name} features`);
-                }
-                const unique = [...new Set(seedKws)].slice(0, 10);
-                unique.forEach(kw =>
-                  registerRankConfig({ tenant_id: tenantId, domain, keyword: kw }).catch(() => {}),
-                );
-              } catch { /* non-critical — rank seeding is best-effort */ }
-            }
-          })
-          .catch(() => {});
-      }
-    }
-
+    setOverview(ov);
+    setPublished(pub.items);
+    setGaps(g);
+    setSearchPerformance(sp);
     setLastUpdated(new Date());
   }, []);
 
   useEffect(() => {
     setLoading(true);
-    fetchAll().finally(() => setLoading(false));
+    fetchAll()
+      .catch((err) => {
+        console.error('Dashboard load failed:', err);
+        setError('Unable to load dashboard data.');
+      })
+      .finally(() => setLoading(false));
   }, [fetchAll]);
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
-    await fetchAll();
-    setRefreshing(false);
+    try {
+      await fetchAll();
+    } catch (err) {
+      console.error('Dashboard refresh failed:', err);
+      setError('Unable to refresh dashboard data.');
+    } finally {
+      setRefreshing(false);
+    }
   }, [fetchAll]);
 
-  // ── Derived values: prefer visibility data, fall back to core stats ──────────
-  const isConnected = !!(crawlUrl || overview?.injection_status === 'live' || overview?.injection_status === 'configuring');
-  const hasAnyData  = !!(coreStats || overview);
-  // Show first-run banner only when truly no data at all
-  const noData      = !loading && !hasAnyData;
+  const intelligence = overview?.intelligence;
+  const content = overview?.content;
+  const pipeline = overview?.pipeline;
+  const feedback = overview?.feedback;
 
-  // Use visibility counts if available, otherwise derive from core stats
-  const publishedCount = overview?.published_count ?? coreStats?.documents_completed ?? 0;
-  const openGaps       = overview?.open_gaps       ?? coreStats?.open_gaps           ?? 0;
-  const coveragePct    = overview?.coverage_pct    ?? coreStats?.coverage_percentage ?? 0;
-  const crawlProgress  = overview?.crawl_progress  ?? (coreDocs.length > 0 ? 100 : 0);
-  const rank1Count     = rankings.filter(r => r.position === 1).length;
+  const rank1Count = searchPerformance?.search_performance
+    .filter((item) => item.avg_position === 1)
+    .reduce((sum, item) => sum + item.measurement_count, 0) ?? 0;
 
-  // Quality: from visibility scores, or fall back to avg from core stats
-  const avgQuality = scores.length
-    ? scores.reduce((s, x) => s + x.quality_score, 0) / scores.length
-    : coreStats?.avg_aeo_score != null
-      ? coreStats.avg_aeo_score / 10   // convert 0-100 to 0-10
-      : null;
 
-  const avgCoverage = scores.length
-    ? scores.reduce((s, x) => s + (x['coverage_pct'] as number ?? 0), 0) / scores.length
-    : null;
+  const publishedThisWeek = content?.published_this_week ?? 0;
+  const openGaps = intelligence?.gaps_open ?? 0;
 
-  // Documents list: prefer published (visibility) else core doc list
-  const displayedDocs: Array<VisibilityPublishedItem | DocumentListItem> =
-    published.length > 0 ? published : coreDocs;
+  const pipelineProgress =
+    pipeline?.progress && typeof pipeline.progress === 'object'
+      ? Object.values(pipeline.progress)
+          .filter((value): value is number => typeof value === 'number')
+      : [];
 
-  // Effective last crawled
-  const effectiveLastCrawled = overview?.last_crawled_at ?? lastCrawled;
-  const effectiveCrawlUrl    = (overview?.['website_url'] as string | undefined) ?? crawlUrl;
+  const crawlProgress = pipelineProgress.length
+    ? Math.max(0, Math.min(100, Math.max(...pipelineProgress)))
+    : pipeline?.state === 'completed'
+      ? 100
+      : 0;
+
+  const hasWebsite = !!website;
+  const hasData = !!overview;
+  const noData = !loading && !hasWebsite;
+
+  const recentPublished = published.slice(0, 8);
 
   return (
-    <div className="h-full flex flex-col overflow-hidden" style={{ background: 'var(--bg)', color: 'var(--text)' }}>
-      <PageHeader lastUpdated={lastUpdated} onRefresh={handleRefresh} refreshing={refreshing} />
+    <div
+      className="h-full flex flex-col overflow-hidden"
+      style={{ background: 'var(--bg)', color: 'var(--text)' }}
+    >
+      <PageHeader
+        lastUpdated={lastUpdated}
+        onRefresh={handleRefresh}
+        refreshing={refreshing}
+      />
 
       <div className="flex-1 overflow-y-auto">
         <div className="px-7 py-6 space-y-7">
 
-          {/* ── First-run banner — only when ZERO data from ALL endpoints ── */}
-          {noData && <FirstRunBanner />}
+          {error && (
+            <Card className="p-4">
+              <p className="text-sm font-semibold" style={{ color: 'var(--danger)' }}>
+                {error}
+              </p>
+            </Card>
+          )}
 
-          {/* ── Product/crawl status bar (shown whenever a crawl URL is known) ── */}
-          {!loading && effectiveCrawlUrl && (
+          {noData && (
+            <FirstRunBanner />
+          )}
+
+          {!loading && website && (
             <div
               className="flex items-center gap-3 px-4 py-2.5 text-xs rounded"
-              style={{ background: 'rgba(34,197,94,0.06)', border: '1px solid rgba(34,197,94,0.2)' }}
+              style={{
+                background: 'rgba(34,197,94,0.06)',
+                border: '1px solid rgba(34,197,94,0.2)',
+              }}
             >
-              <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: 'var(--success)' }} />
-              <span style={{ color: 'var(--success)', fontWeight: 600, fontFamily: 'ui-monospace, monospace' }}>
-                Connected
+              <span
+                className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                style={{ background: 'var(--success)' }}
+              />
+              <span
+                style={{
+                  color: 'var(--success)',
+                  fontWeight: 600,
+                  fontFamily: 'ui-monospace, monospace',
+                }}
+              >
+                {overview?.website.status ?? 'Connected'}
               </span>
               <a
-                href={effectiveCrawlUrl}
+                href={website.url}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="ml-1"
-                style={{ color: 'var(--text-3)', textDecoration: 'none', fontFamily: 'ui-monospace, monospace' }}
+                style={{
+                  color: 'var(--text-3)',
+                  textDecoration: 'none',
+                  fontFamily: 'ui-monospace, monospace',
+                }}
               >
-                {effectiveCrawlUrl.replace(/^https?:\/\//, '')}
+                {website.domain}
               </a>
-              {effectiveLastCrawled && (
-                <span style={{ color: 'var(--text-3)', marginLeft: 'auto' }}>
-                  Last crawled {new Date(effectiveLastCrawled).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+              {overview?.website.last_crawled_at && (
+                <span
+                  style={{
+                    color: 'var(--text-3)',
+                    marginLeft: 'auto',
+                  }}
+                >
+                  Last crawled{' '}
+                  {new Date(overview.website.last_crawled_at).toLocaleDateString([], {
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
                 </span>
               )}
             </div>
           )}
 
-          {/* ── KPI strip ── */}
           <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
-            {/* Plan section 16: keywords #1, content published this week, AI citations, traffic growth, avg quality, open gaps */}
             <StatCard
               label="Keywords #1"
               value={loading ? '—' : rank1Count}
-              sub={rankings.length ? `of ${rankings.length} tracked` : undefined}
+              sub={
+                feedback?.ranked_measurements
+                  ? `${feedback.ranked_measurements} measured`
+                  : undefined
+              }
               loading={loading}
             />
+
             <StatCard
               label="Published this week"
-              value={loading ? '—' : (() => {
-                const cutoff = Date.now() - 7 * 24 * 3600 * 1000;
-                if (published.length) return published.filter(p => new Date(p.published_at).getTime() > cutoff).length;
-                return coreDocs.filter(d => new Date((d.created_at ?? '') as string).getTime() > cutoff).length;
-              })()}
+              value={loading ? '—' : publishedThisWeek}
               loading={loading}
             />
+
             <StatCard
-              label="AI citations"
-              value={loading ? '—' : ((overview?.['ai_citation_count'] as number | undefined) ?? '—')}
+              label="Search measurements"
+              value={loading ? '—' : feedback?.total_measurements ?? 0}
               loading={loading}
             />
+
             <StatCard
-              label="Traffic growth"
-              value={loading ? '—' : (overview?.['traffic_growth_pct'] as number | undefined) != null
-                ? `${(overview!['traffic_growth_pct'] as number).toFixed(0)}%`
-                : '—'}
-              delta={(overview?.['traffic_growth_pct'] as number | undefined)}
+              label="Avg position"
+              value={
+                loading
+                  ? '—'
+                  : feedback?.avg_position != null
+                    ? feedback.avg_position.toFixed(1)
+                    : '—'
+              }
               loading={loading}
             />
+
             <StatCard
               label="Avg quality"
-              value={avgQuality != null ? `${avgQuality.toFixed(1)}/10` : '—'}
+              value="—"
               loading={loading}
             />
+
             <StatCard
               label="Open gaps"
               value={loading ? '—' : openGaps}
-              sub={openGaps === 0 && !loading && hasAnyData ? 'All resolved' : undefined}
+              sub={
+                openGaps === 0 && hasData
+                  ? 'All resolved'
+                  : undefined
+              }
               loading={loading}
             />
           </div>
 
-          {/* ── Engine status + scores ── */}
-          {(isConnected || hasAnyData || loading) && (
+          {(hasWebsite || hasData || loading) && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              {/* Bridge status */}
+
               <Card className="p-5 flex flex-col gap-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-bold" style={{ color: 'var(--text)' }}>Pipeline health</span>
-                  {loading
-                    ? <Skeleton className="h-5 w-16" />
-                    : <StatusPill status={overview?.injection_status ?? (isConnected ? 'live' : 'not_installed')} />
-                  }
+                  <span
+                    className="text-sm font-bold"
+                    style={{ color: 'var(--text)' }}
+                  >
+                    Pipeline health
+                  </span>
+
+                  {loading ? (
+                    <Skeleton className="h-5 w-20" />
+                  ) : (
+                    <StatusPill
+                      status={
+                        pipeline?.state ??
+                        overview?.website.status ??
+                        'pending'
+                      }
+                    />
+                  )}
                 </div>
+
                 <div className="space-y-3">
-                  <ScoreBar label="Coverage"       score={coveragePct}  loading={loading} />
-                  <ScoreBar label="Crawl progress"  score={crawlProgress} loading={loading} />
-                  <ScoreBar label="Avg quality"     score={avgQuality != null ? avgQuality * 10 : 0} loading={loading} />
-                  <ScoreBar label="Gap closure"     score={avgCoverage != null ? avgCoverage * 100 : 0} loading={loading} />
+                  <ScoreBar
+                    label="Crawl progress"
+                    score={crawlProgress}
+                    loading={loading}
+                  />
+
+                  <ScoreBar
+                    label="Gap closure"
+                    score={
+                      intelligence && intelligence.gaps_total > 0
+                        ? (intelligence.gaps_resolved / intelligence.gaps_total) * 100
+                        : 0
+                    }
+                    loading={loading}
+                  />
+
+                  <ScoreBar
+                    label="Publication"
+                    score={
+                      content && content.executions_total > 0
+                        ? (content.published / content.executions_total) * 100
+                        : 0
+                    }
+                    loading={loading}
+                  />
                 </div>
-                {coreStats && !loading && (
-                  <div className="pt-3 grid grid-cols-3 gap-2 text-xs" style={{ borderTop: '1px solid var(--border)', fontFamily: 'ui-monospace, monospace' }}>
-                    <div><span style={{ color: 'var(--text-3)' }}>Chunks</span><div style={{ color: 'var(--text)' }}>{coreStats.total_chunks?.toLocaleString() ?? '—'}</div></div>
-                    <div><span style={{ color: 'var(--text-3)' }}>Schemas</span><div style={{ color: 'var(--text)' }}>{coreStats.schemas_generated?.toLocaleString() ?? '—'}</div></div>
-                    <div><span style={{ color: 'var(--text-3)' }}>Trends</span><div style={{ color: 'var(--text)' }}>{coreStats.trends_today?.toLocaleString() ?? '—'}</div></div>
+
+                {overview && !loading && (
+                  <div
+                    className="pt-3 grid grid-cols-3 gap-2 text-xs"
+                    style={{
+                      borderTop: '1px solid var(--border)',
+                      fontFamily: 'ui-monospace, monospace',
+                    }}
+                  >
+                    <div>
+                      <span style={{ color: 'var(--text-3)' }}>Gaps</span>
+                      <div style={{ color: 'var(--text)' }}>
+                        {intelligence?.gaps_total ?? 0}
+                      </div>
+                    </div>
+
+                    <div>
+                      <span style={{ color: 'var(--text-3)' }}>Strategies</span>
+                      <div style={{ color: 'var(--text)' }}>
+                        {content?.strategies_total ?? 0}
+                      </div>
+                    </div>
+
+                    <div>
+                      <span style={{ color: 'var(--text-3)' }}>Executions</span>
+                      <div style={{ color: 'var(--text)' }}>
+                        {content?.executions_total ?? 0}
+                      </div>
+                    </div>
                   </div>
                 )}
               </Card>
 
-              {/* Published / Documents */}
               <Card className="p-5 flex flex-col gap-3">
-                <span className="text-sm font-bold" style={{ color: 'var(--text)' }}>Documents processed</span>
+                <span
+                  className="text-sm font-bold"
+                  style={{ color: 'var(--text)' }}
+                >
+                  Content execution
+                </span>
+
                 <div className="flex items-baseline gap-2">
-                  <span className="text-[40px] font-bold leading-none tabular-nums" style={{ color: 'var(--text)' }}>
-                    {loading ? '—' : (coreStats?.documents_completed ?? publishedCount)}
+                  <span
+                    className="text-[40px] font-bold leading-none tabular-nums"
+                    style={{ color: 'var(--text)' }}
+                  >
+                    {loading ? '—' : content?.executions_total ?? 0}
                   </span>
-                  <span className="text-base" style={{ color: 'var(--text-3)' }}>completed</span>
+                  <span
+                    className="text-base"
+                    style={{ color: 'var(--text-3)' }}
+                  >
+                    total
+                  </span>
                 </div>
-                {coreStats && !loading && (
-                  <div className="flex gap-4 text-xs" style={{ fontFamily: 'ui-monospace, monospace' }}>
-                    <span style={{ color: 'var(--danger)'  }}>{coreStats.documents_failed ?? 0} failed</span>
-                    <span style={{ color: 'var(--warning)' }}>{coreStats.documents_queued ?? 0} queued</span>
+
+                {!loading && content && (
+                  <div
+                    className="flex flex-wrap gap-4 text-xs"
+                    style={{ fontFamily: 'ui-monospace, monospace' }}
+                  >
+                    <span style={{ color: 'var(--warning)' }}>
+                      {content.awaiting_approval} awaiting approval
+                    </span>
+                    <span style={{ color: 'var(--success)' }}>
+                      {content.approved} approved
+                    </span>
+                    <span style={{ color: 'var(--danger)' }}>
+                      {content.failed} failed
+                    </span>
                   </div>
                 )}
+
                 {!loading && (
-                  <div className="mt-auto pt-3" style={{ borderTop: '1px solid var(--border)' }}>
-                    <span className="text-xs" style={{ color: 'var(--text-3)' }}>
-                      {effectiveLastCrawled
-                        ? `Last crawled ${new Date(effectiveLastCrawled).toLocaleDateString([], { month: 'short', day: 'numeric' })}`
-                        : 'No crawl recorded yet'}
+                  <div
+                    className="mt-auto pt-3"
+                    style={{ borderTop: '1px solid var(--border)' }}
+                  >
+                    <span
+                      className="text-xs"
+                      style={{ color: 'var(--text-3)' }}
+                    >
+                      {content?.awaiting_publication ?? 0} awaiting publication ·{' '}
+                      {content?.published ?? 0} published
                     </span>
                   </div>
                 )}
@@ -836,17 +885,20 @@ export default function Dashboard() {
             </div>
           )}
 
-          {/* ── Rankings ── */}
-          <RankingsPanel rankings={rankings} loading={loading} />
+          <RankingsPanel
+            performance={searchPerformance}
+            loading={loading}
+          />
 
-          {/* ── Documents / Published list ── */}
-          <PublishedList items={displayedDocs as VisibilityPublishedItem[]} loading={loading} />
+          <PublishedList
+            items={recentPublished}
+            loading={loading}
+          />
 
-          {/* ── Quality scores ── */}
-          <QualityList scores={scores} loading={loading} />
-
-          {/* ── What the engine is working on next ── */}
-          <NextActions gaps={gaps} loading={loading} />
+          <NextActions
+            gaps={gaps}
+            loading={loading}
+          />
 
         </div>
       </div>

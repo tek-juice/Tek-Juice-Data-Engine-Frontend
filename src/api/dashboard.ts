@@ -13,70 +13,96 @@ import type {
   TenantSummary,
   TenantPerformance,
   VisibilityOverview,
-  VisibilityPublishedItem,
+  VisibilityPublishedResponse,
   VisibilityConnection,
   VisibilityGapItem,
-  VisibilityQualityScore,
+  VisibilitySearchPerformanceResponse,
 } from '../types';
 
-// ── Visibility Dashboard (primary tenant-facing endpoints) ────────────────────
+// ── Visibility Dashboard ──────────────────────────────────────────────────────
 
 /**
- * GET /api/v1/dashboard/visibility/overview
- * Main dashboard — injection status, published count, open gaps, crawl progress.
+ * GET /api/v1/dashboard/visibility/overview?website_id={website_id}
+ * Current website-scoped visibility, pipeline, intelligence, content and feedback state.
  */
-export async function getVisibilityOverview(): Promise<VisibilityOverview> {
+export async function getVisibilityOverview(
+  website_id: string,
+): Promise<VisibilityOverview> {
   const { data } = await apiClient.get<VisibilityOverview>(
     '/api/v1/dashboard/visibility/overview',
+    { params: { website_id } },
   );
   return data;
 }
 
 /**
- * GET /api/v1/dashboard/visibility/published
- * Paginated list of all published / live content items.
+ * GET /api/v1/dashboard/visibility/published?website_id={website_id}
+ * Paginated published content from the canonical execution pipeline.
  */
 export async function getVisibilityPublished(
+  website_id: string,
   params?: PaginatedQuery,
-): Promise<VisibilityPublishedItem[]> {
-  const { data } = await apiClient.get<VisibilityPublishedItem[] | { items: VisibilityPublishedItem[] }>(
+): Promise<VisibilityPublishedResponse> {
+  const { data } = await apiClient.get<VisibilityPublishedResponse>(
     '/api/v1/dashboard/visibility/published',
-    { params: { page: 1, page_size: 20, ...params } },
-  );
-  return Array.isArray(data) ? data : (data as { items: VisibilityPublishedItem[] }).items ?? [];
-}
-
-/**
- * GET /api/v1/dashboard/visibility/connection
- * Bridge status, detected platform, last crawl timestamp, API key info.
- */
-export async function getVisibilityConnection(): Promise<VisibilityConnection> {
-  const { data } = await apiClient.get<VisibilityConnection>(
-    '/api/v1/dashboard/visibility/connection',
+    {
+      params: {
+        website_id,
+        page: 1,
+        page_size: 20,
+        ...params,
+      },
+    },
   );
   return data;
 }
 
 /**
- * GET /api/v1/dashboard/visibility/gaps
- * Gap closure progress per document — coverage before/after per item.
+ * GET /api/v1/dashboard/visibility/connection?website_id={website_id}
+ * Current website connection and crawl state.
  */
-export async function getVisibilityGaps(): Promise<VisibilityGapItem[]> {
-  const { data } = await apiClient.get<VisibilityGapItem[] | { items: VisibilityGapItem[] }>(
-    '/api/v1/dashboard/visibility/gaps',
+export async function getVisibilityConnection(
+  website_id: string,
+): Promise<VisibilityConnection> {
+  const { data } = await apiClient.get<VisibilityConnection>(
+    '/api/v1/dashboard/visibility/connection',
+    { params: { website_id } },
   );
-  return Array.isArray(data) ? data : (data as { items: VisibilityGapItem[] }).items ?? [];
+  return data;
 }
 
 /**
- * GET /api/v1/dashboard/visibility/quality-scores
- * Quality score distribution across all published content.
+ * GET /api/v1/dashboard/visibility/gaps?website_id={website_id}
+ * Current intelligence gaps and downstream opportunity/content state.
  */
-export async function getVisibilityQualityScores(): Promise<VisibilityQualityScore[]> {
-  const { data } = await apiClient.get<VisibilityQualityScore[] | { items: VisibilityQualityScore[] }>(
-    '/api/v1/dashboard/visibility/quality-scores',
+export async function getVisibilityGaps(
+  website_id: string,
+  limit = 20,
+): Promise<VisibilityGapItem[]> {
+  const { data } = await apiClient.get<VisibilityGapItem[]>(
+    '/api/v1/dashboard/visibility/gaps',
+    {
+      params: {
+        website_id,
+        limit,
+      },
+    },
   );
-  return Array.isArray(data) ? data : (data as { items: VisibilityQualityScore[] }).items ?? [];
+  return data;
+}
+
+/**
+ * GET /api/v1/dashboard/visibility/search-performance?website_id={website_id}
+ * Publication state and measured SearXNG search performance.
+ */
+export async function getVisibilitySearchPerformance(
+  website_id: string,
+): Promise<VisibilitySearchPerformanceResponse> {
+  const { data } = await apiClient.get<VisibilitySearchPerformanceResponse>(
+    '/api/v1/dashboard/visibility/search-performance',
+    { params: { website_id } },
+  );
+  return data;
 }
 
 // ── Authenticated Proxy ───────────────────────────────────────────────────────
