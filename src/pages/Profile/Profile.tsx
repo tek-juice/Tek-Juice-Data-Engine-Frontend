@@ -233,7 +233,7 @@ export default function ProfilePage() {
             style={{ background: 'var(--surface)', border: '1px solid var(--danger)', borderRadius: 4, opacity: 0.8 }}
           >
             <p className="text-sm mb-3" style={{ color: 'var(--text-2)' }}>
-              Deactivating your account will stop all crawls, gap analysis, and content injection for your tenant. This action cannot be undone.
+              Deactivating your account will stop all crawls, gap analysis, and automated content publication for your tenant. This action cannot be undone.
             </p>
             <button
               className="text-xs font-bold px-3 py-2 transition-colors"

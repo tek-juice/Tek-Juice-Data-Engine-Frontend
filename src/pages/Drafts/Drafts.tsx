@@ -400,7 +400,7 @@ export default function Drafts() {
           >
             <CheckCircle2 size={13} className="flex-shrink-0 mt-0.5" style={{ color: 'var(--success)' }} />
             <p style={{ color: 'var(--text-3)', lineHeight: 1.6 }}>
-              Drafts with <strong>QS ≥ 8.0</strong> beat all paid ads. Drafts with <strong>QS ≥ 9.5</strong> are captured by Google AI Overviews. The engine writes and embeds drafts automatically — injection into your connected product happens on the next scheduled run.
+              Drafts with <strong>QS ≥ 8.0</strong> beat all paid ads. Drafts with <strong>QS ≥ 9.5</strong> are captured by Google AI Overviews. The engine generates and prepares content for publication — approved executions are delivered to your connected product backend through the M2M connection.
             </p>
           </div>
         )}

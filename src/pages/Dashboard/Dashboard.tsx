@@ -100,31 +100,6 @@ function StatCard({ label, value, sub, delta, loading }: {
   );
 }
 
-// ─── Score bar ────────────────────────────────────────────────────────────────
-
-function ScoreBar({ label, score, loading }: {
-  label: string; score: number; loading?: boolean;
-}) {
-  const pct   = Math.min(100, Math.max(0, score));
-  const color =
-    pct >= 80 ? 'var(--success)' :
-    pct >= 60 ? 'var(--info)'    :
-    pct >= 40 ? 'var(--warning)' :
-               'var(--danger)';
-
-  if (loading) return <Skeleton className="h-8 w-full" />;
-
-  return (
-    <div className="flex items-center gap-3">
-      <span className="text-sm w-28 flex-shrink-0" style={{ color: 'var(--text-2)' }}>{label}</span>
-      <div className="flex-1 h-2 overflow-hidden" style={{ background: 'var(--surface-2)', borderRadius: 2 }}>
-        <div className="h-full transition-all duration-700" style={{ width: `${pct}%`, background: color, borderRadius: 2 }} />
-      </div>
-      <span className="text-sm font-bold tabular-nums w-10 text-right" style={{ color }}>{pct.toFixed(0)}</span>
-    </div>
-  );
-}
-
 // ─── Status pill ──────────────────────────────────────────────────────────────
 
 function StatusPill({ status }: { status: string }) {
@@ -582,30 +557,10 @@ export default function Dashboard() {
   const content = overview?.content;
   const pipeline = overview?.pipeline;
   const feedback = overview?.feedback;
-
-  const rank1Count = searchPerformance?.search_performance
-    .filter((item) => item.avg_position === 1)
-    .reduce((sum, item) => sum + item.measurement_count, 0) ?? 0;
-
-
   const publishedThisWeek = content?.published_this_week ?? 0;
   const openGaps = intelligence?.gaps_open ?? 0;
-
-  const pipelineProgress =
-    pipeline?.progress && typeof pipeline.progress === 'object'
-      ? Object.values(pipeline.progress)
-          .filter((value): value is number => typeof value === 'number')
-      : [];
-
-  const crawlProgress = pipelineProgress.length
-    ? Math.max(0, Math.min(100, Math.max(...pipelineProgress)))
-    : pipeline?.state === 'completed'
-      ? 100
-      : 0;
-
   const hasWebsite = !!website;
-  const hasData = !!overview;
-  const noData = !loading && !hasWebsite;
+    const noData = !loading && !hasWebsite;
 
   const recentPublished = published.slice(0, 8);
 
@@ -689,16 +644,6 @@ export default function Dashboard() {
           )}
 
           <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
-            <StatCard
-              label="Keywords #1"
-              value={loading ? '—' : rank1Count}
-              sub={
-                feedback?.ranked_measurements
-                  ? `${feedback.ranked_measurements} measured`
-                  : undefined
-              }
-              loading={loading}
-            />
 
             <StatCard
               label="Published this week"
@@ -725,24 +670,13 @@ export default function Dashboard() {
             />
 
             <StatCard
-              label="Avg quality"
-              value="—"
-              loading={loading}
-            />
-
-            <StatCard
               label="Open gaps"
               value={loading ? '—' : openGaps}
-              sub={
-                openGaps === 0 && hasData
-                  ? 'All resolved'
-                  : undefined
-              }
-              loading={loading}
+loading={loading}
             />
           </div>
 
-          {(hasWebsite || hasData || loading) && (
+          {(hasWebsite || overview || loading) && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
 
               <Card className="p-5 flex flex-col gap-4">
@@ -766,36 +700,7 @@ export default function Dashboard() {
                     />
                   )}
                 </div>
-
-                <div className="space-y-3">
-                  <ScoreBar
-                    label="Crawl progress"
-                    score={crawlProgress}
-                    loading={loading}
-                  />
-
-                  <ScoreBar
-                    label="Gap closure"
-                    score={
-                      intelligence && intelligence.gaps_total > 0
-                        ? (intelligence.gaps_resolved / intelligence.gaps_total) * 100
-                        : 0
-                    }
-                    loading={loading}
-                  />
-
-                  <ScoreBar
-                    label="Publication"
-                    score={
-                      content && content.executions_total > 0
-                        ? (content.published / content.executions_total) * 100
-                        : 0
-                    }
-                    loading={loading}
-                  />
-                </div>
-
-                {overview && !loading && (
+{overview && !loading && (
                   <div
                     className="pt-3 grid grid-cols-3 gap-2 text-xs"
                     style={{

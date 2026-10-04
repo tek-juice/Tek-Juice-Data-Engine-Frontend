@@ -11,6 +11,8 @@ export default function Login() {
   const [mode, setMode]                       = useState<Mode>('signin');
   const [username, setUsername]               = useState('');
   const [email, setEmail]                     = useState('');
+  const [productName, setProductName]         = useState('');
+  const [businessDescription, setBusinessDescription] = useState('');
   const [password, setPassword]               = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError]                     = useState('');
@@ -19,13 +21,15 @@ export default function Login() {
   const [showConfirm, setShowConfirm]         = useState(false);
 
   // Already authenticated → skip straight to the dashboard
-  if (isAuthenticated()) return <Navigate to="/dashboard" replace />;
+  if (isAuthenticated()) return <Navigate to="/" replace />;
 
   function switchMode(next: Mode) {
     setMode(next);
     setError('');
     setUsername('');
     setEmail('');
+    setProductName('');
+    setBusinessDescription('');
     setPassword('');
     setConfirmPassword('');
   }
@@ -39,14 +43,41 @@ export default function Login() {
       return;
     }
 
-    if (mode === 'signup') {
-      if (!email.trim())               { setError('Email is required.');             return; }
-      if (password !== confirmPassword) { setError("Passwords don't match.");        return; }
-      if (password.length < 8)         { setError('Password needs 8+ characters.'); return; }
-      setLoading(true);
-      try {
-        await register(email.trim(), password, username.trim() || undefined);
-        navigate('/dashboard', { replace: true });
+      if (mode === 'signup') {
+        if (!email.trim()) {
+          setError('Email is required.');
+          return;
+        }
+        if (!productName.trim()) {
+          setError('Product or business name is required.');
+          return;
+        }
+        if (!businessDescription.trim()) {
+          setError('Please describe what your business does.');
+          return;
+        }
+        if (businessDescription.trim().length < 10) {
+          setError('Business description needs at least 10 characters.');
+          return;
+        }
+        if (password !== confirmPassword) {
+          setError("Passwords don't match.");
+          return;
+        }
+        if (password.length < 8) {
+          setError('Password needs 8+ characters.');
+          return;
+        }
+        setLoading(true);
+        try {
+          await register(
+            email.trim(),
+            password,
+            username.trim() || undefined,
+            productName.trim(),
+            businessDescription.trim(),
+          );
+        navigate('/websites/connect', { replace: true });
       } catch (err: unknown) {
         const s = (err as { response?: { status?: number } })?.response?.status;
         if (s === 409) setError('An account with that email already exists.');
@@ -60,7 +91,7 @@ export default function Login() {
     setLoading(true);
     try {
       await login(username.trim(), password);
-      navigate('/dashboard', { replace: true });
+      navigate('/', { replace: true });
     } catch (err: unknown) {
       const s = (err as { response?: { status?: number } })?.response?.status;
       if (s === 401 || s === 403) setError('Wrong username or password.');
@@ -152,6 +183,35 @@ export default function Login() {
               />
             </div>
           )}
+
+            {isSignUp && (
+              <>
+                <div className="auth-field">
+                  <label htmlFor="a-product-name">Product or business name</label>
+                  <input
+                    id="a-product-name"
+                    type="text"
+                    value={productName}
+                    onChange={e => setProductName(e.target.value)}
+                    autoComplete="organization"
+                    placeholder="e.g. Ultimate Move"
+                    disabled={loading}
+                  />
+                </div>
+
+                <div className="auth-field">
+                  <label htmlFor="a-business-description">What does your business do?</label>
+                  <textarea
+                    id="a-business-description"
+                    value={businessDescription}
+                    onChange={e => setBusinessDescription(e.target.value)}
+                    placeholder="Briefly describe your product, service, or business."
+                    rows={4}
+                    disabled={loading}
+                  />
+                </div>
+              </>
+            )}
 
           <div className="auth-field">
             <div className="auth-label-row">

@@ -344,47 +344,6 @@ export interface VideoSeoResponse {
   schema_org: Record<string, unknown>;
 }
 
-// ── Telemetry ─────────────────────────────────────────────────────────────────
-
-export interface TelemetrySummary {
-  event_counts: Record<string, number>;
-  error_rate: number;
-  services: Record<string, { healthy: boolean; event_count: number }>;
-}
-
-export interface TelemetryTimeseriesPoint {
-  timestamp: string;
-  count: number;
-  interval_minutes: number;
-}
-
-export interface TelemetryError {
-  event_type: string;
-  service: string;
-  payload: Record<string, unknown>;
-  error?: string;
-  timestamp: string;
-}
-
-export interface QueueStatus {
-  queue_depth: number;
-  buffer_status: string;
-  [key: string]: unknown;
-}
-
-// ── Sync ──────────────────────────────────────────────────────────────────────
-
-export type SyncType = 'full' | 'incremental' | 'cache';
-
-export interface SyncRun {
-  id: string;
-  sync_type: SyncType;
-  status: string;
-  started_at: string;
-  completed_at?: string;
-  [key: string]: unknown;
-}
-
 // ── Dashboard ─────────────────────────────────────────────────────────────────
 
 export interface DashboardOverview {
@@ -407,12 +366,6 @@ export interface DashboardOverview {
   [key: string]: unknown;
 }
 
-export interface GapComparisonPoint {
-  date: string;
-  before_coverage: number;
-  after_coverage: number;
-  gap_score: number;
-}
 
 export interface ActivityLogEntry {
   event_type: string;
@@ -420,33 +373,13 @@ export interface ActivityLogEntry {
   status?: string;
   duration_ms?: number;
   payload?: Record<string, unknown>;
-  // Backend returns created_at; timestamp kept for WS compat
+  // Backend returns created_at.
   created_at?: string;
   timestamp?: string;
 }
 
-export interface MetricsSummary {
-  event_counts: Record<string, number>;
-  error_rate: number;
-  total_events: number;
-  [key: string]: unknown;
-}
 
-export interface ThroughputPoint {
-  // Backend may return interval_start; timestamp kept for telemetry compat
-  interval_start?: string;
-  timestamp?: string;
-  count: number;
-}
 
-export interface PipelineMetrics {
-  ingest_ms: number;
-  chunk_ms: number;
-  embed_ms: number;
-  gap_ms: number;
-  write_ms: number;
-  [key: string]: unknown;
-}
 
 // ── WebSocket ─────────────────────────────────────────────────────────────────
 
@@ -625,77 +558,6 @@ export interface QualityScoreRequest {
   monthly_search_volume?: number;
 }
 
-// ── Onboarding ────────────────────────────────────────────────────────────────
-
-export interface OnboardRegisterPayload {
-  product_name: string;
-  admin_email: string;
-  website_url: string;
-  password?: string;
-  [key: string]: unknown;
-}
-
-export interface OnboardRegisterResponse {
-  tenant_id: string;
-  api_key: string;
-  message?: string;
-}
-
-export interface OnboardVerifyEmailPayload {
-  token: string;
-  tenant_id?: string;
-}
-
-export interface OnboardVerifyEmailResponse {
-  tenant_id: string;
-  product_name: string;
-  website_url: string;
-}
-
-export interface OnboardScanPayload {
-  website_url: string;
-  tenant_id?: string;
-}
-
-export interface OnboardScanResponse {
-  platform_type: string;
-  credential_guide: string;
-  detected_at?: string;
-}
-
-export interface OnboardInstallPayload {
-  tenant_id?: string;
-  platform?: string;
-  platform_type?: string;
-  website_url?: string;
-  credentials: Record<string, string>;
-}
-
-export interface OnboardInstallResponse {
-  success: boolean;
-  installing: boolean;
-  message?: string;
-}
-
-export type InjectionStatus = 'configuring' | 'live' | 'failed';
-
-export interface OnboardPingResponse {
-  tenant_id: string;
-  injection_status: InjectionStatus;
-  message?: string;
-  checked_at?: string;
-}
-
-// ── SDK Bridge ────────────────────────────────────────────────────────────────
-
-export interface SdkSignalPayload {
-  api_key: string;
-  event: 'page-live' | 'scroll' | string;
-  url: string;
-  tenant_id?: string;
-  metadata?: Record<string, unknown>;
-  timestamp?: string;
-}
 
 // ── Visibility Dashboard ──────────────────────────────────────────────────────
 
@@ -817,7 +679,6 @@ export interface VisibilityConnection {
   verified_at: string | null;
   last_crawled_at: string | null;
   page_count: number;
-  crawl_config: Record<string, unknown> | null;
   meta: Record<string, unknown> | null;
 }
 

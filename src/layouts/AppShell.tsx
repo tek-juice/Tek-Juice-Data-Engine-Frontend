@@ -1,8 +1,8 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import {
-  Settings, LogOut,
-  ChevronDown, User,
+  LogOut,
+  ChevronDown,
   Sun, Moon,
 } from 'lucide-react';
 import { logout, getCurrentUserId } from '../services/auth.service';
@@ -16,35 +16,39 @@ interface NavGroup { heading: string; items: NavItem[]; }
 
 const NAV: NavGroup[] = [
   {
-    heading: 'Overview',
+    heading: 'Data Engine',
     items: [
-      { label: 'Dashboard',      to: '/dashboard' },
-      { label: 'My Performance', to: '/my-performance' },
+      { label: 'Overview', to: '/visibility' },
+      { label: 'Product Intelligence', to: '/product-intelligence' },
+      { label: 'Market Intelligence', to: '/market-intelligence' },
+      { label: 'Intelligence Runs', to: '/intelligence-runs' },
+      { label: 'Queries', to: '/queries' },
+      { label: 'Gaps', to: '/gaps' },
+      { label: 'Opportunities', to: '/opportunities' },
+      { label: 'Competitors', to: '/competitors' },
     ],
   },
   {
-    heading: 'Intelligence',
+    heading: 'Content & Execution',
     items: [
-      { label: 'Gap Detection',  to: '/gaps' },
-      { label: 'Trends',         to: '/trends' },
-      { label: 'Schema Factory', to: '/schema-factory' },
+      { label: 'Content Strategies', to: '/content-strategies' },
+      { label: 'Execution', to: '/execution' },
+      { label: 'Published Content', to: '/published-content' },
     ],
   },
   {
-    heading: 'Visibility',
+    heading: 'Search & Visibility',
     items: [
-      { label: 'SEO', to: '/seo' },
-      { label: 'GEO', to: '/geo' },
-      { label: 'AEO', to: '/aeo' },
+      { label: 'Search Performance', to: '/search-performance' },
+      { label: 'SERP Observations', to: '/serp-observations' },
+      { label: 'Feedback', to: '/feedback' },
     ],
   },
   {
-    heading: 'System',
+    heading: 'Integrations',
     items: [
-      { label: 'Website Setup',    to: '/website-setup' },
-      { label: 'Connect Product',  to: '/connect' },
-      { label: 'Sync',             to: '/sync' },
-      { label: 'Telemetry',        to: '/telemetry' },
+      { label: 'Website Connection', to: '/websites/connect' },
+      { label: 'M2M Integration', to: '/m2m-integration' },
     ],
   },
 ];
@@ -121,29 +125,6 @@ function UserMenu() {
               boxShadow: 'var(--shadow-md)',
             }}
           >
-            <NavLink
-              to="/profile"
-              onClick={() => setOpen(false)}
-              className="flex items-center gap-2.5 px-4 py-2.5 text-sm font-medium transition-colors"
-              style={{ color: 'var(--text-2)' }}
-              onMouseEnter={e => { e.currentTarget.style.background = 'var(--surface-2)'; e.currentTarget.style.color = 'var(--text)'; }}
-              onMouseLeave={e => { e.currentTarget.style.background = ''; e.currentTarget.style.color = 'var(--text-2)'; }}
-            >
-              <User size={14} />
-              Profile
-            </NavLink>
-            <NavLink
-              to="/settings"
-              onClick={() => setOpen(false)}
-              className="flex items-center gap-2.5 px-4 py-2.5 text-sm font-medium transition-colors"
-              style={{ color: 'var(--text-2)' }}
-              onMouseEnter={e => { e.currentTarget.style.background = 'var(--surface-2)'; e.currentTarget.style.color = 'var(--text)'; }}
-              onMouseLeave={e => { e.currentTarget.style.background = ''; e.currentTarget.style.color = 'var(--text-2)'; }}
-            >
-              <Settings size={14} />
-              Settings
-            </NavLink>
-            <div style={{ borderTop: '1px solid var(--border)' }} />
             <button
               onClick={handleLogout}
               className="flex items-center gap-2.5 w-full px-4 py-2.5 text-sm font-medium transition-colors"

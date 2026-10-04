@@ -32,7 +32,7 @@ export default function OAuthCallback() {
           token_type:    'bearer',
           expires_in:    Number(expiresIn ?? 3600),
         });
-        navigate('/dashboard', { replace: true });
+        navigate('/', { replace: true });
         return;
       }
 
@@ -43,7 +43,7 @@ export default function OAuthCallback() {
         try {
           const tokens = await exchangeOAuthCode(provider, code);
           setTokens(tokens);
-          navigate('/dashboard', { replace: true });
+          navigate('/', { replace: true });
         } catch {
           setDetail('Authentication failed. Please try again.');
           setStatus('error');

@@ -1,9 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
   Settings, Loader2, AlertTriangle, CheckCircle2,
-  Globe, Clock, Layers, Bell,
+  Clock, Layers, Bell,
 } from 'lucide-react';
-import { getCrawlStatus, registerWebsiteCrawl } from '../../api/ingest';
 import { listWebhooks, registerWebhook, deleteWebhook } from '../../api/auth';
 import type { WebhookEndpoint, WebhookEventType } from '../../types';
 
@@ -74,77 +73,6 @@ function Toast({ msg, ok }: { msg: string; ok: boolean }) {
       {ok ? <CheckCircle2 size={12} /> : <AlertTriangle size={12} />}
       {msg}
     </div>
-  );
-}
-
-// ── Crawl config section ──────────────────────────────────────────────────────
-
-function CrawlSettings() {
-  const [url,         setUrl]         = useState('');
-  const [maxPages,    setMaxPages]    = useState(50);
-  const [maxDepth,    setMaxDepth]    = useState(3);
-  const [interval,   setInterval]    = useState(24);
-  const [saving,     setSaving]      = useState(false);
-  const [msg,        setMsg]         = useState('');
-  const [ok,         setOk]          = useState(true);
-  const [loaded,     setLoaded]      = useState(false);
-
-  useEffect(() => {
-    getCrawlStatus().then(s => {
-      if (s.registered && s.website_url) {
-        setUrl(s.website_url);
-        if (s.crawl_config) {
-          setMaxPages(s.crawl_config.max_pages ?? 50);
-          setMaxDepth(s.crawl_config.max_depth ?? 3);
-          setInterval(s.crawl_config.recrawl_interval_hours ?? 24);
-        }
-      }
-    }).catch(() => {}).finally(() => setLoaded(true));
-  }, []);
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setSaving(true); setMsg('');
-    try {
-      await registerWebsiteCrawl({
-        website_url: url.trim(),
-        max_pages: maxPages,
-        max_depth: maxDepth,
-        recrawl_interval_hours: interval,
-      });
-      setOk(true); setMsg('Crawl settings saved and first crawl queued.');
-    } catch {
-      setOk(false); setMsg('Failed to save crawl settings.');
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  if (!loaded) return <div className="text-xs py-2" style={{ color: 'var(--text-3)' }}>Loading…</div>;
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <Field label="Website URL" hint="The product site the engine crawls automatically.">
-        <input type="url" value={url} onChange={e => setUrl(e.target.value)}
-          placeholder="https://yourproduct.com" className={inputCls} />
-      </Field>
-      <div className="grid grid-cols-3 gap-4">
-        <Field label="Max pages" hint="Per crawl run">
-          <input type="number" min={1} max={500} value={maxPages}
-            onChange={e => setMaxPages(Number(e.target.value))} className={inputCls} />
-        </Field>
-        <Field label="Max depth" hint="Links from root">
-          <input type="number" min={1} max={10} value={maxDepth}
-            onChange={e => setMaxDepth(Number(e.target.value))} className={inputCls} />
-        </Field>
-        <Field label="Recrawl (hours)" hint="Auto-repeat interval">
-          <input type="number" min={1} max={168} value={interval}
-            onChange={e => setInterval(Number(e.target.value))} className={inputCls} />
-        </Field>
-      </div>
-      {msg && <Toast msg={msg} ok={ok} />}
-      <SaveBtn saving={saving} />
-    </form>
   );
 }
 
@@ -329,15 +257,11 @@ export default function SettingsPage() {
         <Settings size={16} style={{ color: 'var(--text-3)' }} />
         <div>
           <h1 className="text-xl font-bold" style={{ color: 'var(--text)', letterSpacing: '-0.01em' }}>Settings</h1>
-          <p className="text-sm" style={{ color: 'var(--text-3)' }}>Crawl configuration, webhooks, and notifications</p>
+          <p className="text-sm" style={{ color: 'var(--text-3)' }}>Webhooks, notifications, and pipeline status</p>
         </div>
       </header>
 
       <div className="px-7 py-8 max-w-2xl">
-        <Section icon={Globe} title="Website & Crawl">
-          <CrawlSettings />
-        </Section>
-
         <Section icon={Layers} title="Webhooks">
           <WebhookSettings />
         </Section>
@@ -349,15 +273,12 @@ export default function SettingsPage() {
         <Section icon={Clock} title="Pipeline schedule">
           <div className="space-y-2">
             {([
-              ['Website re-crawl',   'Every 24h (configurable above)'],
               ['Gap analysis',       'Every 6h on completed documents'],
               ['AI draft writing',   'Every gap_auto_close_interval'],
-              ['Content injection',  'Every gap_auto_close_interval'],
               ['Trend scraping',     'Every hour (Google News, HN, Reddit, GitHub, YouTube)'],
               ['SEO rank tracking',  'Daily'],
               ['AEO analysis',       'Every 6h'],
               ['Data pool sync',     'Every 15 minutes'],
-              ['Telemetry flush',    'Every 30 seconds'],
               ['Health checks',      'Every 60 seconds'],
             ] as [string, string][]).map(([name, sched]) => (
               <div key={name} className="flex items-center justify-between py-1.5" style={{ borderBottom: '1px solid var(--border)' }}>

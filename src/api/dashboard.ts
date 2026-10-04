@@ -1,13 +1,8 @@
 import apiClient from './axios';
 import type {
   DashboardOverview,
-  GapComparisonPoint,
   DocumentListItem,
   ActivityLogEntry,
-  MetricsSummary,
-  ThroughputPoint,
-  TelemetryError,
-  PipelineMetrics,
   PaginatedQuery,
   DocumentStatus,
   TenantSummary,
@@ -142,19 +137,6 @@ export async function getDashboardOverview(): Promise<DashboardOverview> {
 }
 
 /**
- * GET /api/v1/dashboard/gap-comparison/{document_id}
- * Before/after gap timeline for a document — powers a coverage improvement chart.
- */
-export async function getGapComparison(
-  document_id: string,
-): Promise<GapComparisonPoint[]> {
-  const { data } = await apiClient.get<GapComparisonPoint[]>(
-    `/api/v1/dashboard/gap-comparison/${document_id}`,
-  );
-  return data;
-}
-
-/**
  * GET /api/v1/dashboard/documents
  * Paginated document list with status, chunk count, and metadata.
  */
@@ -185,58 +167,6 @@ export async function getActivityLog(
 }
 
 // ── Metrics ───────────────────────────────────────────────────────────────────
-
-/**
- * GET /api/v1/dashboard/metrics/summary
- * Event counts and error rate summary for the metrics panel.
- */
-export async function getMetricsSummary(hours = 24): Promise<MetricsSummary> {
-  const { data } = await apiClient.get<MetricsSummary>(
-    '/api/v1/dashboard/metrics/summary',
-    { params: { hours } },
-  );
-  return data;
-}
-
-/**
- * GET /api/v1/dashboard/metrics/throughput
- * Throughput time series — events per interval for charting.
- */
-export async function getMetricsThroughput(
-  hours = 24,
-  interval_minutes = 60,
-): Promise<ThroughputPoint[]> {
-  const { data } = await apiClient.get<ThroughputPoint[]>(
-    '/api/v1/dashboard/metrics/throughput',
-    { params: { hours, interval_minutes } },
-  );
-  return data;
-}
-
-/**
- * GET /api/v1/dashboard/metrics/errors
- * Error event log — use for error rate panel.
- */
-export async function getMetricsErrors(
-  limit = 100,
-): Promise<TelemetryError[]> {
-  const { data } = await apiClient.get<TelemetryError[]>(
-    '/api/v1/dashboard/metrics/errors',
-    { params: { limit } },
-  );
-  return data;
-}
-
-/**
- * GET /api/v1/dashboard/metrics/pipeline
- * Per-stage pipeline latencies — ingest, chunk, embed, gap, write.
- */
-export async function getPipelineMetrics(): Promise<PipelineMetrics> {
-  const { data } = await apiClient.get<PipelineMetrics>(
-    '/api/v1/dashboard/metrics/pipeline',
-  );
-  return data;
-}
 
 // ── Admin: Tenant / Product Performance ──────────────────────────────────────
 
@@ -277,6 +207,106 @@ export async function getTenantPerformance(
 export async function getMyTenantPerformance(): Promise<TenantPerformance> {
   const { data } = await apiClient.get<TenantPerformance>(
     '/api/v1/dashboard/tenant/me',
+  );
+  return data;
+}
+
+export interface ContentStrategy {
+  id: string;
+  website_id: string;
+  opportunity_id: string;
+  objective: string | null;
+  content_type: string | null;
+  target_intent: string | null;
+  primary_query: string | null;
+  supporting_queries: string[];
+  topic: string | null;
+  entities: string[];
+  required_sections: string[];
+  competitor_evidence: unknown[];
+  content_gaps: string[];
+  schema_recommendations: string[];
+  quality_requirements: Record<string, unknown>;
+  status: string;
+  writing_task_id: string | null;
+  created_at: string;
+  updated_at: string;
+  opportunity_title?: string | null;
+  opportunity_priority_score?: number | null;
+}
+
+export interface ContentStrategyListResponse {
+  items: ContentStrategy[];
+  total: number;
+  page: number;
+  page_size: number;
+}
+
+/**
+ * GET /api/v1/dashboard/content-strategies?website_id={website_id}
+ *
+ * Canonical content strategy projection.
+ * The backend endpoint will be finalized separately; the frontend
+ * contract is intentionally ready for that projection.
+ */
+export async function getContentStrategies(
+  website_id: string,
+  params?: PaginatedQuery & { status?: string; run_id?: string },
+): Promise<ContentStrategyListResponse> {
+  const { data } = await apiClient.get<ContentStrategyListResponse>(
+    '/api/v1/dashboard/content-strategies',
+    {
+      params: {
+        website_id,
+        page: 1,
+        page_size: 20,
+        ...params,
+      },
+    },
+  );
+  return data;
+}
+
+export interface ContentExecution {
+  id: string;
+  opportunity_id: string | null;
+  content_strategy_id: string | null;
+  action_type: string | null;
+  target_url: string | null;
+  target_title: string | null;
+  approval_status: string | null;
+  publication_status: string | null;
+  published_url: string | null;
+  published_at: string | null;
+  created_at: string;
+  updated_at: string;
+  opportunity_title: string | null;
+  primary_query: string | null;
+}
+
+export interface ContentExecutionListResponse {
+  items: ContentExecution[];
+  total: number;
+  page: number;
+  page_size: number;
+}
+
+/**
+ * GET /api/v1/dashboard/content-executions
+ * Canonical content execution pipeline records.
+ */
+export async function getContentExecutions(
+  params?: PaginatedQuery & { status?: string; run_id?: string },
+): Promise<ContentExecutionListResponse> {
+  const { data } = await apiClient.get<ContentExecutionListResponse>(
+    '/api/v1/dashboard/content-executions',
+    {
+      params: {
+        page: 1,
+        page_size: 20,
+        ...params,
+      },
+    },
   );
   return data;
 }

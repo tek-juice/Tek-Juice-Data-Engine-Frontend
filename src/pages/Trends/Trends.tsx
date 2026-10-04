@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { RefreshCw, Loader2, AlertTriangle, TrendingUp, Play, CheckCircle2, AlertCircle } from 'lucide-react';
 import { getTrendingTopics, getScraperPlatforms, runIndirectScrape, getDeadLetterItems } from '../../api/scraper';
-import { getCrawlStatus } from '../../api/ingest';
+import { listWebsites } from '../../api/websites';
 import type { TrendingTopic, Platform, DeadLetterItem } from '../../types';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -66,15 +66,18 @@ export default function Trends() {
   const [refreshing, setRefreshing] = useState(false);
   const [running,    setRunning]    = useState(false);
   const [runMsg,     setRunMsg]     = useState('');
-  // Product domain derived from crawl config — used to build relevant scrape queries
+  // Product domain comes from the canonical registered website.
   const [productDomain, setProductDomain] = useState<string>('');
 
-  // Load crawl status on mount to know the product domain for targeted queries
+  // Load the registered website to build product-relevant trend queries.
   useEffect(() => {
-    getCrawlStatus()
-      .then(s => {
-        if (s.website_url) {
-          const domain = s.website_url.replace(/^https?:\/\//, '').split('/')[0];
+    listWebsites()
+      .then(websites => {
+        const website = websites[0];
+        if (website?.domain) {
+          setProductDomain(website.domain);
+        } else if (website?.url) {
+          const domain = website.url.replace(/^https?:\/\//, '').split('/')[0];
           setProductDomain(domain);
         }
       })

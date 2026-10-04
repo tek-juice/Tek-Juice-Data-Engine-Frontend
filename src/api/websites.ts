@@ -23,6 +23,27 @@ export interface WebsiteStatus {
   verified_at: string | null;
 }
 
+export interface ConnectWebsiteRequest {
+  url: string;
+}
+
+export interface ConnectWebsiteResponse {
+  website_id: string;
+  run_id: string | null;
+  status: string;
+  message: string;
+}
+
+export async function connectWebsite(
+  payload: ConnectWebsiteRequest,
+): Promise<ConnectWebsiteResponse> {
+  const { data } = await apiClient.post<ConnectWebsiteResponse>(
+    '/api/v1/websites/connect',
+    payload,
+  );
+  return data;
+}
+
 export async function listWebsites(): Promise<Website[]> {
   const { data } = await apiClient.get<Website[]>('/api/v1/websites');
   return data;

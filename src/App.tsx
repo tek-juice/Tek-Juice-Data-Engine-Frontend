@@ -1,7 +1,8 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { useEffect, type ReactElement } from 'react';
-import { destroyActivityFeed } from './services/websocket';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+
+import { type ReactElement } from 'react';
 import { ThemeProvider } from './contexts/ThemeContext';
+import { IntelligenceRunProvider } from './contexts/IntelligenceRunContext';
 import { PageErrorBoundary } from './components/common/PageErrorBoundary';
 
 // ── Layouts ───────────────────────────────────────────────────────────────────
@@ -12,29 +13,24 @@ import AuthLayout from './layouts/AuthLayout';
 import Login         from './pages/Login/Login';
 import OAuthCallback from './pages/OAuthCallback/OAuthCallback';
 import ProtectedRoute from './routes/ProtectedRoute';
-import Onboarding    from './pages/Onboarding/Onboarding';
+import EntryGate from './routes/EntryGate';
 import Connect       from './pages/Connect/Connect';
 
 // ── App pages ─────────────────────────────────────────────────────────────────
-import Dashboard       from './pages/Dashboard/Dashboard';
-import Credentials     from './pages/Credentials/Credentials';
-import WebsiteSetup    from './pages/WebsiteSetup/WebsiteSetup';
 import TenantDashboard from './pages/TenantDashboard/TenantDashboard';
-import Monitor         from './pages/Monitor/Monitor';
-import AdminTenants    from './pages/AdminTenants/AdminTenants';
-import GapDetection    from './pages/GapDetection/GapDetection';
-import Trends          from './pages/Trends/Trends';
-import SchemaFactory   from './pages/SchemaFactory/SchemaFactory';
-import SEO             from './pages/SEO/SEO';
-import GEO             from './pages/GEO/GEO';
-import AEO             from './pages/AEO/AEO';
-import Sync            from './pages/Sync/Sync';
-import Telemetry       from './pages/Telemetry/Telemetry';
-import Upload          from './pages/Upload/Upload';
-import Drafts          from './pages/Drafts/Drafts';
-import SearchPage      from './pages/Search/Search';
-import SettingsPage    from './pages/Settings/Settings';
-import ProfilePage     from './pages/Profile/Profile';
+import ProductIntelligence from './pages/ProductIntelligence/ProductIntelligence';
+import MarketIntelligence from './pages/MarketIntelligence/MarketIntelligence';
+import IntelligenceRuns from './pages/IntelligenceRuns/IntelligenceRuns';
+import Queries from './pages/Queries/Queries';
+import Gaps from './pages/Gaps/Gaps';
+import Opportunities from './pages/Opportunities/Opportunities';
+import Competitors from './pages/Competitors/Competitors';
+import ContentStrategies from './pages/ContentStrategies/ContentStrategies';
+import Execution from './pages/Execution/Execution';
+import PublishedContent from './pages/PublishedContent/PublishedContent';
+import SearchPerformance from './pages/SearchPerformance/SearchPerformance';
+import SerpObservations from './pages/SerpObservations/SerpObservations';
+import Feedback from './pages/Feedback/Feedback';
 
 // ── Helper: wrap element in an error boundary ─────────────────────────────────
 function page(el: ReactElement) {
@@ -42,12 +38,6 @@ function page(el: ReactElement) {
 }
 
 function App() {
-  useEffect(() => {
-    const handleLogout = () => destroyActivityFeed();
-    window.addEventListener('auth:logout', handleLogout);
-    return () => window.removeEventListener('auth:logout', handleLogout);
-  }, []);
-
   return (
     <ThemeProvider>
     <BrowserRouter>
@@ -61,57 +51,37 @@ function App() {
         {/* ── OAuth callback — standalone, no layout shell ── */}
         <Route path="/auth/callback" element={<OAuthCallback />} />
 
-        {/* ── Connect wizard — public, no auth required ── */}
-        <Route path="/connect" element={<Connect />} />
-
-        {/* ── Onboarding — legacy flow ── */}
-        <Route path="/onboard" element={<Onboarding />} />
-
-        {/* ── Email verification — reads ?token= and auto-verifies, then redirects to /connect ── */}
-        <Route path="/onboard/verify-email" element={<Connect />} />
-
-        {/* ── Protected — all inside AppShell sidebar ── */}
+        {/* ── Protected entry + canonical application ── */}
         <Route element={<ProtectedRoute />}>
-          <Route element={<AppShell />}>
-            <Route path="/"               element={<Navigate to="/dashboard" replace />} />
+          {/* Website connection is onboarding, not part of the application shell. */}
+          <Route path="/websites/connect" element={page(<Connect />)} />
 
-            {/* Overview */}
-            <Route path="/dashboard"      element={page(<Dashboard />)} />
-            <Route path="/analytics"      element={page(<Monitor />)} />
-
-            {/* Content */}
-            <Route path="/website"        element={page(<WebsiteSetup />)} />
-            <Route path="/website-setup"  element={page(<WebsiteSetup />)} />
-            <Route path="/upload"         element={page(<Upload />)} />
-            <Route path="/drafts"         element={page(<Drafts />)} />
-            <Route path="/search"         element={page(<SearchPage />)} />
-
-            {/* Intelligence */}
-            <Route path="/gaps"           element={page(<GapDetection />)} />
-            <Route path="/trends"         element={page(<Trends />)} />
-            <Route path="/schema-factory" element={page(<SchemaFactory />)} />
-
-            {/* Visibility */}
-            <Route path="/seo"            element={page(<SEO />)} />
-            <Route path="/geo"            element={page(<GEO />)} />
-            <Route path="/aeo"            element={page(<AEO />)} />
-
-            {/* System */}
-            <Route path="/sync"           element={page(<Sync />)} />
-            <Route path="/telemetry"      element={page(<Telemetry />)} />
-
-            {/* Access */}
-            <Route path="/credentials"    element={page(<Credentials />)} />
-            <Route path="/settings"       element={page(<SettingsPage />)} />
-            <Route path="/profile"        element={page(<ProfilePage />)} />
-
-            {/* Performance */}
-            <Route path="/my-performance"   element={page(<TenantDashboard />)} />
-            <Route path="/admin/tenants"    element={page(<AdminTenants />)} />
+          {/* Canonical application shell. */}
+          <Route
+              element={
+                <IntelligenceRunProvider>
+                  <AppShell />
+                </IntelligenceRunProvider>
+              }
+            >
+            <Route path="/" element={<EntryGate />} />
+            <Route path="/visibility" element={page(<TenantDashboard />)} />
+      <Route path="/product-intelligence" element={page(<ProductIntelligence />)} />
+      <Route path="/market-intelligence" element={page(<MarketIntelligence />)} />
+      <Route path="/intelligence-runs" element={page(<IntelligenceRuns />)} />
+      <Route path="/queries" element={page(<Queries />)} />
+      <Route path="/gaps" element={page(<Gaps />)} />
+      <Route path="/opportunities" element={page(<Opportunities />)} />
+      <Route path="/competitors" element={page(<Competitors />)} />
+      <Route path="/content-strategies" element={page(<ContentStrategies />)} />
+      <Route path="/execution" element={page(<Execution />)} />
+      <Route path="/published-content" element={page(<PublishedContent />)} />
+      <Route path="/search-performance" element={page(<SearchPerformance />)} />
+      <Route path="/serp-observations" element={page(<SerpObservations />)} />
+      <Route path="/feedback" element={page(<Feedback />)} />
           </Route>
         </Route>
 
-        {/* ── 404 ── */}
         <Route path="*" element={
           <div
             className="flex items-center justify-center h-screen text-sm"

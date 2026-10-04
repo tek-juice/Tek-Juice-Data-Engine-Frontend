@@ -58,15 +58,23 @@ export async function login(
  * Register a new account.
  * Stores tokens automatically on success so the user lands straight in the app.
  */
-export async function register(
-  email: string,
-  password: string,
-  full_name?: string,
-): Promise<TokenResponse> {
-  const tokens = await apiRegister(email, password, full_name);
-  setTokens(tokens);
-  return tokens;
-}
+  export async function register(
+    email: string,
+    password: string,
+    full_name?: string,
+    product_name?: string,
+    business_description?: string,
+  ): Promise<TokenResponse> {
+    const tokens = await apiRegister(
+      email,
+      password,
+      full_name,
+      product_name,
+      business_description,
+    );
+    setTokens(tokens);
+    return tokens;
+  }
 
 /**
  * Exchange the stored refresh token for a new access token.

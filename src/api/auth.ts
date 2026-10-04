@@ -36,10 +36,18 @@ export async function register(
   email: string,
   password: string,
   full_name?: string,
+  product_name?: string,
+  business_description?: string,
 ): Promise<TokenResponse> {
   const { data } = await apiClient.post<TokenResponse>(
     '/api/v1/auth/register',
-    { email, password, full_name: full_name ?? '' },
+    {
+      email,
+      password,
+      full_name: full_name ?? '',
+      product_name: product_name ?? '',
+      business_description: business_description ?? '',
+    },
   );
   return data;
 }
