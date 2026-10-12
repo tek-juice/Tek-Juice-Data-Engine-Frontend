@@ -9,7 +9,24 @@ export interface ContentReviewItem {
   approval_status: string;
   publication_status: string;
   approval: ApprovalDecision;
+  edited?: boolean;
   updated_at: string | null;
+}
+
+/** The full article under review. */
+export interface ContentReviewDetail extends ContentReviewItem {
+  content: string | null;
+  meta_description: string | null;
+  slug: string | null;
+  primary_query: string | null;
+  style_warnings: string[];
+  review_edits: Array<{ editor: string; at: string; fields: string[] }>;
+}
+
+export interface ArticleEdits {
+  title?: string;
+  content?: string;
+  meta_description?: string;
 }
 
 export interface ApprovalPolicy {
@@ -34,10 +51,34 @@ export async function reviewContent(
   executionId: string,
   decision: 'approve' | 'reject',
   note?: string,
+  edits?: ArticleEdits,
 ): Promise<{ execution_id: string; approval_status: string }> {
   const { data } = await apiClient.post(
     `/api/v1/websites/${websiteId}/content-reviews/${executionId}`,
-    { decision, note: note || null },
+    { decision, note: note || null, ...(edits ? { edits } : {}) },
+  );
+  return data;
+}
+
+export async function getContentReview(
+  websiteId: string,
+  executionId: string,
+): Promise<ContentReviewDetail> {
+  const { data } = await apiClient.get<ContentReviewDetail>(
+    `/api/v1/websites/${websiteId}/content-reviews/${executionId}`,
+  );
+  return data;
+}
+
+/** Save a reviewer's corrections; the article stays held for review. */
+export async function saveContentEdits(
+  websiteId: string,
+  executionId: string,
+  edits: ArticleEdits,
+): Promise<ContentReviewDetail> {
+  const { data } = await apiClient.put<ContentReviewDetail>(
+    `/api/v1/websites/${websiteId}/content-reviews/${executionId}`,
+    edits,
   );
   return data;
 }
