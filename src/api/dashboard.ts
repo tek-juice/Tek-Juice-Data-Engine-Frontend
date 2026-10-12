@@ -1,12 +1,6 @@
 import apiClient from './axios';
 import type {
-  DashboardOverview,
-  DocumentListItem,
-  ActivityLogEntry,
   PaginatedQuery,
-  DocumentStatus,
-  TenantSummary,
-  TenantPerformance,
   VisibilityOverview,
   VisibilityPublishedResponse,
   VisibilityConnection,
@@ -96,117 +90,6 @@ export async function getVisibilitySearchPerformance(
   const { data } = await apiClient.get<VisibilitySearchPerformanceResponse>(
     '/api/v1/dashboard/visibility/search-performance',
     { params: { website_id } },
-  );
-  return data;
-}
-
-// ── Authenticated Proxy ───────────────────────────────────────────────────────
-
-/**
- * Proxy — GET/POST/PUT/DELETE/PATCH /api/v1/{service}/{path}
- * Routes authenticated requests to any downstream microservice.
- */
-export async function proxyRequest<T = unknown>(
-  method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH',
-  service: string,
-  path: string,
-  body?: unknown,
-  params?: Record<string, unknown>,
-): Promise<T> {
-  const { data } = await apiClient.request<T>({
-    method,
-    url: `/api/v1/${service}/${path}`,
-    data: body,
-    params,
-  });
-  return data;
-}
-
-
-// ── Dashboard & Analytics ─────────────────────────────────────────────────────
-
-/**
- * GET /api/v1/dashboard/overview
- * Platform overview: document count, avg gap score, coverage %, recent activity.
- */
-export async function getDashboardOverview(): Promise<DashboardOverview> {
-  const { data } = await apiClient.get<DashboardOverview>(
-    '/api/v1/dashboard/overview',
-  );
-  return data;
-}
-
-/**
- * GET /api/v1/dashboard/documents
- * Paginated document list with status, chunk count, and metadata.
- */
-export async function getDashboardDocuments(
-  params?: PaginatedQuery & { status?: DocumentStatus },
-): Promise<DocumentListItem[]> {
-  const { data } = await apiClient.get<{ items: DocumentListItem[] } | DocumentListItem[]>(
-    '/api/v1/dashboard/documents',
-    { params: { page: 1, page_size: 20, ...params } },
-  );
-  // Backend returns a paginated envelope { items, total, page, page_size }
-  return Array.isArray(data) ? data : (data as { items: DocumentListItem[] }).items ?? [];
-}
-
-/**
- * GET /api/v1/dashboard/activity-log
- * Recent system activity across all pipeline stages — live feed source.
- */
-export async function getActivityLog(
-  hours = 24,
-  limit = 50,
-): Promise<ActivityLogEntry[]> {
-  const { data } = await apiClient.get<ActivityLogEntry[]>(
-    '/api/v1/dashboard/activity-log',
-    { params: { hours, limit } },
-  );
-  return data;
-}
-
-// ── Metrics ───────────────────────────────────────────────────────────────────
-
-// ── Admin: Tenant / Product Performance ──────────────────────────────────────
-
-/**
- * GET /api/v1/dashboard/admin/tenants
- * List all tenants (products/companies) using the platform.
- * Admin-only — requires an admin-scoped JWT.
- */
-export async function listTenants(
-  params?: { status?: 'active' | 'idle' | 'error'; limit?: number },
-): Promise<TenantSummary[]> {
-  const { data } = await apiClient.get<TenantSummary[]>(
-    '/api/v1/dashboard/admin/tenants',
-    { params: { limit: 100, ...params } },
-  );
-  return data;
-}
-
-/**
- * GET /api/v1/dashboard/admin/tenants/{tenant_id}
- * Full performance breakdown for a single tenant.
- */
-export async function getTenantPerformance(
-  tenant_id: string,
-): Promise<TenantPerformance> {
-  const { data } = await apiClient.get<TenantPerformance>(
-    `/api/v1/dashboard/admin/tenants/${tenant_id}`,
-  );
-  return data;
-}
-
-// ── Tenant-scoped: Company's own performance ──────────────────────────────────
-
-/**
- * GET /api/v1/dashboard/tenant/me
- * The calling tenant's own performance snapshot (scoped to their API key / JWT).
- */
-export async function getMyTenantPerformance(): Promise<TenantPerformance> {
-  const { data } = await apiClient.get<TenantPerformance>(
-    '/api/v1/dashboard/tenant/me',
   );
   return data;
 }
