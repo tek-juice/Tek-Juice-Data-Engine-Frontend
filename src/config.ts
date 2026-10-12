@@ -42,13 +42,14 @@ export const WS_MAX_RECONNECT_ATTEMPTS: number =
 
 // ── Auth / Storage ────────────────────────────────────────────────────────────
 
-/** localStorage key for the JWT access token */
-export const TOKEN_KEY: string =
-  import.meta.env.VITE_TOKEN_STORAGE_KEY ?? 'data_engine_token';
-
-/** localStorage key for the JWT refresh token */
-export const REFRESH_KEY: string =
-  import.meta.env.VITE_REFRESH_TOKEN_STORAGE_KEY ?? 'data_engine_refresh_token';
+/**
+ * localStorage keys where earlier releases kept JWTs. Sessions now live only
+ * in httpOnly cookies; these keys are read solely to delete leftovers.
+ */
+export const LEGACY_TOKEN_KEYS: readonly string[] = [
+  import.meta.env.VITE_TOKEN_STORAGE_KEY ?? 'data_engine_token',
+  import.meta.env.VITE_REFRESH_TOKEN_STORAGE_KEY ?? 'data_engine_refresh_token',
+];
 
 // ── Pagination ────────────────────────────────────────────────────────────────
 

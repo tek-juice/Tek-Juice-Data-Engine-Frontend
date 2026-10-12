@@ -1,6 +1,6 @@
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { useLocation, useNavigate, Navigate } from 'react-router-dom';
-import { login, register, isAuthenticated } from '../../services/auth.service';
+import { login, register, isAuthenticated, loadSession } from '../../services/auth.service';
 import { redirectToOAuth } from '../../api/auth';
 import './Login.css';
 
@@ -22,6 +22,17 @@ export default function Login() {
   const [loading, setLoading]                 = useState(false);
   const [showPw, setShowPw]                   = useState(false);
   const [showConfirm, setShowConfirm]         = useState(false);
+
+  // A valid session cookie from an earlier visit skips the login form.
+  useEffect(() => {
+    let active = true;
+    void loadSession().then(user => {
+      if (active && user) navigate('/', { replace: true });
+    });
+    return () => {
+      active = false;
+    };
+  }, [navigate]);
 
   // Already authenticated → skip straight to the dashboard
   if (isAuthenticated()) return <Navigate to="/" replace />;

@@ -1,175 +1,91 @@
-import { login as apiLogin, refreshToken as apiRefresh, register as apiRegister } from '../api/auth';
-import { rawStorage } from './storage';
-import type { TokenResponse } from '../types';
+import {
+  fetchSession,
+  login as apiLogin,
+  logoutRequest,
+  register as apiRegister,
+} from '../api/auth';
+import { refreshSessionCookies } from '../api/axios';
+import { getSessionUser, isSessionKnown, setSessionUser } from './session';
+import type { SessionUser } from '../types';
 
-const TOKEN_KEY =
-  import.meta.env.VITE_TOKEN_STORAGE_KEY ?? 'data_engine_token';
-const REFRESH_KEY =
-  import.meta.env.VITE_REFRESH_TOKEN_STORAGE_KEY ?? 'data_engine_refresh_token';
-
-// ── Token management ──────────────────────────────────────────────────────────
-
-export function getAccessToken(): string | null {
-  return rawStorage.get(TOKEN_KEY);
-}
-
-export function getRefreshToken(): string | null {
-  return rawStorage.get(REFRESH_KEY);
-}
-
-export function setTokens(tokens: TokenResponse): void {
-  rawStorage.set(TOKEN_KEY, tokens.access_token);
-  rawStorage.set(REFRESH_KEY, tokens.refresh_token);
-}
-
-export function clearTokens(): void {
-  rawStorage.remove(TOKEN_KEY);
-  rawStorage.remove(REFRESH_KEY);
-}
+/**
+ * Browser authentication. Tokens are httpOnly cookies managed by the gateway;
+ * nothing here can read or store them. Only the session's identity (user,
+ * tenant, role) is held, in memory.
+ */
 
 export function isAuthenticated(): boolean {
-  return !!getAccessToken();
+  return getSessionUser() !== null;
 }
 
 /**
- * Persist any token pair received from an OAuth exchange.
- * Called by OAuthCallback after the code/token exchange succeeds.
+ * Resolve the session from the server once per page load (cookies survive
+ * reloads; memory does not). Resolves null when signed out.
  */
-export function handleOAuthToken(tokens: TokenResponse): void {
-  setTokens(tokens);
-}
-
-// ── Auth actions ──────────────────────────────────────────────────────────────
-
-/**
- * Login with username and password.
- * Stores tokens automatically on success.
- */
-export async function login(
-  username: string,
-  password: string,
-): Promise<TokenResponse> {
-  const tokens = await apiLogin(username, password);
-  setTokens(tokens);
-  return tokens;
-}
-
-/**
- * Register a new account.
- * Stores tokens automatically on success so the user lands straight in the app.
- */
-  export async function register(
-    email: string,
-    password: string,
-    full_name?: string,
-    product_name?: string,
-    business_description?: string,
-  ): Promise<TokenResponse> {
-    const tokens = await apiRegister(
-      email,
-      password,
-      full_name,
-      product_name,
-      business_description,
-    );
-    setTokens(tokens);
-    return tokens;
-  }
-
-/**
- * Exchange the stored refresh token for a new access token.
- * Updates storage automatically on success.
- * Clears tokens and dispatches `auth:logout` if refresh fails.
- */
-export async function refreshSession(): Promise<TokenResponse | null> {
-  const refreshToken = getRefreshToken();
-  if (!refreshToken) {
-    logout();
-    return null;
-  }
-
+export async function loadSession(): Promise<SessionUser | null> {
+  if (isSessionKnown()) return getSessionUser();
   try {
-    const tokens = await apiRefresh(refreshToken);
-    setTokens(tokens);
-    return tokens;
+    const user = await fetchSession();
+    setSessionUser(user);
+    return user;
   } catch {
-    logout();
+    setSessionUser(null);
     return null;
   }
 }
 
-/**
- * Log out the current user — clears tokens and notifies the app.
- */
+export async function login(username: string, password: string): Promise<SessionUser> {
+  const { user } = await apiLogin(username, password);
+  setSessionUser(user);
+  return user;
+}
+
+export async function register(
+  email: string,
+  password: string,
+  full_name?: string,
+  product_name?: string,
+  business_description?: string,
+): Promise<SessionUser> {
+  const { user } = await apiRegister(email, password, full_name, product_name, business_description);
+  setSessionUser(user);
+  return user;
+}
+
+/** Refresh the session cookies; resolves false (and signs out) when that fails. */
+export async function refreshSession(): Promise<boolean> {
+  const ok = await refreshSessionCookies();
+  if (!ok) setSessionUser(null);
+  return ok;
+}
+
+/** Sign out: clear the server cookies, then the in-memory session. */
 export function logout(): void {
-  clearTokens();
+  void logoutRequest().catch(() => undefined);
+  setSessionUser(null);
   window.dispatchEvent(new Event('auth:logout'));
 }
 
-// ── JWT introspection (client-side only, no signature verification) ───────────
-
-interface JwtPayload {
-  sub?: string;
-  exp?: number;
-  iat?: number;
-  [key: string]: unknown;
+/** @deprecated Tokens are httpOnly cookies and cannot be read by scripts. */
+export function getAccessToken(): string | null {
+  return null;
 }
 
-function parseJwt(token: string): JwtPayload | null {
-  try {
-    const base64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
-    const json = decodeURIComponent(
-      atob(base64)
-        .split('')
-        .map((c) => `%${c.charCodeAt(0).toString(16).padStart(2, '0')}`)
-        .join(''),
-    );
-    return JSON.parse(json) as JwtPayload;
-  } catch {
-    return null;
-  }
-}
-
-/**
- * Returns true if the stored access token is expired (client-side check only).
- */
-export function isTokenExpired(): boolean {
-  const token = getAccessToken();
-  if (!token) return true;
-  const payload = parseJwt(token);
-  if (!payload?.exp) return true;
-  // Add a 30-second buffer to handle clock skew
-  return Date.now() / 1000 > payload.exp - 30;
-}
-
-/**
- * Returns the subject (user ID) from the stored JWT, or null.
- */
 export function getCurrentUserId(): string | null {
-  const token = getAccessToken();
-  if (!token) return null;
-  const payload = parseJwt(token);
-  return payload?.sub ?? null;
+  return getSessionUser()?.sub ?? null;
 }
 
-/**
- * Returns the tenant ID (JWT sub claim) for the current user.
- * Used as the tenant_id parameter for all analysis API calls.
- * Returns empty string if not authenticated.
- */
+/** The signed-in user's tenant ID, or '' when signed out. */
 export function getTenantId(): string {
-  return getCurrentUserId() ?? '';
+  return getSessionUser()?.tenant_id ?? '';
 }
 
 /**
- * Role claim of the stored JWT ('admin', 'editor', 'viewer', …).
+ * Role of the signed-in user ('admin', 'editor', 'viewer', …).
  * For UI affordances only — the backend enforces every permission.
  */
 export function getCurrentRole(): string {
-  const token = getAccessToken();
-  if (!token) return 'viewer';
-  const role = parseJwt(token)?.role;
-  return typeof role === 'string' ? role : 'viewer';
+  return getSessionUser()?.role ?? 'viewer';
 }
 
 export function isAdmin(): boolean {

@@ -1,7 +1,8 @@
 import apiClient from './axios';
 import { API_BASE_URL, API_PREFIX } from '../config';
 import type {
-  TokenResponse,
+  SessionResponse,
+  SessionUser,
   ApiKeyResponse,
   WebhookEndpoint,
   WebhookEventType,
@@ -18,9 +19,9 @@ import type {
 export async function login(
   username: string,
   password: string,
-): Promise<TokenResponse> {
+): Promise<SessionResponse> {
   const params = new URLSearchParams({ username, password });
-  const { data } = await apiClient.post<TokenResponse>(
+  const { data } = await apiClient.post<SessionResponse>(
     '/api/v1/auth/token',
     params,
     { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } },
@@ -38,8 +39,8 @@ export async function register(
   full_name?: string,
   product_name?: string,
   business_description?: string,
-): Promise<TokenResponse> {
-  const { data } = await apiClient.post<TokenResponse>(
+): Promise<SessionResponse> {
+  const { data } = await apiClient.post<SessionResponse>(
     '/api/v1/auth/register',
     {
       email,
@@ -53,17 +54,20 @@ export async function register(
 }
 
 /**
- * POST /api/v1/auth/refresh
- * Exchange a refresh token for a new access token.
+ * GET /api/v1/auth/session
+ * Who the httpOnly session cookie belongs to. Rejects with 401 when signed out.
  */
-export async function refreshToken(
-  refresh_token: string,
-): Promise<TokenResponse> {
-  const { data } = await apiClient.post<TokenResponse>(
-    '/api/v1/auth/refresh',
-    { refresh_token },
-  );
+export async function fetchSession(): Promise<SessionUser> {
+  const { data } = await apiClient.get<SessionUser>('/api/v1/auth/session');
   return data;
+}
+
+/**
+ * POST /api/v1/auth/logout
+ * Clears the session cookies on the server side.
+ */
+export async function logoutRequest(): Promise<void> {
+  await apiClient.post('/api/v1/auth/logout');
 }
 
 // ── OAuth ─────────────────────────────────────────────────────────────────────
@@ -72,29 +76,13 @@ export type OAuthProvider = 'google' | 'github' | 'builderid';
 
 /**
  * Redirect the browser to the backend OAuth authorisation URL.
- * The backend will redirect back to /auth/callback?code=...&provider=...
- * after the user authenticates with the social provider.
+ *
+ * `redirect_uri` is this frontend's origin (it must be in the gateway's
+ * allowlist). After sign-in the gateway sets the httpOnly session cookies and
+ * redirects to `${origin}/auth/callback` — no tokens in the URL.
  */
 export function redirectToOAuth(provider: OAuthProvider): void {
-  const callbackUrl = `${window.location.origin}/auth/callback`;
-  window.location.href = `${API_BASE_URL}${API_PREFIX}/auth/oauth/${provider}?redirect_uri=${encodeURIComponent(callbackUrl)}`;
-}
-
-/**
- * POST /api/v1/auth/oauth/callback
- * Exchange the ?code= returned by the provider for a JWT token pair.
- * Called by the OAuthCallback page after the browser is redirected back.
- */
-export async function exchangeOAuthCode(
-  provider: OAuthProvider,
-  code: string,
-): Promise<TokenResponse> {
-  const callbackUrl = `${window.location.origin}/auth/callback`;
-  const { data } = await apiClient.post<TokenResponse>(
-    '/api/v1/auth/oauth/callback',
-    { provider, code, redirect_uri: callbackUrl },
-  );
-  return data;
+  window.location.href = `${API_BASE_URL}${API_PREFIX}/auth/oauth/${provider}?redirect_uri=${encodeURIComponent(window.location.origin)}`;
 }
 
 // ── API Keys ──────────────────────────────────────────────────────────────────

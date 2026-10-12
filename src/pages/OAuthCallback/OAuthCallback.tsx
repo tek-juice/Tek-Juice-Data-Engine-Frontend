@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { setTokens } from '../../services/auth.service';
-import { exchangeOAuthCode } from '../../api/auth';
-import type { OAuthProvider } from '../../api/auth';
+import { loadSession } from '../../services/auth.service';
 
+/**
+ * Landing page after social sign-in. The gateway has already set the httpOnly
+ * session cookies; this page only confirms the session with the server.
+ * Tokens are never accepted from the URL.
+ */
 export default function OAuthCallback() {
   const [searchParams] = useSearchParams();
   const navigate       = useNavigate();
@@ -12,11 +15,7 @@ export default function OAuthCallback() {
 
   useEffect(() => {
     async function handle() {
-      const accessToken  = searchParams.get('access_token');
-      const refreshToken = searchParams.get('refresh_token');
-      const expiresIn    = searchParams.get('expires_in');
-      const error        = searchParams.get('error');
-
+      const error = searchParams.get('error');
       if (error) {
         const desc = searchParams.get('error_description') ?? error;
         setDetail(desc);
@@ -25,36 +24,15 @@ export default function OAuthCallback() {
         return;
       }
 
-      if (accessToken) {
-        setTokens({
-          access_token:  accessToken,
-          refresh_token: refreshToken ?? '',
-          token_type:    'bearer',
-          expires_in:    Number(expiresIn ?? 3600),
-        });
+      const user = await loadSession();
+      if (user) {
         navigate('/', { replace: true });
         return;
       }
 
-      const code     = searchParams.get('code');
-      const provider = searchParams.get('provider') as OAuthProvider | null;
-
-      if (code && provider) {
-        try {
-          const tokens = await exchangeOAuthCode(provider, code);
-          setTokens(tokens);
-          navigate('/', { replace: true });
-        } catch {
-          setDetail('Authentication failed. Please try again.');
-          setStatus('error');
-          setTimeout(() => navigate('/login?error=oauth_failed', { replace: true }), 2500);
-        }
-        return;
-      }
-
-      setDetail('Invalid callback — missing token or code.');
+      setDetail('Sign-in could not be completed. Please try again.');
       setStatus('error');
-      setTimeout(() => navigate('/login?error=oauth_invalid', { replace: true }), 2500);
+      setTimeout(() => navigate('/login?error=oauth_failed', { replace: true }), 2500);
     }
 
     void handle();

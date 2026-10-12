@@ -19,6 +19,20 @@ export interface TokenResponse {
   expires_in: number;
 }
 
+/** Who the browser session belongs to. Carries no token. */
+export interface SessionUser {
+  sub: string;
+  tenant_id: string;
+  role: string;
+}
+
+/** Login/register/refresh response in cookie transport: no tokens in the body. */
+export interface SessionResponse {
+  token_type: 'cookie';
+  expires_in: number;
+  user: SessionUser;
+}
+
 export interface ApiKeyResponse {
   key_id: string;
   api_key: string;

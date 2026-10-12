@@ -10,8 +10,7 @@ import { IntelligenceRunProvider, useIntelligenceRun } from '../contexts/Intelli
 import * as websitesApi from '../api/websites';
 import * as intelligenceApi from '../api/intelligence';
 import * as dashboard from '../api/dashboard';
-import { TOKEN_KEY } from '../config';
-import { fakeJwt } from '../test/jwt';
+import { setSessionUser } from '../services/session';
 
 const site = (id: string, onboarding: string) => ({
   id, url: `https://${id}.example`, domain: `${id}.example`, status: 'active',
@@ -36,7 +35,7 @@ function renderWithProvider(ui: React.ReactNode, path = '/') {
 }
 
 beforeEach(() => {
-  localStorage.setItem(TOKEN_KEY, fakeJwt({ sub: 'user-1', tenant_id: 't1', role: 'admin' }));
+  setSessionUser({ sub: 'user-1', tenant_id: 't1', role: 'admin' });
   vi.spyOn(intelligenceApi, 'getIntelligenceRuns').mockResolvedValue([]);
 });
 
