@@ -5,6 +5,7 @@ export interface Website {
   url: string;
   domain: string;
   status: string;
+  onboarding_status: string;
   page_count: number | null;
   last_crawled_at: string | null;
   created_at: string;
@@ -15,6 +16,7 @@ export interface WebsiteStatus {
   url: string;
   domain: string;
   status: string;
+  onboarding_status: string;
   stage: string | null;
   run_status: string | null;
   progress: Record<string, unknown> | null;

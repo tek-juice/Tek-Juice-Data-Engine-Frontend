@@ -282,6 +282,34 @@ export interface ContentExecution {
   updated_at: string;
   opportunity_title: string | null;
   primary_query: string | null;
+  error?: string | null;
+  approval?: ApprovalDecision | null;
+  job_status?: string | null;
+  job_attempts?: number | null;
+  url_verification?: UrlVerification | null;
+}
+
+export interface ApprovalDecision {
+  decision: 'approved' | 'held' | 'rejected' | string;
+  reasons: string[];
+  policy?: { mode?: string; name?: string };
+  decided_at?: string;
+  review?: {
+    decision: string;
+    reviewer: string;
+    note: string | null;
+    reviewed_at: string;
+    policy_decision?: string;
+  };
+}
+
+export interface UrlVerification {
+  status: 'verified' | 'reachable' | 'failed' | string;
+  reason?: string;
+  http_status?: number;
+  url?: string;
+  attempt?: number;
+  checked_at?: string;
 }
 
 export interface ContentExecutionListResponse {

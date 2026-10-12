@@ -53,7 +53,7 @@ apiClient.interceptors.response.use(
       if (!refreshToken) {
         localStorage.removeItem(TOKEN_KEY);
         localStorage.removeItem(REFRESH_KEY);
-        window.dispatchEvent(new Event('auth:logout'));
+        window.dispatchEvent(new CustomEvent('auth:logout', { detail: { reason: 'session_expired' } }));
         return Promise.reject(error);
       }
 
@@ -90,7 +90,7 @@ apiClient.interceptors.response.use(
         processQueue(refreshError, null);
         localStorage.removeItem(TOKEN_KEY);
         localStorage.removeItem(REFRESH_KEY);
-        window.dispatchEvent(new Event('auth:logout'));
+        window.dispatchEvent(new CustomEvent('auth:logout', { detail: { reason: 'session_expired' } }));
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;

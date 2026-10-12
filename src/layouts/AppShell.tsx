@@ -8,6 +8,8 @@ import {
 import { logout, getCurrentUserId } from '../services/auth.service';
 import { useTheme } from '../contexts/ThemeContext';
 import { getHealth } from '../api/health';
+import PublicationStatusBanner from '../components/connection/PublicationStatusBanner';
+import WebsiteSwitcher from '../components/connection/WebsiteSwitcher';
 
 // ─── Navigation structure ─────────────────────────────────────────────────────
 
@@ -33,6 +35,7 @@ const NAV: NavGroup[] = [
     items: [
       { label: 'Content Strategies', to: '/content-strategies' },
       { label: 'Execution', to: '/execution' },
+      { label: 'Content Reviews', to: '/content-reviews' },
       { label: 'Published Content', to: '/published-content' },
     ],
   },
@@ -47,8 +50,8 @@ const NAV: NavGroup[] = [
   {
     heading: 'Integrations',
     items: [
-      { label: 'Website Connection', to: '/websites/connect' },
-      { label: 'M2M Integration', to: '/m2m-integration' },
+      { label: 'Connection & Publishing', to: '/connection' },
+      { label: 'Add Website', to: '/websites/connect' },
     ],
   },
 ];
@@ -227,6 +230,8 @@ export default function AppShell() {
           </div>
         </div>
 
+        <WebsiteSwitcher />
+
         {/* Navigation */}
         <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-5">
           {NAV.map(group => (
@@ -271,6 +276,7 @@ export default function AppShell() {
 
       {/* ── Main content ── */}
       <main className="flex-1 overflow-y-auto" style={{ background: 'var(--bg)' }}>
+        <PublicationStatusBanner />
         <Outlet />
       </main>
 

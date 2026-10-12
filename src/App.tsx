@@ -14,6 +14,10 @@ import Login         from './pages/Login/Login';
 import OAuthCallback from './pages/OAuthCallback/OAuthCallback';
 import ProtectedRoute from './routes/ProtectedRoute';
 import EntryGate from './routes/EntryGate';
+import SessionWatcher from './components/SessionWatcher';
+import ConnectionRedirect from './components/connection/ConnectionRedirect';
+import WebsiteSetup from './pages/WebsiteSetup/WebsiteSetup';
+import ContentReviews from './pages/ContentReviews/ContentReviews';
 import Connect       from './pages/Connect/Connect';
 
 // ── App pages ─────────────────────────────────────────────────────────────────
@@ -41,6 +45,7 @@ function App() {
   return (
     <ThemeProvider>
     <BrowserRouter>
+      <SessionWatcher />
       <Routes>
 
         {/* ── Public auth pages ── */}
@@ -55,6 +60,7 @@ function App() {
         <Route element={<ProtectedRoute />}>
           {/* Website connection is onboarding, not part of the application shell. */}
           <Route path="/websites/connect" element={page(<Connect />)} />
+          <Route path="/websites/:websiteId/setup" element={page(<WebsiteSetup />)} />
 
           {/* Canonical application shell. */}
           <Route
@@ -75,6 +81,8 @@ function App() {
       <Route path="/competitors" element={page(<Competitors />)} />
       <Route path="/content-strategies" element={page(<ContentStrategies />)} />
       <Route path="/execution" element={page(<Execution />)} />
+      <Route path="/content-reviews" element={page(<ContentReviews />)} />
+      <Route path="/connection" element={<ConnectionRedirect />} />
       <Route path="/published-content" element={page(<PublishedContent />)} />
       <Route path="/search-performance" element={page(<SearchPerformance />)} />
       <Route path="/serp-observations" element={page(<SerpObservations />)} />

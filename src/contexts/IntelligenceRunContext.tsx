@@ -16,6 +16,8 @@ import { getCurrentUserId } from '../services/auth.service';
 
 interface IntelligenceRunContextValue {
   website: Website | null;
+  websites: Website[];
+  selectWebsite: (websiteId: string) => void;
   runs: IntelligenceRun[];
   selectedRun: IntelligenceRun | null;
   selectedRunId: string | null;
@@ -28,6 +30,10 @@ interface IntelligenceRunContextValue {
 const IntelligenceRunContext =
   createContext<IntelligenceRunContextValue | undefined>(undefined);
 
+function websiteKey(): string {
+  return `data_engine_selected_website:${getCurrentUserId() ?? 'anonymous'}`;
+}
+
 function storageKey(websiteId: string): string {
   const userId = getCurrentUserId() ?? 'anonymous';
   return `data_engine_selected_intelligence_run:${userId}:${websiteId}`;
@@ -39,26 +45,32 @@ export function IntelligenceRunProvider({
   children: ReactNode;
 }) {
   const [website, setWebsite] = useState<Website | null>(null);
+  const [websites, setWebsites] = useState<Website[]>([]);
   const [runs, setRuns] = useState<IntelligenceRun[]>([]);
   const [selectedRunId, setSelectedRunId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  async function refreshRuns() {
+  async function refreshRuns(preferredWebsiteId?: string) {
     setLoading(true);
     setError(null);
 
     try {
-      const websites = await listWebsites();
+      const fetched = await listWebsites();
+      setWebsites(fetched);
 
-      if (!websites.length) {
+      if (!fetched.length) {
         setWebsite(null);
         setRuns([]);
         setSelectedRunId(null);
         return;
       }
 
-      const currentWebsite = websites[0];
+      // Selected website: explicit choice, else the remembered one, else first.
+      const wanted = preferredWebsiteId ?? storage.get<string>(websiteKey());
+      const currentWebsite =
+        fetched.find(item => item.id === wanted) ?? fetched[0];
+      storage.set(websiteKey(), currentWebsite.id);
       setWebsite(currentWebsite);
 
       const fetchedRuns = await getIntelligenceRuns(currentWebsite.id);
@@ -100,6 +112,11 @@ export function IntelligenceRunProvider({
     void refreshRuns();
   }, []);
 
+  function selectWebsite(websiteId: string) {
+    if (website?.id === websiteId) return;
+    void refreshRuns(websiteId);
+  }
+
   function selectRun(runId: string) {
     if (!runs.some(run => run.id === runId)) {
       return;
@@ -120,6 +137,8 @@ export function IntelligenceRunProvider({
   const value = useMemo<IntelligenceRunContextValue>(
     () => ({
       website,
+      websites,
+      selectWebsite,
       runs,
       selectedRun,
       selectedRunId,
@@ -130,6 +149,7 @@ export function IntelligenceRunProvider({
     }),
     [
       website,
+      websites,
       runs,
       selectedRun,
       selectedRunId,

@@ -44,7 +44,7 @@ export default function Connect() {
       setSuccess(result.message);
 
       window.setTimeout(() => {
-        navigate('/', { replace: true });
+        navigate(`/websites/${result.website_id}/setup`, { replace: true });
       }, 900);
     } catch (e: unknown) {
       const response = (
@@ -93,7 +93,7 @@ export default function Connect() {
               Connect your website
             </h1>
             <p className="text-sm mt-0.5" style={{ color: 'var(--text-3)' }}>
-              Give Data Engine your website URL and it will start intelligence analysis automatically.
+              Register your website, then connect your backend so the Data Engine can analyse and publish.
             </p>
           </div>
         </div>
@@ -127,7 +127,7 @@ export default function Connect() {
             />
 
             <p className="text-xs mt-1.5" style={{ color: 'var(--text-3)' }}>
-              Data Engine will register the website and begin the background intelligence pipeline.
+              Next you will create a connector key, verify ownership and connect your backend.
             </p>
           </div>
 

@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { useNavigate, Navigate } from 'react-router-dom';
+import { useLocation, useNavigate, Navigate } from 'react-router-dom';
 import { login, register, isAuthenticated } from '../../services/auth.service';
 import { redirectToOAuth } from '../../api/auth';
 import './Login.css';
@@ -8,6 +8,9 @@ type Mode = 'signin' | 'signup';
 
 export default function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const sessionExpired =
+    (location.state as { reason?: string } | null)?.reason === 'session_expired';
   const [mode, setMode]                       = useState<Mode>('signin');
   const [username, setUsername]               = useState('');
   const [email, setEmail]                     = useState('');
@@ -152,6 +155,9 @@ export default function Login() {
         {/* ── Form ── */}
         <form className="auth-form" onSubmit={handleSubmit} noValidate>
 
+          {sessionExpired && !error && (
+            <p className="auth-error" role="status">Your session expired. Please sign in again.</p>
+          )}
           {error && <p className="auth-error" role="alert">{error}</p>}
 
           <div className="auth-field">

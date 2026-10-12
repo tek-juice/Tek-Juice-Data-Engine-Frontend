@@ -680,6 +680,20 @@ export interface VisibilityConnection {
   last_crawled_at: string | null;
   page_count: number;
   meta: Record<string, unknown> | null;
+  onboarding_status?: string;
+  publication?: PublicationReadiness;
+}
+
+/** Secret-free S2S publication readiness for a website. */
+export interface PublicationReadiness {
+  transport: 's2s_connector';
+  status: 'not_configured' | 'pending_verification' | 'verified' | 'failed' | string;
+  ready: boolean;
+  endpoint_host: string | null;
+  capabilities: string[];
+  contract_versions: string[];
+  verified_at: string | null;
+  failure_reason: string | null;
 }
 
 export interface VisibilityGapItem {

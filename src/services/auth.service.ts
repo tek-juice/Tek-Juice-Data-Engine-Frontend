@@ -160,3 +160,18 @@ export function getCurrentUserId(): string | null {
 export function getTenantId(): string {
   return getCurrentUserId() ?? '';
 }
+
+/**
+ * Role claim of the stored JWT ('admin', 'editor', 'viewer', …).
+ * For UI affordances only — the backend enforces every permission.
+ */
+export function getCurrentRole(): string {
+  const token = getAccessToken();
+  if (!token) return 'viewer';
+  const role = parseJwt(token)?.role;
+  return typeof role === 'string' ? role : 'viewer';
+}
+
+export function isAdmin(): boolean {
+  return getCurrentRole() === 'admin';
+}

@@ -1,3 +1,4 @@
+import { approvalLabel, publicationLabel, verificationLabel } from '../../utils/publicationLabels';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AlertCircle, RefreshCw } from 'lucide-react';
 import { isAxiosError } from 'axios';
@@ -97,6 +98,7 @@ export default function Execution() {
       ).length,
       awaitingApproval: executions.filter(
         (item) => item.approval_status === 'pending' ||
+          item.approval_status === 'held' ||
           item.approval_status === 'awaiting_approval',
       ).length,
       awaitingPublication: executions.filter(
@@ -212,7 +214,9 @@ export default function Execution() {
             <option value="">All statuses</option>
             <option value="approved">Approved</option>
             <option value="pending">Pending</option>
-            <option value="awaiting_approval">Awaiting approval</option>
+            <option value="held">Held for review</option>
+            <option value="rejected">Rejected</option>
+            <option value="queued">Queued</option>
             <option value="published">Published</option>
             <option value="failed">Failed</option>
           </select>
@@ -259,9 +263,28 @@ export default function Execution() {
                     </td>
                     <td>{execution.action_type || '—'}</td>
                     <td>{execution.target_url || '—'}</td>
-                    <td>{execution.approval_status || '—'}</td>
-                    <td>{execution.publication_status || '—'}</td>
-                    <td>{execution.published_url || '—'}</td>
+                    <td title={approvalLabel(execution).detail ?? undefined}>
+                      {approvalLabel(execution).text}
+                      {approvalLabel(execution).detail && (
+                        <div className="muted">{approvalLabel(execution).detail}</div>
+                      )}
+                    </td>
+                    <td title={publicationLabel(execution).detail ?? undefined}>
+                      {publicationLabel(execution).text}
+                      {publicationLabel(execution).detail && (
+                        <div className="muted">{publicationLabel(execution).detail}</div>
+                      )}
+                    </td>
+                    <td>
+                      {execution.published_url ? (
+                        <a href={execution.published_url} target="_blank" rel="noreferrer">
+                          {execution.published_url}
+                        </a>
+                      ) : '—'}
+                      {verificationLabel(execution.url_verification) && (
+                        <div className="muted">{verificationLabel(execution.url_verification)}</div>
+                      )}
+                    </td>
                     <td>
                       {new Date(execution.created_at).toLocaleDateString()}
                     </td>
