@@ -267,6 +267,7 @@ export default function ContentStrategies() {
             <option value="">All statuses</option>
             <option value="draft">Draft</option>
             <option value="generated">Generated</option>
+            <option value="deduplicated">Skipped (duplicate)</option>
           </select>
         </div>
       </div>
