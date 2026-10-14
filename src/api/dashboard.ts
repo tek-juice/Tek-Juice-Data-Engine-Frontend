@@ -244,17 +244,30 @@ export interface AIPlatformSummary {
   failed: number;
   grounded: number;
   mentioned: number;
+  recommended?: number;
   cited: number;
+  retrieval_rate?: number | null;
+  mention_rate?: number | null;
+  recommendation_rate?: number | null;
   citation_rate: number | null;
+  avg_citation_position?: number | null;
+  share_of_voice?: number | null;
+  claims_accurate?: number;
+  claims_inaccurate?: number;
+  claims_unverifiable?: number;
 }
 
 export interface AIAnswerRecord {
   platform: string;
   model: string | null;
   query_text: string;
-  query_kind: 'recommendation' | 'published' | 'query';
+  query_kind: 'brand' | 'recommendation' | 'published' | 'query';
   grounded: boolean;
   mentioned: boolean | null;
+  recommended?: boolean | null;
+  competitors_mentioned?: string[];
+  accuracy?: { claims?: { claim: string; verdict: string }[]; error?: string } | null;
+  diagnosis?: string | null;
   cited: boolean | null;
   cited_url: string | null;
   cited_rank: number | null;
@@ -272,10 +285,35 @@ export interface AISourceGap {
   example_url: string | null;
 }
 
+export interface AIAction {
+  category: 'technical_access' | 'content' | 'external_corroboration';
+  automatic: boolean;
+  action: string;
+  detail: string;
+  questions: string[];
+}
+
 export interface AIAnswersReport {
   measured_at: string | null;
+  measurements?: number;
   configured_platforms: string[];
   platforms: Record<string, AIPlatformSummary>;
+  previous?: Record<string, AIPlatformSummary> | null;
+  baseline?: Record<string, AIPlatformSummary> | null;
+  diagnoses?: Record<string, number>;
+  diagnosis_categories?: Record<string, number>;
+  access?: {
+    result: {
+      blocked_platforms: string[];
+      unreadable_platforms: string[];
+      sitemap: boolean | null;
+      llms_txt: boolean | null;
+      platforms: Record<string, { access: string }>;
+    } | null;
+    measured_at: string | null;
+  };
+  indexed_pages?: number | null;
+  actions?: AIAction[];
   questions: AIAnswerRecord[];
   source_gaps: AISourceGap[];
   indexnow: {
@@ -295,5 +333,47 @@ export async function getAIAnswers(website_id: string): Promise<AIAnswersReport>
     '/api/v1/dashboard/visibility/ai-answers',
     { params: { website_id } },
   );
+  return data;
+}
+
+export interface EntityFactItem {
+  value: string;
+  source: 'customer' | 'crawl' | 'inferred';
+  verified: boolean;
+  evidence: { url?: string; quote?: string; confirmed_by?: string }[];
+}
+
+export interface EntityFact {
+  value?: string;
+  items?: EntityFactItem[];
+  source?: 'customer' | 'crawl' | 'inferred';
+  verified?: boolean;
+  evidence?: { url?: string; quote?: string; confirmed_by?: string }[];
+}
+
+export interface EntityProfile {
+  website_id: string;
+  facts: Record<string, EntityFact>;
+  status: 'draft' | 'confirmed';
+  confirmed_by: string | null;
+  confirmed_at: string | null;
+  customer_pages: number;
+  unverified: string[];
+  published_facts: Record<string, string | string[]>;
+}
+
+/** GET /api/v1/websites/{id}/entity — the business's verified source of truth. */
+export async function getEntity(websiteId: string): Promise<EntityProfile> {
+  const { data } = await apiClient.get<EntityProfile>(`/api/v1/websites/${websiteId}/entity`);
+  return data;
+}
+
+/** PUT /api/v1/websites/{id}/entity — enter, correct or confirm facts (admin). */
+export async function saveEntity(
+  websiteId: string,
+  facts: Record<string, string | string[] | null>,
+  confirm: boolean,
+): Promise<EntityProfile> {
+  const { data } = await apiClient.put<EntityProfile>(`/api/v1/websites/${websiteId}/entity`, { facts, confirm });
   return data;
 }

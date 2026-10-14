@@ -5,6 +5,7 @@ import { getVisibilityOverview } from '../../api/dashboard';
 import { listWebsites, type Website } from '../../api/websites';
 import type { VisibilityFeedback } from '../../types';
 import AIAnswers from './AIAnswers';
+import BusinessFacts from './BusinessFacts';
 
 function SummaryCard({
   label,
@@ -284,6 +285,7 @@ export default function Feedback() {
       )}
 
       {website && <AIAnswers websiteId={website.id} />}
+      {website && <BusinessFacts websiteId={website.id} />}
 
       {feedback.total_measurements === 0 && (
         <div className="card empty-state">

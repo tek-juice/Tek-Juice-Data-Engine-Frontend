@@ -12,10 +12,38 @@ export function platformName(platform: string): string {
   return PLATFORM_NAMES[platform] ?? platform;
 }
 
+export const DIAGNOSIS_LABELS: Record<string, string> = {
+  crawler_blocked: 'AI crawler blocked or served an empty page',
+  not_indexed: 'Site not in the search index',
+  answered_from_memory: 'Answered from memory (no web search)',
+  no_page_for_question: 'No page on the site answers this',
+  competitor_content: 'Competitor pages cited instead',
+  third_party_sources: 'Review / community sites cited instead',
+  measurement_failed: 'Not measured',
+};
+
+const CATEGORY_LABELS: Record<string, string> = {
+  technical_access: 'Technical access',
+  content: 'Content',
+  external_corroboration: 'External corroboration',
+};
+
+function pct(value: number | null | undefined): string {
+  return value === null || value === undefined ? '—' : `${Math.round(value * 100)}%`;
+}
+
+/** "+12 pts" against an earlier measurement, or "" when there is none. */
+export function delta(now: number | null | undefined, before: number | null | undefined): string {
+  if (now === null || now === undefined || before === null || before === undefined) return '';
+  const diff = Math.round((now - before) * 100);
+  return diff === 0 ? ' (no change)' : ` (${diff > 0 ? '+' : ''}${diff} pts)`;
+}
+
 /** One answer, in words: cited, mentioned, or what the AI used instead. */
 export function answerLabel(record: AIAnswerRecord): string {
   if (record.error) return `Not measured (${record.error})`;
   if (record.cited) return record.cited_rank ? `Cited (source #${record.cited_rank})` : 'Cited';
+  if (record.mentioned && record.recommended) return 'Recommended, not linked';
   if (record.mentioned) return 'Mentioned, not linked';
   if (!record.grounded) return 'Answered from memory (no web search)';
   const others = record.sources.slice(0, 3).map((s) => s.domain).join(', ');
@@ -57,12 +85,21 @@ export default function AIAnswers({ websiteId }: { websiteId: string }) {
           <div className="detail-grid">
             {platforms.map((p) => {
               const s = report.platforms[p];
+              const base = report.baseline?.[p];
               return (
                 <div key={p}>
                   <div className="muted">{platformName(p)}</div>
-                  <strong>{`Cited in ${s.cited} of ${s.answered} answers`}</strong>
+                  <strong>{`Cited ${pct(s.citation_rate)}${delta(s.citation_rate, base?.citation_rate)}`}</strong>
                   <div className="muted">
-                    {`Mentioned ${s.mentioned} · searched the web ${s.grounded}`}
+                    {`Searched the web ${pct(s.retrieval_rate)} · mentioned ${pct(s.mention_rate)}`}
+                    {` · recommended ${pct(s.recommendation_rate)}`}
+                    {s.avg_citation_position ? ` · avg. source position ${s.avg_citation_position}` : ''}
+                  </div>
+                  <div className="muted">
+                    {`Share of voice ${pct(s.share_of_voice)}`}
+                    {s.claims_accurate || s.claims_inaccurate
+                      ? ` · claims about the business: ${s.claims_accurate ?? 0} accurate, ${s.claims_inaccurate ?? 0} wrong`
+                      : ''}
                     {s.failed ? ` · ${s.failed} not measured` : ''}
                   </div>
                 </div>
@@ -80,6 +117,45 @@ export default function AIAnswers({ websiteId }: { websiteId: string }) {
           </div>
         )}
       </div>
+
+      {report.access?.result && (
+        <div className="card">
+          <h3>Can AI crawlers read the site?</h3>
+          <div className="detail-grid">
+            {Object.entries(report.access.result.platforms).map(([p, r]) => (
+              <div key={p}>
+                <div className="muted">{p === 'bing' ? 'Bing (ChatGPT search, Copilot)' : platformName(p)}</div>
+                <strong>
+                  {r.access === 'ok' ? 'Readable' : r.access === 'blocked' ? 'Blocked'
+                    : r.access === 'unreadable' ? 'Empty page served' : 'Unknown'}
+                </strong>
+              </div>
+            ))}
+            <div>
+              <div className="muted">Pages in the search index</div>
+              <strong>{report.indexed_pages ?? 'Not measured'}</strong>
+            </div>
+            <div>
+              <div className="muted">sitemap.xml · llms.txt</div>
+              <strong>{`${report.access.result.sitemap ? 'yes' : 'no'} · ${report.access.result.llms_txt ? 'yes' : 'no'}`}</strong>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {(report.actions?.length ?? 0) > 0 && (
+        <div className="card">
+          <h3>Why the site is not cited, and what happens next</h3>
+          {report.actions!.map((a) => (
+            <div key={a.action} style={{ marginBottom: 12 }}>
+              <div className="eyebrow">{`${CATEGORY_LABELS[a.category] ?? a.category}${a.automatic ? ' · automatic' : ' · needs the site owner'}`}</div>
+              <strong>{a.action}</strong>
+              <p className="muted">{a.detail}</p>
+              {a.questions.length > 0 && <div className="muted">{`Questions: ${a.questions.join('; ')}`}</div>}
+            </div>
+          ))}
+        </div>
+      )}
 
       {questions.length > 0 && (
         <div className="card">
@@ -101,6 +177,12 @@ export default function AIAnswers({ websiteId }: { websiteId: string }) {
                       return (
                         <td key={p}>
                           {record ? answerLabel(record) : '—'}
+                          {record?.diagnosis && record.diagnosis !== 'measurement_failed' && (
+                            <div className="muted">{DIAGNOSIS_LABELS[record.diagnosis] ?? record.diagnosis}</div>
+                          )}
+                          {(record?.competitors_mentioned?.length ?? 0) > 0 && (
+                            <div className="muted">{`Competitors named: ${record!.competitors_mentioned!.join(', ')}`}</div>
+                          )}
                           {record?.cited_url && (
                             <div><a href={record.cited_url} target="_blank" rel="noreferrer">{record.cited_url}</a></div>
                           )}
