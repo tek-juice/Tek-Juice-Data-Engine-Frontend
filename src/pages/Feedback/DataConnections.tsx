@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
 import { isAxiosError } from 'axios';
 import {
-  connectBing, disconnectConnection, getConnectionProperties, getConnections, setConnectionProperty, startGoogleConnection,
-  type DataConnection,
+  connectBing, connectGoogleServiceAccount, disconnectConnection, getConnectionProperties, getConnections,
+  setConnectionProperty, startGoogleConnection, type ConnectionsState, type DataConnection,
 } from '../../api/dashboard';
+import { apiErrorMessage } from '../../utils/apiError';
 
 const NAMES: Record<string, string> = {
   google_search_console: 'Google Search Console',
@@ -22,7 +23,8 @@ export function connectionLabel(c: DataConnection): string {
 }
 
 export default function DataConnections({ websiteId }: { websiteId: string }) {
-  const [state, setState] = useState<{ google_configured: boolean; connections: DataConnection[] } | null>(null);
+  const [state, setState] = useState<ConnectionsState | null>(null);
+  const [checking, setChecking] = useState(false);
   const [options, setOptions] = useState<Record<string, { property: string; name?: string }[]>>({});
   const [message, setMessage] = useState('');
   const [bing, setBing] = useState({ key: '', site: '' });
@@ -47,6 +49,20 @@ export default function DataConnections({ websiteId }: { websiteId: string }) {
     } catch (err) { fail(err); }
   };
 
+  const checkServiceAccount = async () => {
+    setChecking(true);
+    try {
+      const result = await connectGoogleServiceAccount(websiteId);
+      const missing = result.not_connected.map((m) => m.reason).join(' ');
+      setMessage(`Connected. The first sync (up to 16 months of history) has started.${missing ? ` ${missing}` : ''}`);
+      load();
+    } catch (err) {
+      setMessage(apiErrorMessage(err, 'The access check failed.'));
+    } finally {
+      setChecking(false);
+    }
+  };
+
   const loadOptions = async (provider: string) => {
     try { setOptions({ ...options, [provider]: await getConnectionProperties(websiteId, provider) }); } catch (err) { fail(err); }
   };
@@ -69,7 +85,22 @@ export default function DataConnections({ websiteId }: { websiteId: string }) {
         GA4 provides organic sessions and conversions. Access is granted on Google's own consent screen and can
         be removed at any time.
       </p>
-      {!state.google_configured && (
+      {state.google_service_account && (
+        <div className="card" style={{ background: 'transparent' }}>
+          <strong>Connect without signing in to Google</strong>
+          <ol className="muted" style={{ margin: '8px 0', paddingLeft: 20 }}>
+            <li>Search Console → Settings → Users and permissions → Add user:{' '}
+              <code style={{ userSelect: 'all' }}>{state.google_service_account}</code> (Restricted access is enough).</li>
+            <li>Optional, for conversions: Google Analytics → Admin → Property access management → add the same
+              email as Viewer.</li>
+            <li>Check access below. Only properties for this website's own domain can be connected.</li>
+          </ol>
+          <button className="button" disabled={checking} onClick={() => void checkServiceAccount()}>
+            {checking ? 'Checking access…' : 'Check access and connect'}
+          </button>
+        </div>
+      )}
+      {!state.google_configured && !state.google_service_account && (
         <p className="muted">Google connections are not configured on this Data Engine instance yet.</p>
       )}
       <div className="detail-grid">
@@ -84,8 +115,8 @@ export default function DataConnections({ websiteId }: { websiteId: string }) {
                 <input placeholder="Verified site URL (https://...)" value={bing.site}
                   onChange={(e) => setBing({ ...bing, site: e.target.value })} />
                 <button className="button secondary" onClick={() => void connectBing(websiteId, bing.key, bing.site)
-                  .then(() => { setBing({ key: '', site: '' }); load(); }).catch((err) => setMessage(
-                    isAxiosError(err) && err.response?.status === 422 ? String(err.response.data?.detail ?? 'Rejected') : 'The request failed.'))}>
+                  .then(() => { setBing({ key: '', site: '' }); load(); })
+                  .catch((err) => setMessage(apiErrorMessage(err, 'The request failed.')))}>
                   Connect Bing
                 </button>
               </div>

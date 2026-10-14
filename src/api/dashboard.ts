@@ -424,10 +424,65 @@ export interface DataConnection {
   property: string | null;
   last_sync_at: string | null;
   last_error: string | null;
+  auth?: 'oauth' | 'service_account' | 'api_key' | null;
 }
 
-export async function getConnections(websiteId: string): Promise<{ google_configured: boolean; connections: DataConnection[] }> {
+export interface ConnectionsState {
+  google_configured: boolean;
+  /** The Data Engine's service account email to add as a user of the property, if configured. */
+  google_service_account?: string | null;
+  connections: DataConnection[];
+}
+
+export async function getConnections(websiteId: string): Promise<ConnectionsState> {
   const { data } = await apiClient.get(`/api/v1/websites/${websiteId}/connections`);
+  return data;
+}
+
+/** Check the service account's access to this website's properties and connect (starts the first sync). */
+export async function connectGoogleServiceAccount(websiteId: string): Promise<{
+  connected: { provider: string; status: string; property: string | null }[];
+  not_connected: { provider: string; reason: string }[];
+}> {
+  const { data } = await apiClient.post(`/api/v1/websites/${websiteId}/connections/google/service-account`, {});
+  return data;
+}
+
+export interface SearchTotals {
+  from: string; to: string; days: number; clicks: number; impressions: number;
+  ctr: number | null; average_position: number | null; clicks_per_day: number | null; impressions_per_day: number | null;
+}
+
+export interface SearchResultsPage {
+  url: string; published_at: string | null; kind: string; target_query: string | null;
+  first_seen_in_google: string | null; impressions: number; clicks: number; average_position: number | null;
+  target_query_result: { impressions: number; clicks: number; average_position: number | null } | null;
+  top_queries: { query: string; impressions: number; clicks: number; average_position: number | null }[];
+}
+
+export type SearchResults =
+  | { status: 'unavailable'; reason: string }
+  | {
+      status: 'measured'; source: string; property: string; last_sync_at: string | null;
+      data_from: string; data_to: string; engine_started: string | null; engine_started_source: string;
+      weekly: { week: string; clicks: number; impressions: number; ctr: number | null; average_position: number | null }[];
+      comparison: {
+        verdict: 'measured' | 'too_early' | 'too_little_data'; note: string;
+        before: SearchTotals | null; after: SearchTotals;
+        change: { clicks_per_day: number | null; impressions_per_day: number | null; ctr: number | null;
+                  average_position_places: number | null } | null;
+      } | null;
+      published_pages: { count: number; appearing_in_google: number; with_clicks: number; impressions: number;
+                         clicks: number; pages: SearchResultsPage[] };
+      search_gaps_closed: { targets: number; appearing: number; top_10: number; clicked: number; definition: string };
+      new_queries_since_start: number | null;
+      caveats: string[];
+    };
+
+/** GET /api/v1/dashboard/visibility/search-results — Google Search results since the engine started. */
+export async function getSearchResults(website_id: string): Promise<SearchResults> {
+  const { data } = await apiClient.get<SearchResults>('/api/v1/dashboard/visibility/search-results',
+    { params: { website_id } });
   return data;
 }
 

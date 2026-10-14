@@ -10,6 +10,7 @@ import OptimizationOverview from './OptimizationOverview';
 import DataConnections from './DataConnections';
 import Actions from './Actions';
 import Experiments from './Experiments';
+import SearchResults from './SearchResults';
 
 function SummaryCard({
   label,
@@ -172,6 +173,8 @@ export default function Feedback() {
             website.
           </p>
         </div>
+        <SearchResults websiteId={website.id} />
+        <DataConnections websiteId={website.id} />
       </div>
     );
   }
@@ -195,6 +198,15 @@ export default function Feedback() {
           <RefreshCw size={16} />
           {refreshing ? 'Refreshing…' : 'Refresh'}
         </button>
+      </div>
+
+      <SearchResults websiteId={website.id} />
+
+      <div className="section-header">
+        <div>
+          <div className="eyebrow">Search result checks by the Data Engine</div>
+          <h2>Tracked queries (not Search Console)</h2>
+        </div>
       </div>
 
       <div className="grid grid-4">

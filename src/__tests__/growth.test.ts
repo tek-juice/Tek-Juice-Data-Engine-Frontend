@@ -35,3 +35,18 @@ describe('experiments', () => {
       label: 'insufficient data' } } as never)).toBe('No conclusion: insufficient data');
   });
 });
+
+describe('search results', () => {
+  it('states changes, position movement and refuses to judge too early', async () => {
+    const { changeText, positionText, verdictText } = await import('../pages/Feedback/SearchResults');
+    expect(changeText(0.25)).toBe('+25%');
+    expect(changeText(-0.1)).toBe('−10%');
+    expect(changeText(null)).toBeNull();
+    expect(positionText(3.2)).toBe('up 3.2 places');
+    expect(positionText(-1)).toBe('down 1 places');
+    expect(verdictText(null)).toBe('No Search Console data since the Data Engine started yet.');
+    expect(verdictText({ verdict: 'too_early', note: 'only 2 day(s) of data since the engine started; wait for 14',
+      before: null, after: {} as never, change: null })).toBe(
+      'Too early to judge: only 2 day(s) of data since the engine started; wait for 14.');
+  });
+});
