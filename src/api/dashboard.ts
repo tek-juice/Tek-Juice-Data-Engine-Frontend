@@ -200,6 +200,15 @@ export interface UrlVerification {
     in_sitemap: boolean | null;
     indexable: boolean;
   };
+  /** Whether AI answer engines can read the page and credit its canonical URL. */
+  ai_readability?: {
+    structured_data: boolean;
+    faq_schema: boolean;
+    speakable: boolean;
+    markdown: boolean | null;
+    llms_txt: boolean | null;
+    ai_readable: boolean;
+  };
 }
 
 export interface ContentExecutionListResponse {

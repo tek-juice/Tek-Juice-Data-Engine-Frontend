@@ -52,3 +52,16 @@ describe('indexabilityLabel', () => {
     expect(indexabilityLabel({ status: 'verified' })).toBeNull();
   });
 });
+
+describe('aiReadabilityLabel', () => {
+  it('says whether AI answer engines can read and cite a page', async () => {
+    const { aiReadabilityLabel } = await import('../utils/publicationLabels');
+    expect(aiReadabilityLabel({ status: 'verified', ai_readability: {
+      structured_data: true, faq_schema: true, speakable: true, markdown: true, llms_txt: true, ai_readable: true } }))
+      .toBe('Readable by AI answer engines (with FAQ)');
+    expect(aiReadabilityLabel({ status: 'reachable', ai_readability: {
+      structured_data: false, faq_schema: false, speakable: false, markdown: null, llms_txt: false, ai_readable: false } }))
+      .toBe('Not readable by AI answer engines: no article structured data, no Markdown copy, not in llms.txt');
+    expect(aiReadabilityLabel({ status: 'verified' })).toBeNull();
+  });
+});

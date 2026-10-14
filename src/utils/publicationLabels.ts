@@ -60,3 +60,17 @@ export function indexabilityLabel(verification: UrlVerification | null | undefin
   if (check.in_sitemap === null) missing.push('sitemap unavailable');
   return `Not readable by search engines: ${missing.join(', ')}`;
 }
+
+/** Whether AI answer engines can read a published page and cite its URL. */
+export function aiReadabilityLabel(verification: UrlVerification | null | undefined): string | null {
+  const check = verification?.ai_readability;
+  if (!check) return null;
+  if (check.ai_readable) {
+    return check.faq_schema ? 'Readable by AI answer engines (with FAQ)' : 'Readable by AI answer engines';
+  }
+  const missing: string[] = [];
+  if (!check.structured_data) missing.push('no article structured data');
+  if (check.markdown !== true) missing.push('no Markdown copy');
+  if (check.llms_txt !== true) missing.push('not in llms.txt');
+  return `Not readable by AI answer engines: ${missing.join(', ')}`;
+}

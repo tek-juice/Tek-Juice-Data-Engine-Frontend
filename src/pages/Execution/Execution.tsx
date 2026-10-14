@@ -1,4 +1,4 @@
-import { approvalLabel, indexabilityLabel, publicationLabel, verificationLabel } from '../../utils/publicationLabels';
+import { aiReadabilityLabel, approvalLabel, indexabilityLabel, publicationLabel, verificationLabel } from '../../utils/publicationLabels';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AlertCircle, RefreshCw } from 'lucide-react';
 import { isAxiosError } from 'axios';
@@ -283,6 +283,9 @@ export default function Execution() {
                       ) : '—'}
                       {indexabilityLabel(execution.url_verification) && (
                         <div className="muted">{indexabilityLabel(execution.url_verification)}</div>
+                      )}
+                      {aiReadabilityLabel(execution.url_verification) && (
+                        <div className="muted">{aiReadabilityLabel(execution.url_verification)}</div>
                       )}
                       {verificationLabel(execution.url_verification) && (
                         <div className="muted">{verificationLabel(execution.url_verification)}</div>
