@@ -7,6 +7,8 @@ import type { VisibilityFeedback } from '../../types';
 import AIAnswers from './AIAnswers';
 import BusinessFacts from './BusinessFacts';
 import OptimizationOverview from './OptimizationOverview';
+import DataConnections from './DataConnections';
+import Actions from './Actions';
 
 function SummaryCard({
   label,
@@ -286,6 +288,8 @@ export default function Feedback() {
       )}
 
       {website && <OptimizationOverview websiteId={website.id} />}
+      {website && <Actions websiteId={website.id} />}
+      {website && <DataConnections websiteId={website.id} />}
       {website && <AIAnswers websiteId={website.id} />}
       {website && <BusinessFacts websiteId={website.id} />}
 

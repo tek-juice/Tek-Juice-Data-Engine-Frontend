@@ -7,7 +7,9 @@ const METRICS: { key: string; label: string }[] = [
   { key: 'structured_data_validity', label: 'Valid structured data' },
   { key: 'search_index', label: 'Pages in the search index' },
   { key: 'search_rankings', label: 'Queries where the site appears' },
-  { key: 'search_impressions_clicks', label: 'Search impressions and clicks' },
+  { key: 'search_impressions_clicks', label: 'Search Console (28 days)' },
+  { key: 'organic_conversions', label: 'Organic sessions and conversions (28 days)' },
+  { key: 'indexing_status', label: 'Google index status of published pages' },
   { key: 'product_information', label: 'Product information verified' },
   { key: 'search_intent_coverage', label: 'Top queries with a page' },
   { key: 'content_freshness', label: 'Content updated in 180 days' },
@@ -42,6 +44,18 @@ export function metricText(metric: OptimizationMetric | undefined, kind: 'rate' 
   if (metric.status === 'unavailable') return `Unavailable: ${String(metric.evidence?.reason ?? 'no data')}`;
   const v = metric.value;
   if (typeof v === 'number') return kind === 'count' ? String(v) : `${Math.round(v * 100)}%`;
+  if (v && typeof v === 'object' && 'impressions' in v && 'clicks' in v) {
+    const r = v as { clicks: number; impressions: number; average_position: number | null };
+    return `${r.clicks} clicks · ${r.impressions} impressions${r.average_position ? ` · avg. position ${r.average_position}` : ''}`;
+  }
+  if (v && typeof v === 'object' && 'sessions' in v) {
+    const r = v as { sessions: number; conversions: number };
+    return `${r.sessions} sessions · ${r.conversions} conversions`;
+  }
+  if (v && typeof v === 'object' && 'indexed' in v && 'not_inspected' in v) {
+    const r = v as { indexed: number; not_indexed: number; not_inspected: number; overdue: number };
+    return `${r.indexed} indexed · ${r.not_indexed} not indexed${r.overdue ? ` (${r.overdue} overdue)` : ''} · ${r.not_inspected} not inspected`;
+  }
   if (v && typeof v === 'object' && 'ranked' in v) {
     const r = v as { ranked: number; tracked: number; average_position: number | null };
     return `${r.ranked} of ${r.tracked}${r.average_position ? ` (avg. position ${r.average_position})` : ''}`;

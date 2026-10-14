@@ -417,3 +417,63 @@ export async function getOptimization(website_id: string): Promise<OptimizationO
     { params: { website_id } });
   return data;
 }
+
+export interface DataConnection {
+  provider: 'google_search_console' | 'google_analytics';
+  status: 'not_connected' | 'pending' | 'connected' | 'needs_property' | 'error' | 'revoked';
+  property: string | null;
+  last_sync_at: string | null;
+  last_error: string | null;
+}
+
+export async function getConnections(websiteId: string): Promise<{ google_configured: boolean; connections: DataConnection[] }> {
+  const { data } = await apiClient.get(`/api/v1/websites/${websiteId}/connections`);
+  return data;
+}
+
+export async function startGoogleConnection(websiteId: string, returnUrl: string): Promise<string> {
+  const { data } = await apiClient.post<{ authorization_url: string }>(
+    `/api/v1/websites/${websiteId}/connections/google/start`, { return_url: returnUrl });
+  return data.authorization_url;
+}
+
+export async function getConnectionProperties(websiteId: string, provider: string): Promise<{ property: string; name?: string }[]> {
+  const { data } = await apiClient.get(`/api/v1/websites/${websiteId}/connections/${provider}/properties`);
+  return data.properties;
+}
+
+export async function setConnectionProperty(websiteId: string, provider: string, property: string): Promise<void> {
+  await apiClient.put(`/api/v1/websites/${websiteId}/connections/${provider}`, { property });
+}
+
+export async function disconnectConnection(websiteId: string, provider: string): Promise<void> {
+  await apiClient.delete(`/api/v1/websites/${websiteId}/connections/${provider}`);
+}
+
+export interface OptimizationAction {
+  id: string;
+  kind: string;
+  tier: 1 | 2 | 3;
+  status: string;
+  title: string;
+  rationale: string;
+  urls: string[];
+  query_text: string | null;
+  expected_outcome: string | null;
+  validation: { method?: string };
+  priority_score: number;
+  priority_factors: Record<string, number | string>;
+  outcome: { label?: string; direction?: string; changes?: Record<string, unknown>; note?: string } | null;
+  executed_by: 'engine' | 'site_owner';
+  updated_at: string | null;
+}
+
+export async function getActions(websiteId: string): Promise<{ policy: Record<string, string>; priority_formula: string;
+  actions: OptimizationAction[]; counts: Record<string, number> }> {
+  const { data } = await apiClient.get(`/api/v1/websites/${websiteId}/actions`);
+  return data;
+}
+
+export async function decideAction(websiteId: string, actionId: string, decision: 'approve' | 'reject', note?: string): Promise<void> {
+  await apiClient.post(`/api/v1/websites/${websiteId}/actions/${actionId}/${decision}`, { note });
+}
