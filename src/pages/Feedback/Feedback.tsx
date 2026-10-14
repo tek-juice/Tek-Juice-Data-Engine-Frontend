@@ -197,8 +197,8 @@ export default function Feedback() {
           value={feedback.total_measurements}
         />
         <SummaryCard
-          label="Ranked measurements"
-          value={feedback.ranked_measurements}
+          label="Queries ranking"
+          value={`${feedback.ranked_measurements} of ${feedback.queries_tracked ?? feedback.total_measurements}`}
         />
         <SummaryCard
           label="Average position"
@@ -221,19 +221,11 @@ export default function Feedback() {
         </div>
       </div>
 
-      <div className="grid grid-3">
-        <SummaryCard
-          label="Improved"
-          value={feedback.improved}
-        />
-        <SummaryCard
-          label="Declined"
-          value={feedback.declined}
-        />
-        <SummaryCard
-          label="Unchanged"
-          value={feedback.unchanged}
-        />
+      <div className="grid grid-4">
+        <SummaryCard label="Improved" value={feedback.improved} />
+        <SummaryCard label="Newly ranked" value={feedback.newly_ranked ?? 0} />
+        <SummaryCard label="Declined or dropped" value={feedback.declined + (feedback.dropped ?? 0)} />
+        <SummaryCard label="Unchanged" value={feedback.unchanged} />
       </div>
 
       <div className="card">
@@ -257,19 +249,38 @@ export default function Feedback() {
           </div>
 
           <div>
-            <div className="muted">Ranked coverage</div>
+            <div className="muted">Published articles ranking</div>
             <strong>
-              {feedback.total_measurements > 0
-                ? `${(
-                    (feedback.ranked_measurements /
-                      feedback.total_measurements) *
-                    100
-                  ).toFixed(1)}%`
-                : '—'}
+              {`${feedback.published_ranked ?? 0} of ${feedback.published_tracked ?? 0}`}
             </strong>
+          </div>
+
+          <div>
+            <div className="muted">Pages in the search index</div>
+            <strong>
+              {feedback.indexed_pages === null || feedback.indexed_pages === undefined
+                ? 'Not measured yet'
+                : feedback.indexed_pages}
+            </strong>
+          </div>
+
+          <div>
+            <div className="muted">Failed measurements (last batch)</div>
+            <strong>{feedback.measurement_failures ?? 0}</strong>
           </div>
         </div>
       </div>
+
+      {feedback.indexed_pages === 0 && (
+        <div className="card">
+          <h3>The site is not in the search index yet</h3>
+          <p className="muted">
+            Search engines currently return no pages from this website, so no query can rank.
+            Pages become eligible once they are indexed: published articles are served as
+            pre-rendered pages and listed in the sitemap for crawlers.
+          </p>
+        </div>
+      )}
 
       {feedback.total_measurements === 0 && (
         <div className="card empty-state">

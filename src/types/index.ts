@@ -154,6 +154,14 @@ export interface VisibilityFeedback {
   declined: number;
   unchanged: number;
   last_measured_at: string | null;
+  newly_ranked?: number;
+  dropped?: number;
+  queries_tracked?: number;
+  measurement_failures?: number;
+  published_tracked?: number;
+  published_ranked?: number;
+  /** Pages of the site the search index returns; null when unknown. */
+  indexed_pages?: number | null;
 }
 
 export interface VisibilityRecentExecution {
