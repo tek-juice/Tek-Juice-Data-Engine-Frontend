@@ -35,3 +35,13 @@ describe('stages and facts', () => {
       { value: 'b', source: 'inferred', verified: false, evidence: [] }] })).toBe('a\nb');
   });
 });
+
+describe('diagnosisNote', () => {
+  it('does not repeat the answer label', async () => {
+    const { diagnosisNote } = await import('../pages/Feedback/AIAnswers');
+    expect(diagnosisNote({ ...base, grounded: false, diagnosis: 'answered_from_memory' })).toBeNull();
+    expect(diagnosisNote({ ...base, mentioned: true, diagnosis: 'ambiguous_name' }))
+      .toBe('Answer was about something else with the same name');
+    expect(diagnosisNote({ ...base, error: 'x', diagnosis: 'measurement_failed' })).toBeNull();
+  });
+});

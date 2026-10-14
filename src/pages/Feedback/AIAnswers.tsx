@@ -19,6 +19,8 @@ export const DIAGNOSIS_LABELS: Record<string, string> = {
   no_page_for_question: 'No page on the site answers this',
   competitor_content: 'Competitor pages cited instead',
   third_party_sources: 'Review / community sites cited instead',
+  ambiguous_name: 'Answer was about something else with the same name',
+  brand_unknown: 'The AI does not know the business yet',
   measurement_failed: 'Not measured',
 };
 
@@ -26,7 +28,15 @@ const CATEGORY_LABELS: Record<string, string> = {
   technical_access: 'Technical access',
   content: 'Content',
   external_corroboration: 'External corroboration',
+  entity_clarity: 'Business identity',
 };
+
+/** The cause line under an answer, unless the answer label already says it. */
+export function diagnosisNote(record: AIAnswerRecord): string | null {
+  if (!record.diagnosis || record.diagnosis === 'measurement_failed') return null;
+  const note = DIAGNOSIS_LABELS[record.diagnosis] ?? record.diagnosis;
+  return note === answerLabel(record) ? null : note;
+}
 
 function pct(value: number | null | undefined): string {
   return value === null || value === undefined ? '—' : `${Math.round(value * 100)}%`;
@@ -177,8 +187,8 @@ export default function AIAnswers({ websiteId }: { websiteId: string }) {
                       return (
                         <td key={p}>
                           {record ? answerLabel(record) : '—'}
-                          {record?.diagnosis && record.diagnosis !== 'measurement_failed' && (
-                            <div className="muted">{DIAGNOSIS_LABELS[record.diagnosis] ?? record.diagnosis}</div>
+                          {record && diagnosisNote(record) && (
+                            <div className="muted">{diagnosisNote(record)}</div>
                           )}
                           {(record?.competitors_mentioned?.length ?? 0) > 0 && (
                             <div className="muted">{`Competitors named: ${record!.competitors_mentioned!.join(', ')}`}</div>

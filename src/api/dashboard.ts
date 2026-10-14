@@ -286,7 +286,7 @@ export interface AISourceGap {
 }
 
 export interface AIAction {
-  category: 'technical_access' | 'content' | 'external_corroboration';
+  category: 'technical_access' | 'content' | 'external_corroboration' | 'entity_clarity';
   automatic: boolean;
   action: string;
   detail: string;
