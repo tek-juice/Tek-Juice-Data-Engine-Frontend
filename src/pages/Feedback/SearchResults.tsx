@@ -83,7 +83,7 @@ export default function SearchResults({ websiteId }: { websiteId: string }) {
           <Tile label="Impressions" value={after.impressions}
             sub={cmp?.change ? `${changeText(cmp.change.impressions_per_day) ?? 'n/a'} per day vs before` : null} />
           <Tile label="CTR" value={pct(after.ctr)}
-            sub={cmp?.before ? `before ${pct(cmp.before.ctr)}` : null} />
+            sub={cmp?.change && cmp.before ? `before ${pct(cmp.before.ctr)}` : null} />
           <Tile label="Average position" value={pos(after.average_position)}
             sub={cmp?.change ? positionText(cmp.change.average_position_places) : null} />
         </div>
