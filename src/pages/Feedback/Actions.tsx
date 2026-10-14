@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { isAxiosError } from 'axios';
-import { decideAction, getActions, type OptimizationAction } from '../../api/dashboard';
+import { decideAction, getActions, rollbackAction, type OptimizationAction } from '../../api/dashboard';
 
 const TIER_LABELS: Record<number, string> = {
   1: 'Tier 1 · safe automation',
@@ -20,6 +20,7 @@ const STATUS_LABELS: Record<string, string> = {
   retained: 'Kept (outcome measured)',
   revise: 'Needs revision',
   rejected: 'Rejected',
+  rolled_back: 'Rolled back',
   failed: 'Failed',
   resolved: 'Resolved',
   superseded: 'Superseded',
@@ -108,6 +109,10 @@ export default function Actions({ websiteId }: { websiteId: string }) {
             {done.map((a) => (
               <li key={a.id}>
                 <strong>{a.title}</strong> · {STATUS_LABELS[a.status] ?? a.status}
+                {a.kind === 'site_change' && ['retained', 'revise'].includes(a.status) && (
+                  <>{' '}<button className="button secondary" onClick={() => void rollbackAction(websiteId, a.id)
+                    .then(load).catch(() => setMessage('Rollback failed (admins only).'))}>Roll back</button></>
+                )}
                 {outcomeText(a) && <div className="muted" style={{ fontSize: 12 }}>{outcomeText(a)}</div>}
               </li>
             ))}

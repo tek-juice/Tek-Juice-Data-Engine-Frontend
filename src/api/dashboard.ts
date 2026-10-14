@@ -419,7 +419,7 @@ export async function getOptimization(website_id: string): Promise<OptimizationO
 }
 
 export interface DataConnection {
-  provider: 'google_search_console' | 'google_analytics';
+  provider: 'google_search_console' | 'google_analytics' | 'bing_webmaster';
   status: 'not_connected' | 'pending' | 'connected' | 'needs_property' | 'error' | 'revoked';
   property: string | null;
   last_sync_at: string | null;
@@ -476,4 +476,40 @@ export async function getActions(websiteId: string): Promise<{ policy: Record<st
 
 export async function decideAction(websiteId: string, actionId: string, decision: 'approve' | 'reject', note?: string): Promise<void> {
   await apiClient.post(`/api/v1/websites/${websiteId}/actions/${actionId}/${decision}`, { note });
+}
+
+export async function connectBing(websiteId: string, apiKey: string, siteUrl: string): Promise<void> {
+  await apiClient.post(`/api/v1/websites/${websiteId}/connections/bing`, { api_key: apiKey, site_url: siteUrl });
+}
+
+export async function rollbackAction(websiteId: string, actionId: string): Promise<void> {
+  await apiClient.post(`/api/v1/websites/${websiteId}/actions/${actionId}/rollback`);
+}
+
+export interface Experiment {
+  id: string;
+  kind: string;
+  status: string;
+  hypothesis: string;
+  metric: string;
+  assignment: { treatment?: string[]; control?: string[] };
+  result: { decision?: string; effect?: number | null; label?: string; sufficient_data?: boolean; note?: string } | null;
+  guardrails: { unchanged?: string[] };
+  history: { at: string; status: string; note: string }[];
+  started_at: string | null;
+  ends_at: string | null;
+}
+
+export async function getExperiments(websiteId: string): Promise<Experiment[]> {
+  const { data } = await apiClient.get<{ experiments: Experiment[] }>(`/api/v1/websites/${websiteId}/experiments`);
+  return data.experiments;
+}
+
+export async function startExperiment(websiteId: string): Promise<{ status: string; reason?: string }> {
+  const { data } = await apiClient.post(`/api/v1/websites/${websiteId}/experiments`);
+  return data;
+}
+
+export async function cancelExperiment(websiteId: string, experimentId: string): Promise<void> {
+  await apiClient.post(`/api/v1/websites/${websiteId}/experiments/${experimentId}/cancel`);
 }

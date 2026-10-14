@@ -10,6 +10,8 @@ const METRICS: { key: string; label: string }[] = [
   { key: 'search_impressions_clicks', label: 'Search Console (28 days)' },
   { key: 'organic_conversions', label: 'Organic sessions and conversions (28 days)' },
   { key: 'indexing_status', label: 'Google index status of published pages' },
+  { key: 'bing_search', label: 'Bing (28 days)' },
+  { key: 'page_experience', label: 'Page experience (Core Web Vitals)' },
   { key: 'product_information', label: 'Product information verified' },
   { key: 'search_intent_coverage', label: 'Top queries with a page' },
   { key: 'content_freshness', label: 'Content updated in 180 days' },

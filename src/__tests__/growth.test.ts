@@ -20,3 +20,18 @@ describe('growth dashboard', () => {
       .toBe('1 indexed · 2 not indexed (2 overdue) · 3 not inspected');
   });
 });
+
+describe('experiments', () => {
+  it('reports controlled results and refuses to conclude without data', async () => {
+    const { experimentResult } = await import('../pages/Feedback/Experiments');
+    const base = { id: '1', kind: 'title_meta', status: 'concluded', hypothesis: '', metric: 'ctr', assignment: {},
+      guardrails: {}, history: [{ at: '', status: 'blocked', note: 'Search Console is not connected' }],
+      started_at: null, ends_at: null } as never;
+    expect(experimentResult({ ...(base as object), result: null } as never)).toBe('Search Console is not connected');
+    expect(experimentResult({ ...(base as object), result: { effect: 0.006, sufficient_data: true, decision: 'keep',
+      label: 'controlled (page-level random assignment)' } } as never))
+      .toBe('CTR +0.6 pts vs control, keep (controlled (page-level random assignment))');
+    expect(experimentResult({ ...(base as object), result: { effect: 0.01, sufficient_data: false,
+      label: 'insufficient data' } } as never)).toBe('No conclusion: insufficient data');
+  });
+});

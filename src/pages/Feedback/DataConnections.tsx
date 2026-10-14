@@ -1,13 +1,14 @@
 import { useCallback, useEffect, useState } from 'react';
 import { isAxiosError } from 'axios';
 import {
-  disconnectConnection, getConnectionProperties, getConnections, setConnectionProperty, startGoogleConnection,
+  connectBing, disconnectConnection, getConnectionProperties, getConnections, setConnectionProperty, startGoogleConnection,
   type DataConnection,
 } from '../../api/dashboard';
 
 const NAMES: Record<string, string> = {
   google_search_console: 'Google Search Console',
   google_analytics: 'Google Analytics 4',
+  bing_webmaster: 'Bing Webmaster Tools',
 };
 
 export function connectionLabel(c: DataConnection): string {
@@ -24,6 +25,7 @@ export default function DataConnections({ websiteId }: { websiteId: string }) {
   const [state, setState] = useState<{ google_configured: boolean; connections: DataConnection[] } | null>(null);
   const [options, setOptions] = useState<Record<string, { property: string; name?: string }[]>>({});
   const [message, setMessage] = useState('');
+  const [bing, setBing] = useState({ key: '', site: '' });
 
   const load = useCallback(() => {
     getConnections(websiteId).then(setState).catch(() => setMessage('Unable to load data connections.'));
@@ -75,6 +77,19 @@ export default function DataConnections({ websiteId }: { websiteId: string }) {
           <div key={c.provider}>
             <div className="muted">{NAMES[c.provider] ?? c.provider}</div>
             <strong>{connectionLabel(c)}</strong>
+            {c.provider === 'bing_webmaster' && c.status !== 'connected' && (
+              <div style={{ display: 'grid', gap: 4 }}>
+                <input placeholder="Bing API key" type="password" value={bing.key}
+                  onChange={(e) => setBing({ ...bing, key: e.target.value })} />
+                <input placeholder="Verified site URL (https://...)" value={bing.site}
+                  onChange={(e) => setBing({ ...bing, site: e.target.value })} />
+                <button className="button secondary" onClick={() => void connectBing(websiteId, bing.key, bing.site)
+                  .then(() => { setBing({ key: '', site: '' }); load(); }).catch((err) => setMessage(
+                    isAxiosError(err) && err.response?.status === 422 ? String(err.response.data?.detail ?? 'Rejected') : 'The request failed.'))}>
+                  Connect Bing
+                </button>
+              </div>
+            )}
             {c.status === 'needs_property' && (
               options[c.provider] ? (
                 <select defaultValue="" onChange={(e) => {

@@ -9,6 +9,7 @@ import BusinessFacts from './BusinessFacts';
 import OptimizationOverview from './OptimizationOverview';
 import DataConnections from './DataConnections';
 import Actions from './Actions';
+import Experiments from './Experiments';
 
 function SummaryCard({
   label,
@@ -289,6 +290,7 @@ export default function Feedback() {
 
       {website && <OptimizationOverview websiteId={website.id} />}
       {website && <Actions websiteId={website.id} />}
+      {website && <Experiments websiteId={website.id} />}
       {website && <DataConnections websiteId={website.id} />}
       {website && <AIAnswers websiteId={website.id} />}
       {website && <BusinessFacts websiteId={website.id} />}
