@@ -377,3 +377,43 @@ export async function saveEntity(
   const { data } = await apiClient.put<EntityProfile>(`/api/v1/websites/${websiteId}/entity`, { facts, confirm });
   return data;
 }
+
+export interface OptimizationMetric {
+  status: 'measured' | 'unavailable';
+  value: number | Record<string, unknown> | null;
+  formula: string;
+  evidence: Record<string, unknown>;
+  source: string | null;
+}
+
+export interface AuditFinding {
+  type: string;
+  severity: 'high' | 'medium' | 'low';
+  fixable_by: 'automatic' | 'site_owner';
+  urls: string[];
+  count: number;
+  evidence: string;
+}
+
+export interface OptimizationOverview {
+  metrics: Record<string, OptimizationMetric>;
+  site_audit: {
+    pages_checked: number;
+    published_pages: number;
+    verified_pages: number;
+    crawled_at: string | null;
+    findings: AuditFinding[];
+    counts: Record<string, number>;
+  };
+  competitors: { domain: string; category: string; appearance_count: number; best_position: number | null }[];
+  work: { awaiting_review: number; publishing: number; published: number; opportunities: number;
+          verification: Record<string, number> };
+  note: string;
+}
+
+/** GET /api/v1/dashboard/visibility/optimization — scores with formulas and evidence. */
+export async function getOptimization(website_id: string): Promise<OptimizationOverview> {
+  const { data } = await apiClient.get<OptimizationOverview>('/api/v1/dashboard/visibility/optimization',
+    { params: { website_id } });
+  return data;
+}

@@ -6,6 +6,7 @@ import { listWebsites, type Website } from '../../api/websites';
 import type { VisibilityFeedback } from '../../types';
 import AIAnswers from './AIAnswers';
 import BusinessFacts from './BusinessFacts';
+import OptimizationOverview from './OptimizationOverview';
 
 function SummaryCard({
   label,
@@ -284,6 +285,7 @@ export default function Feedback() {
         </div>
       )}
 
+      {website && <OptimizationOverview websiteId={website.id} />}
       {website && <AIAnswers websiteId={website.id} />}
       {website && <BusinessFacts websiteId={website.id} />}
 
