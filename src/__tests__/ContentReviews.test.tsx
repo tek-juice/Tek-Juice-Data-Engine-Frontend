@@ -105,6 +105,13 @@ describe('ContentReviews', () => {
 });
 
 describe('ArticlePreview', () => {
+  it('shows subheadings as headings, not body text', () => {
+    render(<ArticlePreview title="Title" content={'Intro paragraph.\n\n## First section\n\nBody.\n\n### Detail\n\n* one\n* two'} />);
+    expect(screen.getByRole('heading', { level: 2, name: 'First section' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 3, name: 'Detail' })).toBeInTheDocument();
+    expect(screen.getAllByRole('listitem')).toHaveLength(2);
+  });
+
   it('never turns a javascript: address into a link', () => {
     render(<ArticlePreview content={'Click [here](javascript:alert(1)) now.'} />);
     expect(screen.queryByRole('link')).not.toBeInTheDocument();

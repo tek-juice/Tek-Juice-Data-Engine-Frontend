@@ -37,8 +37,8 @@ export function renderInline(text: string, keyPrefix = ''): ReactNode[] {
 export default function ArticlePreview({ title, content }: { title?: string | null; content: string }) {
   const blocks = content.replace(/\r\n/g, '\n').split(/\n\s*\n/);
   return (
-    <article className="space-y-3 text-sm leading-relaxed" style={{ color: 'var(--text)' }}>
-      {title && <h1 className="text-xl font-bold">{title}</h1>}
+    <article className="space-y-3 text-[15px] leading-relaxed" style={{ color: 'var(--text)' }}>
+      {title && <h1 className="text-2xl font-bold leading-tight pb-1">{title}</h1>}
       {blocks.map((block, index) => {
         const trimmed = block.trim();
         if (!trimmed) return null;
@@ -47,9 +47,17 @@ export default function ArticlePreview({ title, content }: { title?: string | nu
         if (heading && !trimmed.includes('\n')) {
           const level = heading[1].length;
           const text = renderInline(heading[2], key);
-          if (level === 1) return <h2 key={key} className="text-lg font-bold pt-2">{text}</h2>;
-          if (level === 2) return <h2 key={key} className="text-base font-bold pt-2">{text}</h2>;
-          return <h3 key={key} className="text-sm font-bold pt-1">{text}</h3>;
+          // Subheadings as they read on the website: clearly larger than body text.
+          if (level === 1) return <h2 key={key} className="text-xl font-bold leading-snug pt-5">{text}</h2>;
+          if (level === 2) {
+            return (
+              <h2 key={key} className="text-lg font-bold leading-snug pt-5 pb-1"
+                style={{ borderBottom: '1px solid var(--border, rgba(127,127,127,0.25))' }}>
+                {text}
+              </h2>
+            );
+          }
+          return <h3 key={key} className="text-base font-semibold leading-snug pt-3">{text}</h3>;
         }
         const lines = trimmed.split('\n');
         if (lines.every(line => /^\s*([*+-]|\d+\.)\s+/.test(line))) {
