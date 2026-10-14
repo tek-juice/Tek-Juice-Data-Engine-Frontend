@@ -39,3 +39,16 @@ describe('publication labels', () => {
     expect(verificationLabel(null)).toBeNull();
   });
 });
+
+
+describe('indexabilityLabel', () => {
+  it('says why a page is not readable by search engines', async () => {
+    const { indexabilityLabel } = await import('../utils/publicationLabels');
+    expect(indexabilityLabel({ status: 'verified', indexability: {
+      prerendered: true, canonical: true, in_sitemap: true, indexable: true } })).toBe('Readable by search engines');
+    expect(indexabilityLabel({ status: 'reachable', indexability: {
+      prerendered: false, canonical: false, in_sitemap: false, indexable: false } }))
+      .toBe('Not readable by search engines: article not in the page HTML, no canonical link, not in the sitemap');
+    expect(indexabilityLabel({ status: 'verified' })).toBeNull();
+  });
+});

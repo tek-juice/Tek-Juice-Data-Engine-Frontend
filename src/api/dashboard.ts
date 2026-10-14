@@ -193,6 +193,13 @@ export interface UrlVerification {
   url?: string;
   attempt?: number;
   checked_at?: string;
+  /** Whether search engines can read the page (Data Engine check after publication). */
+  indexability?: {
+    prerendered: boolean;
+    canonical: boolean | null;
+    in_sitemap: boolean | null;
+    indexable: boolean;
+  };
 }
 
 export interface ContentExecutionListResponse {

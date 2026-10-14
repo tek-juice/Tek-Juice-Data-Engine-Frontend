@@ -47,3 +47,16 @@ export function verificationLabel(verification: UrlVerification | null | undefin
       return verification.status;
   }
 }
+
+/** Whether search engines can read a published page, and if not, why. */
+export function indexabilityLabel(verification: UrlVerification | null | undefined): string | null {
+  const check = verification?.indexability;
+  if (!check) return null;
+  if (check.indexable) return 'Readable by search engines';
+  const missing: string[] = [];
+  if (!check.prerendered) missing.push('article not in the page HTML');
+  if (check.canonical === false || check.canonical === null) missing.push('no canonical link');
+  if (check.in_sitemap === false) missing.push('not in the sitemap');
+  if (check.in_sitemap === null) missing.push('sitemap unavailable');
+  return `Not readable by search engines: ${missing.join(', ')}`;
+}
