@@ -4,6 +4,7 @@ import { isAxiosError } from 'axios';
 import { getVisibilityOverview } from '../../api/dashboard';
 import { listWebsites, type Website } from '../../api/websites';
 import type { VisibilityFeedback } from '../../types';
+import AIAnswers from './AIAnswers';
 
 function SummaryCard({
   label,
@@ -281,6 +282,8 @@ export default function Feedback() {
           </p>
         </div>
       )}
+
+      {website && <AIAnswers websiteId={website.id} />}
 
       {feedback.total_measurements === 0 && (
         <div className="card empty-state">

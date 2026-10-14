@@ -237,3 +237,63 @@ export async function getContentExecutions(
   );
   return data;
 }
+
+export interface AIPlatformSummary {
+  asked: number;
+  answered: number;
+  failed: number;
+  grounded: number;
+  mentioned: number;
+  cited: number;
+  citation_rate: number | null;
+}
+
+export interface AIAnswerRecord {
+  platform: string;
+  model: string | null;
+  query_text: string;
+  query_kind: 'recommendation' | 'published' | 'query';
+  grounded: boolean;
+  mentioned: boolean | null;
+  cited: boolean | null;
+  cited_url: string | null;
+  cited_rank: number | null;
+  sources: { url: string; domain: string; title: string }[];
+  answer_excerpt: string | null;
+  error: string | null;
+  measured_at: string | null;
+}
+
+export interface AISourceGap {
+  domain: string;
+  citations: number;
+  questions: string[];
+  platforms: string[];
+  example_url: string | null;
+}
+
+export interface AIAnswersReport {
+  measured_at: string | null;
+  configured_platforms: string[];
+  platforms: Record<string, AIPlatformSummary>;
+  questions: AIAnswerRecord[];
+  source_gaps: AISourceGap[];
+  indexnow: {
+    published: number;
+    submitted: number;
+    last_submitted_at: string | null;
+    last_problem: string | null;
+  } | null;
+}
+
+/**
+ * GET /api/v1/dashboard/visibility/ai-answers?website_id={website_id}
+ * Whether AI assistants mention and cite the website, and who they cite instead.
+ */
+export async function getAIAnswers(website_id: string): Promise<AIAnswersReport> {
+  const { data } = await apiClient.get<AIAnswersReport>(
+    '/api/v1/dashboard/visibility/ai-answers',
+    { params: { website_id } },
+  );
+  return data;
+}
