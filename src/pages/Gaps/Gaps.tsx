@@ -13,6 +13,10 @@ import {
 import { listWebsites, Website } from '../../api/websites';
 import { useIntelligenceRun } from '../../contexts/IntelligenceRunContext';
 
+export function gapStatusLabel(status: string): string {
+  return status === 'in_progress' ? 'In progress' : status === 'resolved' ? 'Resolved' : status === 'open' ? 'Open' : status;
+}
+
 function SummaryCard({
   label,
   value,
@@ -131,6 +135,8 @@ export default function Gaps() {
   );
 
   const openCount = gaps.filter((gap) => gap.status.toLowerCase() === 'open').length;
+  const inProgressCount = gaps.filter((gap) => gap.status === 'in_progress').length;
+  const resolvedCount = gaps.filter((gap) => gap.status === 'resolved').length;
   const highSeverityCount = gaps.filter(
     (gap) =>
       (gap.severity || '').toLowerCase() === 'high' ||
@@ -212,9 +218,11 @@ export default function Gaps() {
         </div>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         <SummaryCard label="Total gaps" value={gaps.length} />
         <SummaryCard label="Open gaps" value={openCount} />
+        <SummaryCard label="In progress" value={inProgressCount} />
+        <SummaryCard label="Resolved (measured top 10)" value={resolvedCount} />
         <SummaryCard label="High / critical" value={highSeverityCount} />
         <SummaryCard label="With competitor evidence" value={withCompetitorCount} />
       </div>
@@ -325,7 +333,10 @@ export default function Gaps() {
                   </td>
 
                   <td className="px-5 py-4">
-                    {gap.status}
+                    <div className="font-medium">{gapStatusLabel(gap.status)}</div>
+                    {gap.resolution?.reason && (
+                      <div className="mt-1 max-w-xs text-xs text-[var(--text-secondary)]">{gap.resolution.reason}</div>
+                    )}
                   </td>
                 </tr>
               ))}

@@ -420,7 +420,7 @@ function IntelligencePanel({
         </span>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4">
         <StatCard
           label="Open gaps"
           value={formatNumber(overview.intelligence.gaps_open)}
@@ -429,7 +429,14 @@ function IntelligencePanel({
         />
 
         <StatCard
-          label="Resolved gaps"
+          label="Gaps in progress"
+          value={formatNumber(overview.intelligence.gaps_in_progress ?? 0)}
+          icon={<Loader2 size={14} />}
+          color="var(--info)"
+        />
+
+        <StatCard
+          label="Resolved gaps (measured)"
           value={formatNumber(overview.intelligence.gaps_resolved)}
           icon={<CheckCircle2 size={14} />}
           color="var(--success)"
@@ -944,12 +951,19 @@ export default function TenantDashboard() {
       <div className="p-6 space-y-4">
         <GoogleSearchKpis websiteId={websiteId} />
 
-        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-7 gap-4">
           <OverviewKpi
             label="Open gaps"
             value={formatNumber(intelligence.gaps_open)}
             icon={<Target size={16} />}
             color="var(--warning)"
+          />
+
+          <OverviewKpi
+            label="Gaps resolved"
+            value={`${formatNumber(intelligence.gaps_resolved)} of ${formatNumber(intelligence.gaps_total)}`}
+            icon={<CheckCircle2 size={16} />}
+            color="var(--success)"
           />
 
           <OverviewKpi

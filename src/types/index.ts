@@ -123,6 +123,9 @@ export interface VisibilityPipeline {
 export interface VisibilityIntelligence {
   gaps_total: number;
   gaps_open: number;
+  /** A page targets the gap or the site appears below the top 10. */
+  gaps_in_progress?: number;
+  /** Measured top-10 position for the gap's query (Search Console, Bing or the engine's search checks). */
   gaps_resolved: number;
   avg_gap_score: number | null;
   opportunities_total: number;
@@ -256,6 +259,15 @@ export interface VisibilityGapItem {
   tenant_position: number | null;
   competitor_position: number | null;
   status: string;
+  engine?: string | null;
+  resolution?: {
+    status: string; reason: string; checked_at: string; verified_at: string | null; rule: string;
+    evidence: { source: string; position: number | null; impressions?: number; clicks?: number; page?: string | null;
+                note?: string } | null;
+    published: { url: string; at: string | null } | null;
+    history: { at: string; from: string; to: string; reason: string }[];
+  } | null;
+  resolved_at?: string | null;
   created_at: string;
   updated_at: string;
   opportunity_count: number;

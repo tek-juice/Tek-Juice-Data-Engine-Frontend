@@ -42,7 +42,16 @@ export interface IntelligenceGap {
   competitor_domain: string | null;
   tenant_position: number | null;
   competitor_position: number | null;
+  /** open / in_progress / resolved (resolved = measured top-10 position for the query). */
   status: string;
+  engine?: string | null;
+  resolution?: {
+    status: string; reason: string; checked_at: string; verified_at: string | null; rule: string;
+    evidence: { source: string; position: number | null; impressions?: number; page?: string | null; note?: string } | null;
+    published: { url: string; at: string | null } | null;
+    history: { at: string; from: string; to: string; reason: string }[];
+  } | null;
+  resolved_at?: string | null;
   created_at: string;
 }
 

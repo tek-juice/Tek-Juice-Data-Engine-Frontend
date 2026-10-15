@@ -50,3 +50,12 @@ describe('search results', () => {
       'Too early to judge: only 2 day(s) of data since the engine started; wait for 14.');
   });
 });
+
+describe('gap status', () => {
+  it('labels evidence-based gap statuses', async () => {
+    const { gapStatusLabel } = await import('../pages/Gaps/Gaps');
+    expect(gapStatusLabel('in_progress')).toBe('In progress');
+    expect(gapStatusLabel('resolved')).toBe('Resolved');
+    expect(gapStatusLabel('open')).toBe('Open');
+  });
+});
