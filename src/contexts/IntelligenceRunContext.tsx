@@ -34,9 +34,39 @@ function websiteKey(): string {
   return `data_engine_selected_website:${getCurrentUserId() ?? 'anonymous'}`;
 }
 
+// An explicit run choice, with the newest completed run at that moment. The
+// old key also stored automatic picks forever, so pages kept showing an old
+// run after newer runs completed; it is no longer read.
 function storageKey(websiteId: string): string {
   const userId = getCurrentUserId() ?? 'anonymous';
+  return `data_engine_intelligence_run_choice:${userId}:${websiteId}`;
+}
+
+function legacyStorageKey(websiteId: string): string {
+  const userId = getCurrentUserId() ?? 'anonymous';
   return `data_engine_selected_intelligence_run:${userId}:${websiteId}`;
+}
+
+export interface RunChoice {
+  id: string;
+  newestAtChoice: string | null;
+}
+
+/** The run pages show: the newest completed run, unless the user chose one
+ * and no newer run has completed since. ``runs`` is newest first. */
+export function chooseRun(
+  runs: IntelligenceRun[],
+  choice: RunChoice | null,
+): string | null {
+  const newest = runs.find(run => run.status === 'completed') ?? runs[0] ?? null;
+  if (
+    choice &&
+    runs.some(run => run.id === choice.id) &&
+    choice.newestAtChoice === (newest?.id ?? null)
+  ) {
+    return choice.id;
+  }
+  return newest?.id ?? null;
 }
 
 export function IntelligenceRunProvider({
@@ -76,27 +106,13 @@ export function IntelligenceRunProvider({
       const fetchedRuns = await getIntelligenceRuns(currentWebsite.id);
       setRuns(fetchedRuns);
 
-      const storedRunId = storage.get<string>(
-        storageKey(currentWebsite.id),
-      );
-
-      const storedRun = storedRunId
-        ? fetchedRuns.find(run => run.id === storedRunId)
-        : null;
-
-      if (storedRun) {
-        setSelectedRunId(storedRun.id);
-      } else {
-        const availableRun = fetchedRuns.find(
-          run => run.status === 'completed',
-        ) ?? fetchedRuns[0] ?? null;
-
-        setSelectedRunId(availableRun?.id ?? null);
-
-        if (availableRun) {
-          storage.set(storageKey(currentWebsite.id), availableRun.id);
-        }
+      storage.remove(legacyStorageKey(currentWebsite.id));
+      const choice = storage.get<RunChoice>(storageKey(currentWebsite.id));
+      const runId = chooseRun(fetchedRuns, choice);
+      if (choice && choice.id !== runId) {
+        storage.remove(storageKey(currentWebsite.id));
       }
+      setSelectedRunId(runId);
     } catch (err) {
       setError(
         err instanceof Error
@@ -125,7 +141,8 @@ export function IntelligenceRunProvider({
     setSelectedRunId(runId);
 
     if (website) {
-      storage.set(storageKey(website.id), runId);
+      const newest = chooseRun(runs, null);
+      storage.set<RunChoice>(storageKey(website.id), { id: runId, newestAtChoice: newest });
     }
   }
 
