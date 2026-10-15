@@ -465,6 +465,7 @@ export type SearchResults =
   | {
       status: 'measured'; source: string; property: string; last_sync_at: string | null;
       data_from: string; data_to: string; engine_started: string | null; engine_started_source: string;
+      last_28_days: SearchTotals;
       weekly: { week: string; clicks: number; impressions: number; ctr: number | null; average_position: number | null }[];
       comparison: {
         verdict: 'measured' | 'too_early' | 'too_little_data'; note: string;

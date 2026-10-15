@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import SearchResults from '../Feedback/SearchResults';
 import { AlertCircle, RefreshCw } from 'lucide-react';
 import { isAxiosError } from 'axios';
 import { getVisibilitySearchPerformance } from '../../api/dashboard';
@@ -237,6 +238,15 @@ export default function SearchPerformance() {
           <RefreshCw size={16} />
           {refreshing ? 'Refreshing…' : 'Refresh'}
         </button>
+      </div>
+
+      <SearchResults websiteId={website.id} />
+
+      <div className="section-header">
+        <div>
+          <div className="eyebrow">Data Engine rank checks</div>
+          <h2>Tracked queries (the engine's own search checks, not Search Console)</h2>
+        </div>
       </div>
 
       <div className="grid grid-4">

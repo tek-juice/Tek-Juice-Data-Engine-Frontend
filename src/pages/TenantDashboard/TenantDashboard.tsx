@@ -20,6 +20,8 @@ import {
   getVisibilityOverview,
   getVisibilityPublished,
   getVisibilitySearchPerformance,
+  getSearchResults,
+  type SearchResults,
 } from '../../api/dashboard';
 import { listWebsites } from '../../api/websites';
 import type {
@@ -85,6 +87,37 @@ function statusColor(status: string) {
   }
 
   return 'var(--text-3)';
+}
+
+/** Google Search Console totals for the last 28 days (observed, matches the Search Console UI). */
+function GoogleSearchKpis({ websiteId }: { websiteId: string }) {
+  const [results, setResults] = useState<SearchResults | null>(null);
+  useEffect(() => {
+    getSearchResults(websiteId).then(setResults).catch(() => setResults(null));
+  }, [websiteId]);
+  if (!results) return null;
+  if (results.status !== 'measured') {
+    return (
+      <div className="p-4 text-sm" style={{ border: '1px solid var(--border)', color: 'var(--text-2)' }}>
+        Google Search Console: {results.reason}.
+      </div>
+    );
+  }
+  const t = results.last_28_days;
+  return (
+    <div className="space-y-2">
+      <div className="text-xs uppercase font-semibold tracking-widest" style={{ color: 'var(--text-3)' }}>
+        Google Search · last 28 days ({t.from} to {t.to}) · Search Console
+      </div>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <OverviewKpi label="Google clicks" value={formatNumber(t.clicks)} icon={<Activity size={16} />} color="var(--success)" />
+        <OverviewKpi label="Impressions" value={formatNumber(t.impressions)} icon={<Globe size={16} />} color="var(--info)" />
+        <OverviewKpi label="CTR" value={t.ctr === null ? '—' : `${(t.ctr * 100).toFixed(1)}%`} icon={<Target size={16} />} />
+        <OverviewKpi label="Avg Google position" value={t.average_position === null ? '—' : t.average_position.toFixed(1)}
+          icon={<Search size={16} />} color="var(--info)" />
+      </div>
+    </div>
+  );
 }
 
 function OverviewKpi({
@@ -909,6 +942,8 @@ export default function TenantDashboard() {
       </div>
 
       <div className="p-6 space-y-4">
+        <GoogleSearchKpis websiteId={websiteId} />
+
         <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
           <OverviewKpi
             label="Open gaps"
@@ -944,7 +979,7 @@ export default function TenantDashboard() {
           />
 
           <OverviewKpi
-            label="Avg position"
+            label="Avg position (tracked queries)"
             value={
               feedback.avg_position === null
                 ? '—'
