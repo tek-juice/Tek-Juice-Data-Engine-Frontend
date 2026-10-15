@@ -59,3 +59,10 @@ describe('gap status', () => {
     expect(gapStatusLabel('open')).toBe('Open');
   });
 });
+
+describe('date ranges', () => {
+  it('names the window every figure covers', async () => {
+    const { rangeText } = await import('../pages/Feedback/SearchResults');
+    expect(rangeText({ from: '2026-09-28', to: '2026-10-14' })).toBe('28 Sept – 14 Oct 2026'.replace('Sept', new Date('2026-09-28T00:00:00Z').toLocaleDateString('en-GB', { month: 'short', timeZone: 'UTC' })));
+  });
+});

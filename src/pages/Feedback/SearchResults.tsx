@@ -25,6 +25,13 @@ export function verdictText(comparison: Measured['comparison']): string {
   return 'Observed before/after (not a controlled experiment).';
 }
 
+/** "28 Sep – 14 Oct 2026" for a date window. */
+export function rangeText(w: { from: string; to: string }): string {
+  const fmt = (d: string, year: boolean) => new Date(`${d}T00:00:00Z`).toLocaleDateString('en-GB',
+    { day: 'numeric', month: 'short', ...(year ? { year: 'numeric' } : {}), timeZone: 'UTC' });
+  return `${fmt(w.from, false)} – ${fmt(w.to, true)}`;
+}
+
 const pct = (v: number | null | undefined) => (v === null || v === undefined ? '—' : `${(v * 100).toFixed(1)}%`);
 const pos = (v: number | null | undefined) => (v === null || v === undefined ? '—' : v.toFixed(1));
 
@@ -76,6 +83,18 @@ export default function SearchResults({ websiteId }: { websiteId: string }) {
         </div>
       </div>
 
+      <h3>Last 28 days · {rangeText(data.last_28_days)}</h3>
+      <div className="detail-grid">
+        <Tile label="Clicks" value={data.last_28_days.clicks} />
+        <Tile label="Impressions" value={data.last_28_days.impressions} />
+        <Tile label="CTR" value={pct(data.last_28_days.ctr)} />
+        <Tile label="Average position" value={pos(data.last_28_days.average_position)} />
+      </div>
+
+      {after && (
+        <h3>Since Tek Juice started · {rangeText(after)}
+          {cmp?.before && <span className="muted"> (compared with {rangeText(cmp.before)})</span>}</h3>
+      )}
       {after && (
         <div className="detail-grid">
           <Tile label={`Clicks (${after.days} days)`} value={after.clicks}

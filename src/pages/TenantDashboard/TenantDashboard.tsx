@@ -24,6 +24,7 @@ import {
   type SearchResults,
 } from '../../api/dashboard';
 import { listWebsites } from '../../api/websites';
+import { rangeText } from '../Feedback/SearchResults';
 import type {
   VisibilityGapItem,
   VisibilityOverview,
@@ -107,7 +108,7 @@ function GoogleSearchKpis({ websiteId }: { websiteId: string }) {
   return (
     <div className="space-y-2">
       <div className="text-xs uppercase font-semibold tracking-widest" style={{ color: 'var(--text-3)' }}>
-        Google Search · last 28 days ({t.from} to {t.to}) · Search Console
+        Google Search · last 28 days ({rangeText(t)}) · Search Console
       </div>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <OverviewKpi label="Google clicks" value={formatNumber(t.clicks)} icon={<Activity size={16} />} color="var(--success)" />
