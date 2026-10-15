@@ -161,6 +161,10 @@ export interface VisibilityFeedback {
   dropped?: number;
   queries_tracked?: number;
   measurement_failures?: number;
+  /** Measured, and the site was not shown for the query. */
+  not_ranking?: number;
+  /** Positions that are Google's own (Search Console), not the engine's search check. */
+  google_positions?: number;
   published_tracked?: number;
   published_ranked?: number;
   /** Pages of the site the search index returns; null when unknown. */

@@ -283,6 +283,16 @@ export default function Feedback() {
           </div>
 
           <div>
+            <div className="muted">Not ranking (measured, site not shown)</div>
+            <strong>{feedback.not_ranking ?? 0}</strong>
+          </div>
+
+          <div>
+            <div className="muted">Positions from Google Search Console</div>
+            <strong>{feedback.google_positions ?? 0}</strong>
+          </div>
+
+          <div>
             <div className="muted">Failed measurements (last batch)</div>
             <strong>{feedback.measurement_failures ?? 0}</strong>
           </div>
