@@ -46,10 +46,10 @@ describe('EntryGate', () => {
     expect(await screen.findByTestId('where')).toHaveTextContent('/websites/connect');
   });
 
-  it('sends a customer whose website is still onboarding to its setup', async () => {
+  it('opens the dashboard even while the website is still connecting (the banner explains)', async () => {
     vi.spyOn(websitesApi, 'listWebsites').mockResolvedValue([site('a', 'CONNECTOR_PENDING')]);
     renderWithProvider(<EntryGate />);
-    expect(await screen.findByTestId('where')).toHaveTextContent('/websites/a/setup');
+    expect(await screen.findByTestId('where')).toHaveTextContent('/visibility');
   });
 
   it('sends an existing READY customer to the dashboard', async () => {

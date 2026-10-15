@@ -5,10 +5,11 @@ import { useIntelligenceRun } from '../contexts/IntelligenceRunContext';
 /**
  * Authenticated entry point.
  *
- * - No website yet                     -> register one.
- * - Selected website still onboarding  -> its connection setup.
- * - Selected website READY             -> the dashboard (a banner there
- *   explains when publication is not yet ready).
+ * - No website yet  -> register one.
+ * - Any website     -> the dashboard. When the selected website is not
+ *   connected or not publication-ready, the shell's status banner says what
+ *   is wrong and links to its connection setup; the interface (and the
+ *   other websites) stay reachable.
  *
  * Decided from the backend's onboarding_status, never from browser state.
  */
@@ -50,10 +51,6 @@ export default function EntryGate() {
 
   if (!websites.length || !website) {
     return <Navigate to="/websites/connect" replace />;
-  }
-
-  if (website.onboarding_status !== 'READY') {
-    return <Navigate to={`/websites/${website.id}/setup`} replace />;
   }
 
   return <Navigate to="/visibility" replace />;
