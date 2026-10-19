@@ -502,6 +502,12 @@ export async function setConnectionProperty(websiteId: string, provider: string,
   await apiClient.put(`/api/v1/websites/${websiteId}/connections/${provider}`, { property });
 }
 
+/** Measure page speed now (e.g. after deploying a fix); actions follow the result. */
+export async function measurePageSpeed(websiteId: string): Promise<{ queued: boolean; detail: string }> {
+  const { data } = await apiClient.post(`/api/v1/websites/${websiteId}/connections/google_pagespeed/measure`);
+  return data;
+}
+
 export async function disconnectConnection(websiteId: string, provider: string): Promise<void> {
   await apiClient.delete(`/api/v1/websites/${websiteId}/connections/${provider}`);
 }
@@ -568,4 +574,67 @@ export async function startExperiment(websiteId: string): Promise<{ status: stri
 
 export async function cancelExperiment(websiteId: string, experimentId: string): Promise<void> {
   await apiClient.post(`/api/v1/websites/${websiteId}/experiments/${experimentId}/cancel`);
+}
+
+// ── Performance (PageSpeed findings and code-free remediation) ─────────────
+
+export interface PerformanceFinding {
+  id: string;
+  url: string;
+  strategy: 'mobile' | 'desktop';
+  audit_id: string;
+  category: string;
+  category_label: string;
+  title: string;
+  observed_display: string | null;
+  threshold: number | null;
+  hypothesis: string;
+  confidence: string;
+  uncertainty: string | null;
+  eligibility: 'code_free_candidate' | 'code_change_required' | 'not_controllable' | 'insufficient_evidence';
+  code_free: boolean;
+  risk: string;
+  recommended_action: string;
+  resources: { url?: string; selector?: string; party?: string }[];
+  plan: { status?: string; blocked_reason?: string | null; approval?: { mode: string; reason: string } } | null;
+  status: string;
+  state: string;
+  action_id: string | null;
+  observed_at: string | null;
+}
+
+export async function getPerformanceFindings(websiteId: string, params: { status?: string; strategy?: string } = {}):
+  Promise<{ findings: PerformanceFinding[]; total: number; counts: { by_category: Record<string, number>;
+    by_eligibility: Record<string, number>; by_status: Record<string, number> }; categories: Record<string, string> }> {
+  const { data } = await apiClient.get(`/api/v1/websites/${websiteId}/performance/findings`, { params });
+  return data;
+}
+
+export async function requestPerformanceAssessment(websiteId: string, urls: string[] = []):
+  Promise<{ queued: boolean; detail: string; rejected_urls: string[] }> {
+  const { data } = await apiClient.post(`/api/v1/websites/${websiteId}/performance/assessments`,
+    { urls, strategies: ['mobile', 'desktop'] });
+  return data;
+}
+
+export async function planPerformanceFinding(websiteId: string, findingId: string):
+  Promise<{ state: string; action_id: string | null; detail?: string; plan: PerformanceFinding['plan'] }> {
+  const { data } = await apiClient.post(`/api/v1/websites/${websiteId}/performance/findings/${findingId}/plan`);
+  return data;
+}
+
+export interface PerformanceRemediation {
+  id: string;
+  status: string;
+  title: string;
+  verification_outcome: string | null;
+  rollback: { outcome?: string; reason?: string } | null;
+  incident: { summary: string; action: string } | null;
+  outcome: { reason?: string; before?: { score: number | null }; after?: { score: number | null } } | null;
+}
+
+export async function getPerformanceRemediations(websiteId: string):
+  Promise<{ remediations: PerformanceRemediation[]; execution_enabled: boolean }> {
+  const { data } = await apiClient.get(`/api/v1/websites/${websiteId}/performance/remediations`);
+  return data;
 }

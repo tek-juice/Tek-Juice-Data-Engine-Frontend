@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { isAxiosError } from 'axios';
 import {
   connectBing, connectGoogleServiceAccount, disconnectConnection, getConnectionProperties, getConnections,
+  measurePageSpeed,
   setConnectionProperty, startGoogleConnection, type ConnectionsState, type DataConnection,
 } from '../../api/dashboard';
 import { apiErrorMessage } from '../../utils/apiError';
@@ -134,6 +135,14 @@ export default function DataConnections({ websiteId }: { websiteId: string }) {
               ) : (
                 <div><button className="button secondary" onClick={() => void loadOptions(c.provider)}>Choose property</button></div>
               )
+            )}
+            {c.provider === 'google_pagespeed' && c.status === 'connected' && (
+              <div>
+                <button className="button secondary" onClick={() => void measurePageSpeed(websiteId)
+                  .then((r) => setMessage(r.detail)).catch(fail)}>
+                  Measure now
+                </button>
+              </div>
             )}
             {c.provider !== 'google_pagespeed' && ['connected', 'needs_property', 'error'].includes(c.status) && (
               <div>
