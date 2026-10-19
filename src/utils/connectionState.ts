@@ -44,7 +44,7 @@ const FAILURE_HINTS: Record<string, string> = {
   contract_version_unsupported: 'The connector must support publication contract 1.0.',
   endpoint_unreachable: 'The Data Engine could not reach the publication endpoint over HTTPS.',
   receiver_authentication_failed:
-    'The receiver rejected the credential. Run `tekjuice setup --env-file .env` on your backend again to re-register its secret.',
+    'The receiver rejected the credential. Run `tekjuice connect` on your backend again to re-register its secret.',
   verification_rejected:
     'The endpoint does not implement the Tek Juice verify operation. Mount the connector receiver.',
   receiver_error: 'The receiver returned a server error during verification.',

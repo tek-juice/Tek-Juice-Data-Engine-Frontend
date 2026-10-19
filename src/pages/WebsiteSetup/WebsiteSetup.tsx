@@ -365,17 +365,13 @@ export default function WebsiteSetup() {
               {!state.publicationReady && (
                 <>
                   <p style={{ color: 'var(--text-3)' }}>
-                    Install the connector on your backend and run its setup with the environment above.
-                    Setup creates the receiver secret and the publication endpoint on your server,
-                    registers them with the Data Engine and waits for verification: there is nothing
-                    else to copy. If your framework does not declare its public API address, add
-                    TEKJUICE_API_BASE_URL=https://&lt;your backend&apos;s API address&gt; first.
+                    Put the values above in your backend&apos;s <code>.env</code>, then run these two commands
+                    on the server, in the backend&apos;s folder. The connector authenticates, detects your server,
+                    asks only for what it cannot find out (your public address and where articles should appear),
+                    creates the publication endpoint beside your application and waits until it is verified.
+                    It works whatever language or framework your backend uses, and changes none of its code.
                   </p>
-                  <CopyBlock label="Install and set up" value={'pip install "tekjuice-connector>=0.7.0"\ntekjuice setup --env-file .env'} />
-                  <p style={{ color: 'var(--text-3)' }}>
-                    Backend in another language (Node, PHP, Go, …)? Run the connector next to it as a
-                    sidecar: <code>tekjuice serve</code>.
-                  </p>
+                  <CopyBlock label="On your backend server" value={'pip install "tekjuice-connector>=0.8.0"\ntekjuice connect'} />
                 </>
               )}
               {publication && publication.status !== 'not_configured' && (
