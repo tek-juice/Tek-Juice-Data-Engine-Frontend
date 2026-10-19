@@ -9,6 +9,7 @@ import { apiErrorMessage } from '../../utils/apiError';
 const NAMES: Record<string, string> = {
   google_search_console: 'Google Search Console',
   google_analytics: 'Google Analytics 4',
+  google_pagespeed: 'Google PageSpeed Insights',
   bing_webmaster: 'Bing Webmaster Tools',
 };
 
@@ -82,8 +83,8 @@ export default function DataConnections({ websiteId }: { websiteId: string }) {
       </div>
       <p className="muted">
         Search Console provides clicks, impressions, positions and Google's index status for published pages;
-        GA4 provides organic sessions and conversions. Access is granted on Google's own consent screen and can
-        be removed at any time.
+        GA4 provides organic sessions and conversions; PageSpeed Insights provides Core Web Vitals and mobile
+        performance. Access is granted on Google's own consent screen and can be removed at any time.
       </p>
       {state.google_service_account && (
         <div className="card" style={{ background: 'transparent' }}>
@@ -93,6 +94,7 @@ export default function DataConnections({ websiteId }: { websiteId: string }) {
               <code style={{ userSelect: 'all' }}>{state.google_service_account}</code> (Restricted access is enough).</li>
             <li>Optional, for conversions: Google Analytics → Admin → Property access management → add the same
               email as Viewer.</li>
+            <li>Nothing to add for PageSpeed Insights: it measures your public pages through the same account.</li>
             <li>Check access below. Only properties for this website's own domain can be connected.</li>
           </ol>
           <button className="button" disabled={checking} onClick={() => void checkServiceAccount()}>
@@ -133,7 +135,7 @@ export default function DataConnections({ websiteId }: { websiteId: string }) {
                 <div><button className="button secondary" onClick={() => void loadOptions(c.provider)}>Choose property</button></div>
               )
             )}
-            {['connected', 'needs_property', 'error'].includes(c.status) && (
+            {c.provider !== 'google_pagespeed' && ['connected', 'needs_property', 'error'].includes(c.status) && (
               <div>
                 <button className="button secondary" onClick={() => void disconnectConnection(websiteId, c.provider).then(load).catch(fail)}>
                   Disconnect

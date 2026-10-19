@@ -419,7 +419,7 @@ export async function getOptimization(website_id: string): Promise<OptimizationO
 }
 
 export interface DataConnection {
-  provider: 'google_search_console' | 'google_analytics' | 'bing_webmaster';
+  provider: 'google_search_console' | 'google_analytics' | 'google_pagespeed' | 'bing_webmaster';
   status: 'not_connected' | 'pending' | 'connected' | 'needs_property' | 'error' | 'revoked';
   property: string | null;
   last_sync_at: string | null;

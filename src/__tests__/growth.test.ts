@@ -66,3 +66,11 @@ describe('date ranges', () => {
     expect(rangeText({ from: '2026-09-28', to: '2026-10-14' })).toBe('28 Sept – 14 Oct 2026'.replace('Sept', new Date('2026-09-28T00:00:00Z').toLocaleDateString('en-GB', { month: 'short', timeZone: 'UTC' })));
   });
 });
+
+describe('PageSpeed Insights connection', () => {
+  it('shows the Cloud project it runs through', () => {
+    expect(connectionLabel({ provider: 'google_pagespeed', status: 'connected',
+      property: 'Google Cloud project aqueous-argon-408202', last_sync_at: null, last_error: null } as never))
+      .toBe('Connected: Google Cloud project aqueous-argon-408202');
+  });
+});
