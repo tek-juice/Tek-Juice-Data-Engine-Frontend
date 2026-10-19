@@ -19,10 +19,6 @@ export const API_PREFIX: string =
 /** Full base for versioned API calls — convenience for building paths */
 export const API_URL: string = `${API_BASE_URL}${API_PREFIX}`;
 
-/** Step-by-step customer guide for connecting a website (setup page link). */
-export const SETUP_GUIDE_URL: string =
-  import.meta.env.VITE_SETUP_GUIDE_URL ?? 'https://claude.ai/artifact/1CJTgy5az421TuZwgGH8Fg';
-
 /** Request timeout in milliseconds */
 export const API_TIMEOUT: number =
   Number(import.meta.env.VITE_API_TIMEOUT ?? 30000);

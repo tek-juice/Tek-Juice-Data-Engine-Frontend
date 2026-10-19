@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import {
-  AlertTriangle, BookOpen, CheckCircle2, Copy, KeyRound, Loader2, RefreshCw, Server, ShieldCheck,
+  AlertTriangle, CheckCircle2, Copy, KeyRound, Loader2, RefreshCw, Server, ShieldCheck,
 } from 'lucide-react';
 import { getWebsiteStatus, type WebsiteStatus } from '../../api/websites';
 import { getVisibilityConnection } from '../../api/dashboard';
@@ -17,7 +17,7 @@ import type { PublicationReadiness } from '../../types';
 import { deriveConnectionState, type ConnectionState } from '../../utils/connectionState';
 import { apiErrorMessage, apiErrorStatus } from '../../utils/apiError';
 import { isAdmin } from '../../services/auth.service';
-import { API_BASE_URL, SETUP_GUIDE_URL } from '../../config';
+import { API_BASE_URL } from '../../config';
 
 const POLL_MS = 5000;
 const IN_FLIGHT = new Set(['backend_pending', 'connector_authenticated', 'verifying']);
@@ -237,13 +237,6 @@ export default function WebsiteSetup() {
           <p className="text-sm mt-0.5" style={{ color: 'var(--text-3)' }}>
             Content is published to your website only through a verified Tek Juice connector.
           </p>
-          {SETUP_GUIDE_URL && (
-            <a href={SETUP_GUIDE_URL} target="_blank" rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 text-xs font-semibold mt-2 underline underline-offset-2"
-              style={{ color: 'var(--brand)' }}>
-              <BookOpen size={13} aria-hidden="true" /> Step-by-step connection guide
-            </a>
-          )}
         </div>
 
         <div className="p-4 rounded flex items-start justify-between gap-3" style={card} data-testid="connection-state">
