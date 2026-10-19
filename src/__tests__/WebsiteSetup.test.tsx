@@ -48,6 +48,15 @@ afterEach(() => {
 });
 
 describe('WebsiteSetup', () => {
+  it('links to the step-by-step connection guide in a new tab', async () => {
+    mockState('WEBSITE_REGISTERED');
+    renderSetup();
+    const link = await screen.findByRole('link', { name: /step-by-step connection guide/i });
+    expect(link).toHaveAttribute('href', 'https://claude.ai/artifact/1CJTgy5az421TuZwgGH8Fg');
+    expect(link).toHaveAttribute('target', '_blank');
+    expect(link.getAttribute('rel')).toContain('noopener');
+  });
+
   it('shows a new connector key once and never stores it in the browser', async () => {
     mockState('WEBSITE_REGISTERED');
     vi.spyOn(connector, 'issueConnectorCredential').mockResolvedValue({
