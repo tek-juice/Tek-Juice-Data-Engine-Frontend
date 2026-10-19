@@ -1,0 +1,743 @@
+{
+ "umet": {
+  "business_name": "UMET",
+  "description": null,
+  "category": null,
+  "products": [
+   "UMET"
+  ],
+  "services": [
+   "Budget management",
+   "Expense tracking"
+  ],
+  "locations": [],
+  "target_markets": [],
+  "confidence": 0.85,
+  "offerings": {
+   "method": "offerings/1",
+   "state": "identified",
+   "offerings": [
+    {
+     "id": "62cb5246bca7",
+     "name": "UMET",
+     "kind": "product",
+     "status": "confirmed",
+     "origins": [
+      "structured_data"
+     ],
+     "evidence": [
+      {
+       "type": "structured_data",
+       "source": "https://ultimatemove.co.uk",
+       "observation": "WebApplication: UMET — Ultimate Move Expense Tracker",
+       "reliability": "strong",
+       "observed_at": "2026-10-19T01:05:51+00:00",
+       "method": "offerings/1"
+      }
+     ],
+     "confidence": "medium"
+    },
+    {
+     "id": "d07d31285d7b",
+     "name": "Budget management",
+     "kind": "feature",
+     "status": "confirmed",
+     "origins": [
+      "structured_data"
+     ],
+     "evidence": [
+      {
+       "type": "structured_data",
+       "source": "https://ultimatemove.co.uk",
+       "observation": "featureList: Budget management",
+       "reliability": "strong",
+       "observed_at": "2026-10-19T01:05:51+00:00",
+       "method": "offerings/1"
+      }
+     ],
+     "confidence": "medium"
+    },
+    {
+     "id": "7f6290985e5a",
+     "name": "Expense tracking",
+     "kind": "feature",
+     "status": "confirmed",
+     "origins": [
+      "structured_data",
+      "heading"
+     ],
+     "evidence": [
+      {
+       "type": "heading",
+       "source": "https://ultimatemove.co.uk",
+       "observation": "Track every expense",
+       "reliability": "strong",
+       "observed_at": "2026-10-19T01:05:51+00:00",
+       "method": "offerings/1"
+      },
+      {
+       "type": "structured_data",
+       "source": "https://ultimatemove.co.uk",
+       "observation": "featureList: Expense tracking",
+       "reliability": "strong",
+       "observed_at": "2026-10-19T01:05:51+00:00",
+       "method": "offerings/1"
+      }
+     ],
+     "confidence": "medium"
+    },
+    {
+     "id": "e5105274d580",
+     "name": "Relocation planning",
+     "kind": "service",
+     "status": "unverified",
+     "origins": [
+      "profile_model"
+     ],
+     "evidence": [
+      {
+       "type": "model_interpretation",
+       "source": "product_profile_model",
+       "observation": "Named by the profile model; no customer page states it.",
+       "reliability": "weak",
+       "observed_at": null,
+       "method": "offerings/1"
+      }
+     ],
+     "confidence": "low"
+    }
+   ],
+   "missing": []
+  },
+  "geography": {
+   "method": "geo-scope/1",
+   "generated_at": "2026-10-19T00:00:00+00:00",
+   "scope": "UNDETERMINED",
+   "confidence": "none",
+   "basis": [
+    "No supported-country, service-area or availability statement.",
+    "Only weak signals (United Kingdom); these do not establish availability."
+   ],
+   "conflicts": [],
+   "candidate_scopes": [],
+   "delivery_model": [
+    "digital"
+   ],
+   "headquarters": [],
+   "offices": [],
+   "operational_markets": [],
+   "target_markets": [],
+   "observed_demand_markets": [
+    {
+     "name": "Uganda",
+     "level": "country",
+     "country": "UG",
+     "status": "observed",
+     "confidence": "low",
+     "basis": [
+      "analytics (moderate)",
+      "search_console (moderate)"
+     ],
+     "evidence": [
+      "9a863e41c624",
+      "f4944214be68"
+     ]
+    }
+   ],
+   "visibility_markets": [
+    {
+     "name": "Uganda",
+     "level": "country",
+     "country": "UG",
+     "status": "observed",
+     "confidence": "low",
+     "basis": [
+      "search_console (moderate)"
+     ],
+     "evidence": [
+      "9255e6a09bde"
+     ]
+    }
+   ],
+   "competitive_markets": [],
+   "regulatory": [],
+   "unverified_markets": [
+    {
+     "name": "United Kingdom",
+     "level": "country",
+     "country": "GB",
+     "status": "unverified",
+     "confidence": "low",
+     "basis": [
+      "currency (weak)",
+      "domain (weak)"
+     ],
+     "evidence": [
+      "9caf5fba37f8",
+      "f7f0a5f71a62"
+     ]
+    }
+   ],
+   "excluded_markets": [],
+   "offerings": [
+    {
+     "offering": "UMET",
+     "delivery_model": [
+      "digital"
+     ],
+     "scope": "UNDETERMINED",
+     "confidence": "none",
+     "candidate_scopes": [],
+     "conflicts": [],
+     "basis": [
+      "No supported-country, service-area or availability statement.",
+      "Only weak signals (United Kingdom); these do not establish availability."
+     ],
+     "operational_markets": [],
+     "excluded_markets": [],
+     "uses_site_wide_evidence": true
+    },
+    {
+     "offering": "Budget management",
+     "delivery_model": [
+      "digital"
+     ],
+     "scope": "UNDETERMINED",
+     "confidence": "none",
+     "candidate_scopes": [],
+     "conflicts": [],
+     "basis": [
+      "No supported-country, service-area or availability statement.",
+      "Only weak signals (United Kingdom); these do not establish availability."
+     ],
+     "operational_markets": [],
+     "excluded_markets": [],
+     "uses_site_wide_evidence": true
+    },
+    {
+     "offering": "Expense tracking",
+     "delivery_model": [
+      "digital"
+     ],
+     "scope": "UNDETERMINED",
+     "confidence": "none",
+     "candidate_scopes": [],
+     "conflicts": [],
+     "basis": [
+      "No supported-country, service-area or availability statement.",
+      "Only weak signals (United Kingdom); these do not establish availability."
+     ],
+     "operational_markets": [],
+     "excluded_markets": [],
+     "uses_site_wide_evidence": true
+    }
+   ],
+   "evidence": [
+    {
+     "id": "9a863e41c624",
+     "relation": "demand",
+     "place": {
+      "name": "Uganda",
+      "level": "country",
+      "country": "UG"
+     },
+     "offering": null,
+     "evidence_type": "search_console",
+     "reliability": "moderate",
+     "source": "google_search_console_segments",
+     "observation": "6 clicks, 0 sessions, 0 conversions",
+     "observed_at": null,
+     "method": "geo-scope/1",
+     "status": "observed",
+     "metrics": {
+      "clicks": 6,
+      "impressions": 9
+     }
+    },
+    {
+     "id": "f4944214be68",
+     "relation": "demand",
+     "place": {
+      "name": "Uganda",
+      "level": "country",
+      "country": "UG"
+     },
+     "offering": null,
+     "evidence_type": "analytics",
+     "reliability": "moderate",
+     "source": "google_analytics",
+     "observation": "0 clicks, 3 sessions, 0 conversions",
+     "observed_at": null,
+     "method": "geo-scope/1",
+     "status": "observed",
+     "metrics": {
+      "sessions": 3
+     }
+    },
+    {
+     "id": "9caf5fba37f8",
+     "relation": "signal",
+     "place": {
+      "name": "United Kingdom",
+      "level": "country",
+      "country": "GB"
+     },
+     "offering": null,
+     "evidence_type": "currency",
+     "reliability": "weak",
+     "source": "https://ultimatemove.co.uk",
+     "observation": "Offer priceCurrency GBP",
+     "observed_at": "2026-10-19T01:05:51+00:00",
+     "method": "geo-scope/1",
+     "status": "observed"
+    },
+    {
+     "id": "f7f0a5f71a62",
+     "relation": "signal",
+     "place": {
+      "name": "United Kingdom",
+      "level": "country",
+      "country": "GB"
+     },
+     "offering": null,
+     "evidence_type": "domain",
+     "reliability": "weak",
+     "source": "ultimatemove.co.uk",
+     "observation": "Country-code domain .uk (not decisive: says where the domain is registered, not where the offering is available)",
+     "observed_at": null,
+     "method": "geo-scope/1",
+     "status": "observed"
+    },
+    {
+     "id": "9255e6a09bde",
+     "relation": "visibility",
+     "place": {
+      "name": "Uganda",
+      "level": "country",
+      "country": "UG"
+     },
+     "offering": null,
+     "evidence_type": "search_console",
+     "reliability": "moderate",
+     "source": "google_search_console_segments",
+     "observation": "9 search impressions",
+     "observed_at": null,
+     "method": "geo-scope/1",
+     "status": "observed",
+     "metrics": {
+      "clicks": 6,
+      "impressions": 9
+     }
+    }
+   ],
+   "missing_evidence": [
+    "No supported-country list, service-area statement, shipping destinations or schema.org areaServed on the customer's pages.",
+    "No customer-confirmed markets (entity profile: markets / excluded_markets)."
+   ]
+  }
+ },
+ "mixed": {
+  "business_name": "Books Co",
+  "description": null,
+  "category": null,
+  "products": [],
+  "services": [
+   "Online bookkeeping",
+   "Payroll consulting"
+  ],
+  "locations": [
+   "London"
+  ],
+  "target_markets": [],
+  "confidence": 0.85,
+  "offerings": {
+   "method": "offerings/1",
+   "state": "identified",
+   "offerings": [
+    {
+     "id": "7b40ae22d11a",
+     "name": "Online bookkeeping",
+     "kind": "service",
+     "status": "confirmed",
+     "origins": [
+      "structured_data"
+     ],
+     "evidence": [
+      {
+       "type": "structured_data",
+       "source": "https://books.example/",
+       "observation": "Service: Online bookkeeping",
+       "reliability": "strong",
+       "observed_at": "2026-10-01T00:00:00+00:00",
+       "method": "offerings/1"
+      }
+     ],
+     "confidence": "medium"
+    },
+    {
+     "id": "8a0b0de87d98",
+     "name": "Payroll consulting",
+     "kind": "service",
+     "status": "confirmed",
+     "origins": [
+      "structured_data",
+      "heading"
+     ],
+     "evidence": [
+      {
+       "type": "heading",
+       "source": "https://books.example/",
+       "observation": "Payroll consulting",
+       "reliability": "strong",
+       "observed_at": "2026-10-01T00:00:00+00:00",
+       "method": "offerings/1"
+      },
+      {
+       "type": "structured_data",
+       "source": "https://books.example/",
+       "observation": "Service: Payroll consulting",
+       "reliability": "strong",
+       "observed_at": "2026-10-01T00:00:00+00:00",
+       "method": "offerings/1"
+      }
+     ],
+     "confidence": "medium"
+    },
+    {
+     "id": "e5105274d580",
+     "name": "Relocation planning",
+     "kind": "service",
+     "status": "unverified",
+     "origins": [
+      "profile_model"
+     ],
+     "evidence": [
+      {
+       "type": "model_interpretation",
+       "source": "product_profile_model",
+       "observation": "Named by the profile model; no customer page states it.",
+       "reliability": "weak",
+       "observed_at": null,
+       "method": "offerings/1"
+      }
+     ],
+     "confidence": "low"
+    }
+   ],
+   "missing": []
+  },
+  "geography": {
+   "method": "geo-scope/1",
+   "generated_at": "2026-10-19T00:00:00+00:00",
+   "scope": "MIXED",
+   "confidence": "medium",
+   "basis": [
+    "Offerings have different geographic scopes: Online bookkeeping -> GLOBAL; Payroll consulting -> CITY"
+   ],
+   "conflicts": [],
+   "candidate_scopes": [],
+   "delivery_model": [
+    "digital"
+   ],
+   "headquarters": [
+    {
+     "name": "London",
+     "level": "city",
+     "country": "GB",
+     "status": "observed",
+     "confidence": "low",
+     "basis": [
+      "address (moderate)"
+     ],
+     "evidence": [
+      "302f36abdc27"
+     ]
+    }
+   ],
+   "offices": [],
+   "operational_markets": [
+    {
+     "name": "London",
+     "level": "city",
+     "country": "GB",
+     "status": "confirmed",
+     "confidence": "medium",
+     "basis": [
+      "explicit_statement (strong)"
+     ],
+     "evidence": [
+      "ed080a1bc23a"
+     ]
+    },
+    {
+     "name": "Worldwide",
+     "level": "global",
+     "country": null,
+     "status": "confirmed",
+     "confidence": "medium",
+     "basis": [
+      "explicit_statement (strong)"
+     ],
+     "evidence": [
+      "e8e9a716dab5"
+     ]
+    }
+   ],
+   "target_markets": [],
+   "observed_demand_markets": [],
+   "visibility_markets": [],
+   "competitive_markets": [],
+   "regulatory": [],
+   "unverified_markets": [],
+   "excluded_markets": [
+    {
+     "name": "Nigeria",
+     "level": "country",
+     "country": "NG",
+     "status": "excluded",
+     "confidence": "medium",
+     "basis": [
+      "explicit_statement (strong)"
+     ],
+     "evidence": [
+      "151601125b64"
+     ]
+    }
+   ],
+   "offerings": [
+    {
+     "offering": "Online bookkeeping",
+     "delivery_model": [
+      "digital"
+     ],
+     "scope": "GLOBAL",
+     "confidence": "medium",
+     "candidate_scopes": [],
+     "conflicts": [],
+     "basis": [
+      "Worldwide: explicit_statement (strong)"
+     ],
+     "operational_markets": [
+      {
+       "name": "Worldwide",
+       "level": "global",
+       "country": null,
+       "status": "confirmed",
+       "confidence": "medium",
+       "basis": [
+        "explicit_statement (strong)"
+       ],
+       "evidence": [
+        "e8e9a716dab5"
+       ]
+      }
+     ],
+     "excluded_markets": [],
+     "uses_site_wide_evidence": false
+    },
+    {
+     "offering": "Payroll consulting",
+     "delivery_model": [
+      "digital"
+     ],
+     "scope": "CITY",
+     "confidence": "medium",
+     "candidate_scopes": [],
+     "conflicts": [],
+     "basis": [
+      "London: explicit_statement (strong)"
+     ],
+     "operational_markets": [
+      {
+       "name": "London",
+       "level": "city",
+       "country": "GB",
+       "status": "confirmed",
+       "confidence": "medium",
+       "basis": [
+        "explicit_statement (strong)"
+       ],
+       "evidence": [
+        "ed080a1bc23a"
+       ]
+      }
+     ],
+     "excluded_markets": [],
+     "uses_site_wide_evidence": false
+    }
+   ],
+   "evidence": [
+    {
+     "id": "e8e9a716dab5",
+     "relation": "delivery",
+     "place": {
+      "name": "Worldwide",
+      "level": "global",
+      "country": null
+     },
+     "offering": "Online bookkeeping",
+     "evidence_type": "explicit_statement",
+     "reliability": "strong",
+     "source": "https://books.example/",
+     "observation": "Online bookkeeping is available worldwide.",
+     "observed_at": "2026-10-01T00:00:00+00:00",
+     "method": "geo-scope/1",
+     "status": "observed"
+    },
+    {
+     "id": "151601125b64",
+     "relation": "exclusion",
+     "place": {
+      "name": "Nigeria",
+      "level": "country",
+      "country": "NG"
+     },
+     "offering": null,
+     "evidence_type": "explicit_statement",
+     "reliability": "strong",
+     "source": "https://books.example/",
+     "observation": "We do not operate in Nigeria.",
+     "observed_at": "2026-10-01T00:00:00+00:00",
+     "method": "geo-scope/1",
+     "status": "observed"
+    },
+    {
+     "id": "302f36abdc27",
+     "relation": "headquarters",
+     "place": {
+      "name": "London",
+      "level": "city",
+      "country": "GB"
+     },
+     "offering": null,
+     "evidence_type": "address",
+     "reliability": "moderate",
+     "source": "https://books.example/",
+     "observation": "Organization address: London",
+     "observed_at": "2026-10-01T00:00:00+00:00",
+     "method": "geo-scope/1",
+     "status": "observed"
+    },
+    {
+     "id": "ed080a1bc23a",
+     "relation": "restriction",
+     "place": {
+      "name": "London",
+      "level": "city",
+      "country": "GB"
+     },
+     "offering": "Payroll consulting",
+     "evidence_type": "explicit_statement",
+     "reliability": "strong",
+     "source": "https://books.example/",
+     "observation": "Payroll consulting is only available in London.",
+     "observed_at": "2026-10-01T00:00:00+00:00",
+     "method": "geo-scope/1",
+     "status": "observed"
+    }
+   ],
+   "missing_evidence": []
+  }
+ },
+ "empty": {
+  "business_name": "Blank",
+  "description": null,
+  "category": null,
+  "products": [],
+  "services": [],
+  "locations": [],
+  "target_markets": [],
+  "confidence": 0.85,
+  "offerings": {
+   "method": "offerings/1",
+   "state": "unresolved",
+   "offerings": [
+    {
+     "id": "e5105274d580",
+     "name": "Relocation planning",
+     "kind": "service",
+     "status": "unverified",
+     "origins": [
+      "profile_model"
+     ],
+     "evidence": [
+      {
+       "type": "model_interpretation",
+       "source": "product_profile_model",
+       "observation": "Named by the profile model; no customer page states it.",
+       "reliability": "weak",
+       "observed_at": null,
+       "method": "offerings/1"
+      }
+     ],
+     "confidence": "low"
+    }
+   ],
+   "missing": [
+    "No customer pages were available (crawl missing or every page failed)."
+   ]
+  },
+  "geography": {
+   "method": "geo-scope/1",
+   "generated_at": "2026-10-19T00:00:00+00:00",
+   "scope": "UNDETERMINED",
+   "confidence": "none",
+   "basis": [
+    "No supported-country, service-area or availability statement.",
+    "Only weak signals (Uganda); these do not establish availability."
+   ],
+   "conflicts": [],
+   "candidate_scopes": [],
+   "delivery_model": [],
+   "headquarters": [],
+   "offices": [],
+   "operational_markets": [],
+   "target_markets": [],
+   "observed_demand_markets": [],
+   "visibility_markets": [],
+   "competitive_markets": [],
+   "regulatory": [],
+   "unverified_markets": [
+    {
+     "name": "Uganda",
+     "level": "country",
+     "country": "UG",
+     "status": "unverified",
+     "confidence": "low",
+     "basis": [
+      "domain (weak)"
+     ],
+     "evidence": [
+      "074bca3fd419"
+     ]
+    }
+   ],
+   "excluded_markets": [],
+   "offerings": [],
+   "evidence": [
+    {
+     "id": "074bca3fd419",
+     "relation": "signal",
+     "place": {
+      "name": "Uganda",
+      "level": "country",
+      "country": "UG"
+     },
+     "offering": null,
+     "evidence_type": "domain",
+     "reliability": "weak",
+     "source": "blank.ug",
+     "observation": "Country-code domain .ug (not decisive: says where the domain is registered, not where the offering is available)",
+     "observed_at": null,
+     "method": "geo-scope/1",
+     "status": "observed"
+    }
+   ],
+   "missing_evidence": [
+    "No customer pages were available to read.",
+    "No supported-country list, service-area statement, shipping destinations or schema.org areaServed on the customer's pages.",
+    "No customer-confirmed markets (entity profile: markets / excluded_markets)."
+   ]
+  }
+ }
+}

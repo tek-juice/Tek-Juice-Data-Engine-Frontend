@@ -1,12 +1,109 @@
 import apiClient from './axios';
 
+export type EvidenceStatus = 'confirmed' | 'inferred' | 'unverified';
+export type ConfidenceLevel = 'high' | 'medium' | 'low' | 'none';
+
+export interface OfferingEvidence {
+  type: string;
+  source: string;
+  observation: string;
+  reliability: 'verified' | 'strong' | 'moderate' | 'weak';
+  observed_at: string | null;
+}
+
+/** A product, service, plan or capability with its provenance. */
+export interface Offering {
+  id: string;
+  name: string;
+  kind: 'product' | 'service' | 'plan' | 'feature';
+  status: EvidenceStatus;
+  confidence: Exclude<ConfidenceLevel, 'none'>;
+  origins: string[];
+  evidence: OfferingEvidence[];
+}
+
+export interface OfferingsResult {
+  state: 'identified' | 'unresolved';
+  offerings: Offering[];
+  /** Why nothing could be identified (state = unresolved). */
+  missing: string[];
+}
+
+export type GeoScope =
+  | 'LOCAL' | 'CITY' | 'SUBNATIONAL' | 'NATIONAL' | 'MULTI_COUNTRY'
+  | 'CONTINENTAL_OR_REGIONAL' | 'GLOBAL' | 'MIXED' | 'UNDETERMINED';
+
+export interface GeoMarket {
+  name: string;
+  level: 'global' | 'region' | 'country' | 'subnational' | 'city' | 'unresolved';
+  country: string | null;
+  status: string;
+  confidence: Exclude<ConfidenceLevel, 'none'>;
+  basis: string[];
+  evidence: string[];
+}
+
+export interface GeoOfferingScope {
+  offering: string;
+  scope: GeoScope;
+  confidence: ConfidenceLevel;
+  basis: string[];
+  conflicts: string[];
+  delivery_model: string[];
+  operational_markets: GeoMarket[];
+  uses_site_wide_evidence: boolean;
+}
+
+export interface GeoEvidence {
+  id: string;
+  relation: string;
+  place: { name: string; level: string; country: string | null };
+  offering: string | null;
+  evidence_type: string;
+  reliability: 'verified' | 'strong' | 'moderate' | 'weak';
+  source: string;
+  observation: string;
+  observed_at: string | null;
+}
+
+/** Evidence-based geographic market intelligence for one run. */
+export interface Geography {
+  scope: GeoScope;
+  confidence: ConfidenceLevel;
+  basis: string[];
+  conflicts: string[];
+  candidate_scopes: GeoScope[];
+  delivery_model: string[];
+  headquarters: GeoMarket[];
+  offices: GeoMarket[];
+  operational_markets: GeoMarket[];
+  target_markets: GeoMarket[];
+  observed_demand_markets: GeoMarket[];
+  visibility_markets: GeoMarket[];
+  competitive_markets: GeoMarket[];
+  regulatory: GeoMarket[];
+  unverified_markets: GeoMarket[];
+  excluded_markets: GeoMarket[];
+  offerings: GeoOfferingScope[];
+  evidence: GeoEvidence[];
+  missing_evidence: string[];
+}
+
 export interface ProductProfile {
   business_name: string | null;
   description: string | null;
   category: string | null;
+  products?: string[];
+  /** Supported services and capabilities (names only). */
   services: string[];
+  /** Headquarters, offices and confirmed operational places. */
   locations: string[];
+  target_markets?: string[];
   confidence: number;
+  /** null for profiles built before offerings were tracked. */
+  offerings?: OfferingsResult | null;
+  /** null for profiles built before geographic intelligence. */
+  geography?: Geography | null;
 }
 
 export interface IntelligenceSummary {

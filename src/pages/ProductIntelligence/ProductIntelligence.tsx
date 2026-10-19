@@ -14,6 +14,7 @@ import {
 } from '../../api/intelligence';
 import { listWebsites, type Website } from '../../api/websites';
 import { useIntelligenceRun } from '../../contexts/IntelligenceRunContext';
+import { MarketIntelligence, OfferingsList } from './MarketIntelligence';
 
 function formatConfidence(value: number | null | undefined) {
   if (value == null) return '—';
@@ -183,15 +184,11 @@ export default function ProductIntelligence() {
         </DetailCard>
 
         <DetailCard icon={Target} label="Services / Products">
-          {product.services?.length
-            ? product.services.join(', ')
-            : 'No services identified yet.'}
+          <OfferingsList product={product} />
         </DetailCard>
 
-        <DetailCard icon={MapPin} label="Locations">
-          {product.locations?.length
-            ? product.locations.join(', ')
-            : 'No locations identified yet.'}
+        <DetailCard icon={MapPin} label="Locations and markets">
+          <MarketIntelligence product={product} />
         </DetailCard>
       </div>
 
