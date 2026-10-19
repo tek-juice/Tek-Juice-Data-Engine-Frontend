@@ -81,6 +81,16 @@ export type OAuthProvider = 'google' | 'github' | 'builderid';
  * allowlist). After sign-in the gateway sets the httpOnly session cookies and
  * redirects to `${origin}/auth/callback` — no tokens in the URL.
  */
+/** Sign-in methods this instance offers; Google only when it is configured. */
+export async function getAuthProviders(): Promise<{ password: boolean; google: boolean }> {
+  try {
+    const { data } = await apiClient.get<{ password: boolean; google: boolean }>('/api/v1/auth/providers');
+    return { password: data.password !== false, google: data.google === true };
+  } catch {
+    return { password: true, google: false };   // older gateway or unreachable: never offer a broken button
+  }
+}
+
 export function redirectToOAuth(provider: OAuthProvider): void {
   window.location.href = `${API_BASE_URL}${API_PREFIX}/auth/oauth/${provider}?redirect_uri=${encodeURIComponent(window.location.origin)}`;
 }

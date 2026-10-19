@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { useLocation, useNavigate, Navigate } from 'react-router-dom';
 import { login, register, isAuthenticated, loadSession } from '../../services/auth.service';
-import { redirectToOAuth } from '../../api/auth';
+import { getAuthProviders, redirectToOAuth } from '../../api/auth';
 import './Login.css';
 
 type Mode = 'signin' | 'signup';
@@ -22,6 +22,16 @@ export default function Login() {
   const [loading, setLoading]                 = useState(false);
   const [showPw, setShowPw]                   = useState(false);
   const [showConfirm, setShowConfirm]         = useState(false);
+  const [googleEnabled, setGoogleEnabled]     = useState(false);
+
+  // Offer Google only when this instance has it configured.
+  useEffect(() => {
+    let active = true;
+    void getAuthProviders().then(p => { if (active) setGoogleEnabled(p.google); });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   // A valid session cookie from an earlier visit skips the login form.
   useEffect(() => {
@@ -148,20 +158,24 @@ export default function Login() {
           </p>
         </div>
 
-        {/* ── OAuth buttons ── */}
-        <div className="auth-oauth">
-          <button
-            type="button"
-            className="oauth google"
-            onClick={() => redirectToOAuth('google')}
-            disabled={loading}
-          >
-            <GoogleIcon /> Continue with Google
-          </button>
-        </div>
+        {/* ── OAuth buttons (only when configured on this instance) ── */}
+        {googleEnabled && (
+          <>
+            <div className="auth-oauth">
+              <button
+                type="button"
+                className="oauth google"
+                onClick={() => redirectToOAuth('google')}
+                disabled={loading}
+              >
+                <GoogleIcon /> Continue with Google
+              </button>
+            </div>
 
-        {/* ── Divider ── */}
-        <div className="auth-divider"><span>or continue with email</span></div>
+            {/* ── Divider ── */}
+            <div className="auth-divider"><span>or continue with email</span></div>
+          </>
+        )}
 
         {/* ── Form ── */}
         <form className="auth-form" onSubmit={handleSubmit} noValidate>
