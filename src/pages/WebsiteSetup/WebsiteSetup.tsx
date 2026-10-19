@@ -264,8 +264,6 @@ export default function WebsiteSetup() {
                   `TEKJUICE_WEBSITE_ID=${websiteId}`,
                   `TEKJUICE_CONNECTOR_KEY=${connectorKey}`,
                   `TEKJUICE_DATA_ENGINE_URL=${engineUrl}`,
-                  'TEKJUICE_RECEIVER_SECRET=<generate on your server: python -c "import secrets; print(secrets.token_urlsafe(48))">',
-                  'TEKJUICE_PUBLICATION_ENDPOINT_URL=https://<your-api-host>/tekjuice/publish',
                 ].join('\n')}
               />
               <button type="button" className={button} style={{ background: 'var(--surface-2)', color: 'var(--text)' }}
@@ -367,10 +365,17 @@ export default function WebsiteSetup() {
               {!state.publicationReady && (
                 <>
                   <p style={{ color: 'var(--text-3)' }}>
-                    Install the connector on your backend, mount its publication receiver, and start
-                    your backend with the environment above. It registers the receiver automatically.
+                    Install the connector on your backend and run its setup with the environment above.
+                    Setup creates the receiver secret and the publication endpoint on your server,
+                    registers them with the Data Engine and waits for verification: there is nothing
+                    else to copy. If your framework does not declare its public API address, add
+                    TEKJUICE_API_BASE_URL=https://&lt;your backend&apos;s API address&gt; first.
                   </p>
-                  <CopyBlock label="Install" value="pip install 'tekjuice-connector>=0.2.0'" />
+                  <CopyBlock label="Install and set up" value={'pip install "tekjuice-connector>=0.7.0"\ntekjuice setup --env-file .env'} />
+                  <p style={{ color: 'var(--text-3)' }}>
+                    Backend in another language (Node, PHP, Go, …)? Run the connector next to it as a
+                    sidecar: <code>tekjuice serve</code>.
+                  </p>
                 </>
               )}
               {publication && publication.status !== 'not_configured' && (

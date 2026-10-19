@@ -59,6 +59,12 @@ describe('WebsiteSetup', () => {
     await userEvent.click(await screen.findByRole('button', { name: /generate connector key/i }));
 
     expect(await screen.findByText(new RegExp(`TEKJUICE_CONNECTOR_KEY=${SECRET_KEY}`))).toBeInTheDocument();
+    // Only what the backend needs: the connector's setup creates the receiver
+    // secret and the publication endpoint itself.
+    const block = screen.getByText(new RegExp(`TEKJUICE_CONNECTOR_KEY=${SECRET_KEY}`)).textContent ?? '';
+    expect(block.split('\n').map(l => l.split('=')[0])).toEqual(
+      ['TEKJUICE_WEBSITE_ID', 'TEKJUICE_CONNECTOR_KEY', 'TEKJUICE_DATA_ENGINE_URL']);
+    expect(document.body.textContent).not.toMatch(/TEKJUICE_RECEIVER_SECRET|TEKJUICE_PUBLICATION_ENDPOINT_URL/);
     const stored = [
       ...Object.keys(localStorage).map(k => localStorage.getItem(k)),
       ...Object.keys(sessionStorage).map(k => sessionStorage.getItem(k)),
@@ -129,7 +135,7 @@ describe('WebsiteSetup', () => {
     const reverify = vi.spyOn(connector, 'reverifyPublication').mockResolvedValue({} as never);
     renderSetup();
 
-    expect(await screen.findByText(/TEKJUICE_RECEIVER_SECRET/)).toBeInTheDocument();
+    expect(await screen.findByText(/re-register its secret/)).toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: /verify again/i }));
     await waitFor(() => expect(reverify).toHaveBeenCalledWith(WEBSITE_ID));
   });
