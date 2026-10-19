@@ -45,6 +45,7 @@ const NAV: NavGroup[] = [
       { label: 'Search Performance', to: '/search-performance' },
       { label: 'SERP Observations', to: '/serp-observations' },
       { label: 'Feedback', to: '/feedback' },
+      { label: 'PageSpeed Recommendations', to: '/pagespeed' },
     ],
   },
   {

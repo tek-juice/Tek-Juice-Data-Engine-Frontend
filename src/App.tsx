@@ -35,6 +35,7 @@ import PublishedContent from './pages/PublishedContent/PublishedContent';
 import SearchPerformance from './pages/SearchPerformance/SearchPerformance';
 import SerpObservations from './pages/SerpObservations/SerpObservations';
 import Feedback from './pages/Feedback/Feedback';
+import PageSpeed from './pages/PageSpeed/PageSpeed';
 
 // ── Helper: wrap element in an error boundary ─────────────────────────────────
 function page(el: ReactElement) {
@@ -87,6 +88,7 @@ function App() {
       <Route path="/search-performance" element={page(<SearchPerformance />)} />
       <Route path="/serp-observations" element={page(<SerpObservations />)} />
       <Route path="/feedback" element={page(<Feedback />)} />
+      <Route path="/pagespeed" element={page(<PageSpeed />)} />
           </Route>
         </Route>
 

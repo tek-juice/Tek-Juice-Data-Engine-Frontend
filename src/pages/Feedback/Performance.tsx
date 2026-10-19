@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { isAxiosError } from 'axios';
+import { Link } from 'react-router-dom';
 import {
   decideAction,
   getPerformanceFindings,
@@ -57,7 +58,10 @@ export default function Performance({ websiteId }: { websiteId: string }) {
   };
 
   if (!findings) return <div className="card"><div className="muted">{message || 'Loading performance findings…'}</div></div>;
-  const open = findings.findings.filter((f) => !['no_longer_observed', 'resolved', 'rolled_back'].includes(f.status));
+  const current = findings.findings.filter((f) => !['no_longer_observed', 'resolved', 'rolled_back'].includes(f.status));
+  // Source-code changes have their own page (PageSpeed recommendations).
+  const open = current.filter((f) => f.eligibility !== 'code_change_required');
+  const codeChanges = current.length - open.length;
 
   return (
     <div className="card">
@@ -76,7 +80,13 @@ export default function Performance({ websiteId }: { websiteId: string }) {
         {remediations && !remediations.execution_enabled && ' Remediation execution is currently disabled.'}
       </p>
       {message && <p className="muted">{message}</p>}
-      {open.length === 0 ? <p className="muted">No open performance findings.</p> : (
+      {codeChanges > 0 && (
+        <p>
+          {`${codeChanges} finding(s) need a change in the site's source code: `}
+          <Link to="/pagespeed">see PageSpeed recommendations</Link>.
+        </p>
+      )}
+      {open.length === 0 ? <p className="muted">No open code-free or unresolved findings.</p> : (
         <div className="table-wrap">
           <table>
             <thead><tr><th>Finding</th><th>Device</th><th>Category</th><th>Fix</th><th>State</th><th /></tr></thead>
@@ -87,7 +97,6 @@ export default function Performance({ websiteId }: { websiteId: string }) {
                     <strong>{f.title}</strong>{f.observed_display && ` · ${f.observed_display}`}
                     <div className="muted" style={{ fontSize: 12 }}>{f.url}</div>
                     <div className="muted" style={{ fontSize: 12 }}>{f.hypothesis}</div>
-                    {!f.code_free && <div style={{ fontSize: 12 }}>{`Recommended: ${f.recommended_action}`}</div>}
                     {f.plan?.blocked_reason && <div className="muted" style={{ fontSize: 12 }}>{`Blocked: ${f.plan.blocked_reason}`}</div>}
                   </td>
                   <td>{f.strategy}</td>

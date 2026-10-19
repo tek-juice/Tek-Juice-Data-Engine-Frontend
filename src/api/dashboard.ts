@@ -595,7 +595,13 @@ export interface PerformanceFinding {
   code_free: boolean;
   risk: string;
   recommended_action: string;
-  resources: { url?: string; selector?: string; party?: string }[];
+  resources: { url?: string; selector?: string; snippet?: string; party?: string; wastedBytes?: number;
+    wastedMs?: number; totalBytes?: number }[];
+  metric: string | null;
+  observed_value: number | null;
+  impact: { savings_ms?: number; savings_bytes?: number; metric_savings?: Record<string, number> };
+  verification: { resolved_when?: string; functional?: string[] };
+  evidence: { source?: 'lab' | 'field'; scope?: string };
   plan: { status?: string; blocked_reason?: string | null; approval?: { mode: string; reason: string } } | null;
   status: string;
   state: string;
@@ -603,7 +609,8 @@ export interface PerformanceFinding {
   observed_at: string | null;
 }
 
-export async function getPerformanceFindings(websiteId: string, params: { status?: string; strategy?: string } = {}):
+export async function getPerformanceFindings(websiteId: string,
+  params: { status?: string; strategy?: string; eligibility?: string; category?: string; limit?: number } = {}):
   Promise<{ findings: PerformanceFinding[]; total: number; counts: { by_category: Record<string, number>;
     by_eligibility: Record<string, number>; by_status: Record<string, number> }; categories: Record<string, string> }> {
   const { data } = await apiClient.get(`/api/v1/websites/${websiteId}/performance/findings`, { params });
@@ -636,5 +643,23 @@ export interface PerformanceRemediation {
 export async function getPerformanceRemediations(websiteId: string):
   Promise<{ remediations: PerformanceRemediation[]; execution_enabled: boolean }> {
   const { data } = await apiClient.get(`/api/v1/websites/${websiteId}/performance/remediations`);
+  return data;
+}
+
+export interface PerformanceAssessment {
+  id: string;
+  measured_at: string;
+  url: string;
+  strategy: 'mobile' | 'desktop';
+  status: 'ok' | 'error';
+  error: string | null;
+  lab: { performance?: number | null; lcp_ms?: number | null; cls?: number | null; tbt_ms?: number | null;
+    ttfb_ms?: number | null } | null;
+  field: { category?: string; scope?: string } | null;
+}
+
+export async function getPerformanceAssessments(websiteId: string, limit = 50):
+  Promise<{ assessments: PerformanceAssessment[]; total: number; calls_today: number; daily_limit: number }> {
+  const { data } = await apiClient.get(`/api/v1/websites/${websiteId}/performance/assessments`, { params: { limit } });
   return data;
 }
