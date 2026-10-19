@@ -147,7 +147,7 @@ function Header({ website, onRefresh, onAssess, busy }: {
       </div>
       {onRefresh && (
         <div style={{ display: 'flex', gap: 8 }}>
-          {onAssess && <button className="button secondary" onClick={onAssess} disabled={busy}>Assess now</button>}
+          {onAssess && <button className="button" onClick={onAssess} disabled={busy}>Assess now</button>}
           <button className="button secondary" onClick={onRefresh} disabled={busy}>
             <RefreshCw size={16} />
             {busy ? 'Refreshing…' : 'Refresh'}
