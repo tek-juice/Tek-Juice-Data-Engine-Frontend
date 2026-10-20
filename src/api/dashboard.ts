@@ -360,6 +360,13 @@ export interface EntityProfile {
   customer_pages: number;
   unverified: string[];
   published_facts: Record<string, string | string[]>;
+  /** Whether the name alone finds the site (brand_identity.assess). */
+  brand?: {
+    state: 'owned' | 'ambiguous' | 'unknown' | 'unmeasured';
+    name: string;
+    recommended_name: string;
+    taken_by?: string[];
+  };
 }
 
 /** GET /api/v1/websites/{id}/entity — the business's verified source of truth. */

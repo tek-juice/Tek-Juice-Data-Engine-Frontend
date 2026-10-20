@@ -13,7 +13,18 @@ const FIELDS: { key: string; label: string; list: boolean }[] = [
   { key: 'audiences', label: 'Who it is for', list: true },
   { key: 'locations', label: 'Locations', list: true },
   { key: 'pricing', label: 'Pricing', list: false },
+  { key: 'alternate_names', label: 'Other names it is known by', list: true },
+  { key: 'same_as', label: 'Profiles elsewhere (https links: LinkedIn, Product Hunt, app stores, ...)', list: true },
+  { key: 'logo', label: 'Logo (https image address)', list: false },
 ];
+
+/** What AI answers make of the name on its own. */
+export function brandText(brand: NonNullable<EntityProfile['brand']>): string {
+  if (brand.state === 'owned') return `Asked "What is ${brand.name}?", AI answers find this website.`;
+  const others = brand.taken_by?.length ? ` describe ${brand.taken_by.slice(0, 3).join(', ')}` : ' do not find this website';
+  return `Asked "What is ${brand.name}?", AI answers${others}. Use "${brand.recommended_name}" everywhere; `
+    + 'the listing tasks under Actions help search engines and AI assistants recognise the business.';
+}
 
 /** Text of a fact for the editor (lists one per line). */
 export function factText(fact: EntityFact | undefined): string {
@@ -89,6 +100,9 @@ export default function BusinessFacts({ websiteId }: { websiteId: string }) {
         AI systems describe a business from what they can verify. Only facts confirmed here or stated on
         your own pages are published to your site as structured data and used to check AI answers.
       </p>
+      {entity.brand && entity.brand.state !== 'unmeasured' && (
+        <p className="muted">{brandText(entity.brand)}</p>
+      )}
       {FIELDS.map((field) => (
         <label key={field.key} style={{ display: 'block', marginBottom: 12 }}>
           <div>
