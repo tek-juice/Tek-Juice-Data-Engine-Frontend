@@ -109,7 +109,7 @@ export default function Actions({ websiteId }: { websiteId: string }) {
             {done.map((a) => (
               <li key={a.id}>
                 <strong>{a.title}</strong> · {STATUS_LABELS[a.status] ?? a.status}
-                {['site_change', 'performance_remediation'].includes(a.kind) && ['retained', 'revise'].includes(a.status) && (
+                {['site_change', 'page_rename', 'performance_remediation'].includes(a.kind) && ['retained', 'revise'].includes(a.status) && (
                   <>{' '}<button className="button secondary" onClick={() => void rollbackAction(websiteId, a.id)
                     .then(load).catch(() => setMessage('Rollback failed (admins only).'))}>Roll back</button></>
                 )}
