@@ -24,7 +24,7 @@ function SummaryCard({
 }
 
 export default function Execution() {
-  const { selectedRunId } = useIntelligenceRun();
+  const { selectedRunId, website } = useIntelligenceRun();
   const [executions, setExecutions] = useState<ContentExecution[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -33,6 +33,9 @@ export default function Execution() {
 
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
+  // Executions outlive the run that planned them (a held draft published
+  // later, rename and link maintenance): all of them by default.
+  const [scope, setScope] = useState<'all' | 'run'>('all');
 
   const load = useCallback(async (refreshMode = false) => {
     try {
@@ -45,7 +48,8 @@ export default function Execution() {
         page: 1,
         page_size: 100,
         ...(status ? { status } : {}),
-        ...(selectedRunId ? { run_id: selectedRunId } : {}),
+        ...(website?.id ? { website_id: website.id } : {}),
+        ...(scope === 'run' && selectedRunId ? { run_id: selectedRunId } : {}),
       });
 
       setExecutions(response.items);
@@ -62,7 +66,7 @@ export default function Execution() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [status, selectedRunId]);
+  }, [status, scope, selectedRunId, website?.id]);
 
   useEffect(() => {
     void load();
@@ -205,6 +209,16 @@ export default function Execution() {
             value={search}
             onChange={(event) => setSearch(event.target.value)}
           />
+
+          <select
+            className="input"
+            aria-label="Which executions"
+            value={scope}
+            onChange={(event) => setScope(event.target.value as 'all' | 'run')}
+          >
+            <option value="all">All runs</option>
+            <option value="run" disabled={!selectedRunId}>Selected run only</option>
+          </select>
 
           <select
             className="input"

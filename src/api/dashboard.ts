@@ -223,7 +223,7 @@ export interface ContentExecutionListResponse {
  * Canonical content execution pipeline records.
  */
 export async function getContentExecutions(
-  params?: PaginatedQuery & { status?: string; run_id?: string },
+  params?: PaginatedQuery & { status?: string; run_id?: string; website_id?: string },
 ): Promise<ContentExecutionListResponse> {
   const { data } = await apiClient.get<ContentExecutionListResponse>(
     '/api/v1/dashboard/content-executions',
