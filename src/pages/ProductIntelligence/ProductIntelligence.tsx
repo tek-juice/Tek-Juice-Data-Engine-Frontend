@@ -12,7 +12,8 @@ import {
   getIntelligenceSummary,
   type IntelligenceSummary,
 } from '../../api/intelligence';
-import { listWebsites, type Website } from '../../api/websites';
+import { type Website } from '../../api/websites';
+import { websitesFor } from '../../api/selectedWebsite';
 import { useIntelligenceRun } from '../../contexts/IntelligenceRunContext';
 import { MarketIntelligence, OfferingsList } from './MarketIntelligence';
 
@@ -44,7 +45,7 @@ function DetailCard({
 }
 
 export default function ProductIntelligence() {
-  const { selectedRunId } = useIntelligenceRun();
+  const { selectedRunId, website: chosenWebsite, loading: websitesLoading } = useIntelligenceRun();
   const [website, setWebsite] = useState<Website | null>(null);
   const [data, setData] = useState<IntelligenceSummary | null>(null);
   const [loading, setLoading] = useState(true);
@@ -57,7 +58,7 @@ export default function ProductIntelligence() {
       if (refresh) setRefreshing(true);
       else setLoading(true);
 
-      const websites = await listWebsites();
+      const websites = await websitesFor(chosenWebsite);
 
       if (!websites.length) {
         setWebsite(null);
@@ -77,11 +78,11 @@ export default function ProductIntelligence() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [, selectedRunId]);
+  }, [selectedRunId, chosenWebsite]);
 
   useEffect(() => {
-    void load();
-  }, [load]);
+    if (!websitesLoading) void load();
+  }, [load, websitesLoading]);
 
   if (loading) {
     return (

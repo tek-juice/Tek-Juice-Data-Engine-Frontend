@@ -3,7 +3,9 @@ import SearchResults from '../Feedback/SearchResults';
 import { AlertCircle, RefreshCw } from 'lucide-react';
 import { isAxiosError } from 'axios';
 import { getVisibilitySearchPerformance } from '../../api/dashboard';
-import { listWebsites, type Website } from '../../api/websites';
+import { type Website } from '../../api/websites';
+import { websitesFor } from '../../api/selectedWebsite';
+import { useIntelligenceRun } from '../../contexts/IntelligenceRunContext';
 import type { VisibilitySearchPerformanceResponse } from '../../types';
 
 function SummaryCard({
@@ -22,6 +24,7 @@ function SummaryCard({
 }
 
 export default function SearchPerformance() {
+  const { website: chosenWebsite, loading: websitesLoading } = useIntelligenceRun();
   const [website, setWebsite] = useState<Website | null>(null);
   const [data, setData] =
     useState<VisibilitySearchPerformanceResponse | null>(null);
@@ -36,7 +39,7 @@ export default function SearchPerformance() {
       if (refreshMode) setRefreshing(true);
       else setLoading(true);
 
-      const websites = await listWebsites();
+      const websites = await websitesFor(chosenWebsite);
 
       if (!websites.length) {
         setWebsite(null);
@@ -64,11 +67,11 @@ export default function SearchPerformance() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [chosenWebsite]);
 
   useEffect(() => {
-    void load();
-  }, [load]);
+    if (!websitesLoading) void load();
+  }, [load, websitesLoading]);
 
   const executionSummary = useMemo(() => {
     if (!data) {

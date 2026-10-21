@@ -8,7 +8,9 @@ import {
   type PerformanceAssessment,
   type PerformanceFinding,
 } from '../../api/dashboard';
-import { listWebsites, type Website } from '../../api/websites';
+import { type Website } from '../../api/websites';
+import { websitesFor } from '../../api/selectedWebsite';
+import { useIntelligenceRun } from '../../contexts/IntelligenceRunContext';
 
 /** Where in the site's code a developer usually makes the change, per category. */
 export const WHERE_TO_FIX: Record<string, string> = {
@@ -159,6 +161,7 @@ function Header({ website, onRefresh, onAssess, busy }: {
 }
 
 export default function PageSpeed() {
+  const { website: chosenWebsite, loading: websitesLoading } = useIntelligenceRun();
   const [website, setWebsite] = useState<Website | null>(null);
   const [findings, setFindings] = useState<PerformanceFinding[]>([]);
   const [assessments, setAssessments] = useState<PerformanceAssessment[]>([]);
@@ -174,7 +177,7 @@ export default function PageSpeed() {
       setError('');
       if (refresh) setRefreshing(true);
       else setLoading(true);
-      const websites = await listWebsites();
+      const websites = await websitesFor(chosenWebsite);
       if (!websites.length) {
         setWebsite(null);
         return;
@@ -195,11 +198,11 @@ export default function PageSpeed() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [chosenWebsite]);
 
   useEffect(() => {
-    void load();
-  }, [load]);
+    if (!websitesLoading) void load();
+  }, [load, websitesLoading]);
 
   const visible = useMemo(() => findings.filter((f) => (strategy === 'all' || f.strategy === strategy)
     && (category === 'all' || f.category === category)), [findings, strategy, category]);

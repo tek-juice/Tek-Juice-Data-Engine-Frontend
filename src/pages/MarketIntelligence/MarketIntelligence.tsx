@@ -5,11 +5,12 @@ import {
   getMarketProfile,
   type MarketProfile,
 } from '../../api/intelligence';
-import { listWebsites, type Website } from '../../api/websites';
+import { type Website } from '../../api/websites';
+import { websitesFor } from '../../api/selectedWebsite';
 import { useIntelligenceRun } from '../../contexts/IntelligenceRunContext';
 
 export default function MarketIntelligence() {
-  const { selectedRunId } = useIntelligenceRun();
+  const { selectedRunId, website: chosenWebsite, loading: websitesLoading } = useIntelligenceRun();
   const [website, setWebsite] = useState<Website | null>(null);
   const [market, setMarket] = useState<MarketProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -23,7 +24,7 @@ export default function MarketIntelligence() {
       if (refresh) setRefreshing(true);
       else setLoading(true);
 
-      const websites = await listWebsites();
+      const websites = await websitesFor(chosenWebsite);
 
       if (!websites.length) {
         setWebsite(null);
@@ -53,11 +54,11 @@ export default function MarketIntelligence() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [, selectedRunId]);
+  }, [selectedRunId, chosenWebsite]);
 
   useEffect(() => {
-    void load();
-  }, [load]);
+    if (!websitesLoading) void load();
+  }, [load, websitesLoading]);
 
   if (loading) {
     return (

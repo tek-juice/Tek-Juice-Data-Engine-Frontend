@@ -23,7 +23,7 @@ import {
   getSearchResults,
   type SearchResults,
 } from '../../api/dashboard';
-import { listWebsites } from '../../api/websites';
+import { websitesFor } from '../../api/selectedWebsite';
 import { useIntelligenceRun } from '../../contexts/IntelligenceRunContext';
 import { rangeText } from '../Feedback/SearchResults';
 import type {
@@ -747,7 +747,7 @@ function SearchPerformance({
 }
 
 export default function TenantDashboard() {
-  const { selectedRunId } = useIntelligenceRun();
+  const { selectedRunId, website: chosenWebsite, loading: websitesLoading } = useIntelligenceRun();
   const [websiteId, setWebsiteId] = useState<string | null>(null);
   const [overview, setOverview] = useState<VisibilityOverview | null>(null);
   const [gaps, setGaps] = useState<VisibilityGapItem[]>([]);
@@ -770,7 +770,7 @@ export default function TenantDashboard() {
     setError('');
 
     try {
-      const websites = await listWebsites();
+      const websites = await websitesFor(chosenWebsite);
 
       if (!websites.length) {
         setWebsiteId(null);
@@ -808,11 +808,11 @@ export default function TenantDashboard() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [selectedRunId]);
+  }, [selectedRunId, chosenWebsite]);
 
   useEffect(() => {
-    void load();
-  }, [load]);
+    if (!websitesLoading) void load();
+  }, [load, websitesLoading]);
 
   if (loading) {
     return (

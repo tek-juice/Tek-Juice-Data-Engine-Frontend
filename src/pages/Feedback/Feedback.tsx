@@ -2,7 +2,9 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AlertCircle, RefreshCw } from 'lucide-react';
 import { isAxiosError } from 'axios';
 import { getVisibilityOverview } from '../../api/dashboard';
-import { listWebsites, type Website } from '../../api/websites';
+import { type Website } from '../../api/websites';
+import { websitesFor } from '../../api/selectedWebsite';
+import { useIntelligenceRun } from '../../contexts/IntelligenceRunContext';
 import type { VisibilityFeedback } from '../../types';
 import AIAnswers from './AIAnswers';
 import BusinessFacts from './BusinessFacts';
@@ -29,6 +31,7 @@ function SummaryCard({
 }
 
 export default function Feedback() {
+  const { website: chosenWebsite, loading: websitesLoading } = useIntelligenceRun();
   const [website, setWebsite] = useState<Website | null>(null);
   const [feedback, setFeedback] = useState<VisibilityFeedback | null>(null);
   const [loading, setLoading] = useState(true);
@@ -42,7 +45,7 @@ export default function Feedback() {
       if (refreshMode) setRefreshing(true);
       else setLoading(true);
 
-      const websites = await listWebsites();
+      const websites = await websitesFor(chosenWebsite);
 
       if (!websites.length) {
         setWebsite(null);
@@ -70,11 +73,11 @@ export default function Feedback() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [chosenWebsite]);
 
   useEffect(() => {
-    void load();
-  }, [load]);
+    if (!websitesLoading) void load();
+  }, [load, websitesLoading]);
 
   const changeTotal = useMemo(() => {
     if (!feedback) return 0;

@@ -4,7 +4,8 @@ import { isAxiosError } from 'axios';
 import {
   getVisibilityPublished,
 } from '../../api/dashboard';
-import { listWebsites, type Website } from '../../api/websites';
+import { type Website } from '../../api/websites';
+import { websitesFor } from '../../api/selectedWebsite';
 import { useIntelligenceRun } from '../../contexts/IntelligenceRunContext';
 import type { VisibilityPublishedItem } from '../../types';
 
@@ -24,7 +25,7 @@ function SummaryCard({
 }
 
 export default function PublishedContent() {
-  const { selectedRunId } = useIntelligenceRun();
+  const { selectedRunId, website: chosenWebsite, loading: websitesLoading } = useIntelligenceRun();
   const [website, setWebsite] = useState<Website | null>(null);
   const [items, setItems] = useState<VisibilityPublishedItem[]>([]);
   const [total, setTotal] = useState(0);
@@ -42,7 +43,7 @@ export default function PublishedContent() {
       if (refreshMode) setRefreshing(true);
       else setLoading(true);
 
-      const websites = await listWebsites();
+      const websites = await websitesFor(chosenWebsite);
 
       if (!websites.length) {
         setWebsite(null);
@@ -77,11 +78,11 @@ export default function PublishedContent() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [selectedRunId]);
+  }, [selectedRunId, chosenWebsite]);
 
   useEffect(() => {
-    void load();
-  }, [load]);
+    if (!websitesLoading) void load();
+  }, [load, websitesLoading]);
 
   const filtered = useMemo(() => {
     const needle = search.trim().toLowerCase();

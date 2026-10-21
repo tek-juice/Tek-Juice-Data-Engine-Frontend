@@ -9,7 +9,9 @@ import {
   getSerpObservations,
   type SerpObservation,
 } from '../../api/intelligence';
-import { listWebsites, type Website } from '../../api/websites';
+import { type Website } from '../../api/websites';
+import { websitesFor } from '../../api/selectedWebsite';
+import { useIntelligenceRun } from '../../contexts/IntelligenceRunContext';
 
 const PAGE_SIZE = 50;
 
@@ -39,6 +41,7 @@ function formatEngines(value: unknown) {
 }
 
 export default function SerpObservations() {
+  const { website: chosenWebsite, loading: websitesLoading } = useIntelligenceRun();
   const [website, setWebsite] = useState<Website | null>(null);
   const [observations, setObservations] = useState<SerpObservation[]>([]);
   const [total, setTotal] = useState(0);
@@ -55,7 +58,7 @@ export default function SerpObservations() {
       if (refresh) setRefreshing(true);
       else setLoading(true);
 
-      const websites = await listWebsites();
+      const websites = await websitesFor(chosenWebsite);
 
       if (!websites.length) {
         setWebsite(null);
@@ -94,11 +97,11 @@ export default function SerpObservations() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [offset]);
+  }, [offset, chosenWebsite]);
 
   useEffect(() => {
-    void load(0);
-  }, [load]);
+    if (!websitesLoading) void load(0);
+  }, [load, websitesLoading]);
 
   if (loading) {
     return (

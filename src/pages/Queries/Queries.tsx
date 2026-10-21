@@ -10,7 +10,8 @@ import {
   getDiscoveredQueries,
   type DiscoveredQuery,
 } from '../../api/intelligence';
-import { listWebsites, type Website } from '../../api/websites';
+import { type Website } from '../../api/websites';
+import { websitesFor } from '../../api/selectedWebsite';
 import { useIntelligenceRun } from '../../contexts/IntelligenceRunContext';
 
 function formatScore(value: number | null | undefined) {
@@ -29,7 +30,7 @@ function formatDate(value: string | null) {
 }
 
 export default function Queries() {
-  const { selectedRunId } = useIntelligenceRun();
+  const { selectedRunId, website: chosenWebsite, loading: websitesLoading } = useIntelligenceRun();
   const [website, setWebsite] = useState<Website | null>(null);
   const [queries, setQueries] = useState<DiscoveredQuery[]>([]);
   const [search, setSearch] = useState('');
@@ -47,7 +48,7 @@ export default function Queries() {
       if (refresh) setRefreshing(true);
       else setLoading(true);
 
-      const websites = await listWebsites();
+      const websites = await websitesFor(chosenWebsite);
 
       if (!websites.length) {
         setWebsite(null);
@@ -77,11 +78,11 @@ export default function Queries() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [, selectedRunId]);
+  }, [selectedRunId, chosenWebsite]);
 
   useEffect(() => {
-    void load();
-  }, [load]);
+    if (!websitesLoading) void load();
+  }, [load, websitesLoading]);
 
   const intents = useMemo(
     () =>

@@ -10,7 +10,8 @@ import {
   getCompetitors,
   Competitor,
 } from '../../api/intelligence';
-import { listWebsites, Website } from '../../api/websites';
+import { Website } from '../../api/websites';
+import { websitesFor } from '../../api/selectedWebsite';
 import { useIntelligenceRun } from '../../contexts/IntelligenceRunContext';
 
 function SummaryCard({
@@ -29,7 +30,7 @@ function SummaryCard({
 }
 
 export default function Competitors() {
-  const { selectedRunId } = useIntelligenceRun();
+  const { selectedRunId, website: chosenWebsite, loading: websitesLoading } = useIntelligenceRun();
   const [website, setWebsite] = useState<Website | null>(null);
   const [competitors, setCompetitors] = useState<Competitor[]>([]);
   const [loading, setLoading] = useState(true);
@@ -51,7 +52,7 @@ export default function Competitors() {
     }
 
     try {
-      const websites = await listWebsites();
+      const websites = await websitesFor(chosenWebsite);
 
       if (!websites.length) {
         setWebsite(null);
@@ -83,11 +84,11 @@ export default function Competitors() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [, selectedRunId]);
+  }, [selectedRunId, chosenWebsite]);
 
   useEffect(() => {
-    void load();
-  }, [load]);
+    if (!websitesLoading) void load();
+  }, [load, websitesLoading]);
 
   const filteredCompetitors = useMemo(() => {
     const term = search.trim().toLowerCase();

@@ -3,6 +3,7 @@ import { render, screen } from '@testing-library/react';
 import PageSpeed, { groupRecommendations, taskText } from '../pages/PageSpeed/PageSpeed';
 import * as dashboard from '../api/dashboard';
 import * as websites from '../api/websites';
+import * as context from '../contexts/IntelligenceRunContext';
 import type { PerformanceFinding } from '../api/dashboard';
 
 function finding(overrides: Partial<PerformanceFinding>): PerformanceFinding {
@@ -51,6 +52,7 @@ describe('PageSpeed recommendations', () => {
 
   describe('page', () => {
     beforeEach(() => {
+      vi.spyOn(context, 'useIntelligenceRun').mockReturnValue({ website: null, selectedRunId: null } as never);
       vi.spyOn(websites, 'listWebsites').mockResolvedValue([{ id: 'site-1', domain: 'shop.example' }] as never);
       vi.spyOn(dashboard, 'getPerformanceFindings').mockResolvedValue({
         findings: FINDINGS, total: FINDINGS.length, categories: {},
