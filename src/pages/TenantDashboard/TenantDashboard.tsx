@@ -565,17 +565,18 @@ function ContentPanel({
         />
 
         <StatCard
-          label="Published"
+          label="Live pages"
           value={formatNumber(content.published)}
           icon={<CheckCircle2 size={14} />}
           color="var(--success)"
         />
 
         <StatCard
-          label="Published today"
+          label="New articles today"
           value={formatNumber(content.published_today)}
           icon={<Globe size={14} />}
           color="var(--info)"
+          sub={content.updated_today ? `${formatNumber(content.updated_today)} pages updated or moved today` : undefined}
         />
       </div>
 
@@ -990,14 +991,14 @@ export default function TenantDashboard() {
           />
 
           <OverviewKpi
-            label="Published"
+            label="Live pages"
             value={formatNumber(content.published)}
             icon={<CheckCircle2 size={16} />}
             color="var(--success)"
           />
 
           <OverviewKpi
-            label="Published today"
+            label="New articles today"
             value={formatNumber(content.published_today)}
             icon={<FileText size={16} />}
             color="var(--info)"
