@@ -147,7 +147,6 @@ export interface VisibilityContent {
   failed: number;
   published_this_week: number;
   published_today: number;
-  updated_today?: number;
   this_run?: {
     executions_created: number;
     strategies_already_covered: number;

@@ -24,6 +24,7 @@ import {
   type SearchResults,
 } from '../../api/dashboard';
 import { listWebsites } from '../../api/websites';
+import { useIntelligenceRun } from '../../contexts/IntelligenceRunContext';
 import { rangeText } from '../Feedback/SearchResults';
 import type {
   VisibilityGapItem,
@@ -565,25 +566,24 @@ function ContentPanel({
         />
 
         <StatCard
-          label="Live pages"
+          label="Published"
           value={formatNumber(content.published)}
           icon={<CheckCircle2 size={14} />}
           color="var(--success)"
         />
 
         <StatCard
-          label="New articles today"
+          label="Published today"
           value={formatNumber(content.published_today)}
           icon={<Globe size={14} />}
           color="var(--info)"
-          sub={content.updated_today ? `${formatNumber(content.updated_today)} pages updated or moved today` : undefined}
         />
       </div>
 
       {content.this_run && content.this_run.executions_created === 0 &&
         content.this_run.strategies_already_covered > 0 && (
         <p className="text-xs mb-4" style={{ color: 'var(--text-2)' }}>
-          The latest run created no new content: its{' '}
+          This run created no new content: its{' '}
           {formatNumber(content.this_run.strategies_already_covered)} topics are already covered by pages
           published in the last {content.this_run.regeneration_cooldown_days} days, which are left for
           search engines to assess before they are rewritten.
@@ -747,6 +747,7 @@ function SearchPerformance({
 }
 
 export default function TenantDashboard() {
+  const { selectedRunId } = useIntelligenceRun();
   const [websiteId, setWebsiteId] = useState<string | null>(null);
   const [overview, setOverview] = useState<VisibilityOverview | null>(null);
   const [gaps, setGaps] = useState<VisibilityGapItem[]>([]);
@@ -785,7 +786,7 @@ export default function TenantDashboard() {
 
       const [ov, gapData, publishedData, searchData] =
         await Promise.all([
-          getVisibilityOverview(id),
+          getVisibilityOverview(id, selectedRunId ?? undefined),
           getVisibilityGaps(id, 20),
           getVisibilityPublished(id, { page: 1, page_size: 20 }),
           getVisibilitySearchPerformance(id),
@@ -803,7 +804,7 @@ export default function TenantDashboard() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [selectedRunId]);
 
   useEffect(() => {
     void load();
@@ -991,14 +992,14 @@ export default function TenantDashboard() {
           />
 
           <OverviewKpi
-            label="Live pages"
+            label="Published"
             value={formatNumber(content.published)}
             icon={<CheckCircle2 size={16} />}
             color="var(--success)"
           />
 
           <OverviewKpi
-            label="New articles today"
+            label="Published today"
             value={formatNumber(content.published_today)}
             icon={<FileText size={16} />}
             color="var(--info)"

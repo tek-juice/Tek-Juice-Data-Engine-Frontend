@@ -16,10 +16,11 @@ import type {
  */
 export async function getVisibilityOverview(
   website_id: string,
+  run_id?: string,
 ): Promise<VisibilityOverview> {
   const { data } = await apiClient.get<VisibilityOverview>(
     '/api/v1/dashboard/visibility/overview',
-    { params: { website_id } },
+    { params: { website_id, ...(run_id ? { run_id } : {}) } },
   );
   return data;
 }
