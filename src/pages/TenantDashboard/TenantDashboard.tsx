@@ -788,7 +788,11 @@ export default function TenantDashboard() {
         await Promise.all([
           getVisibilityOverview(id, selectedRunId ?? undefined),
           getVisibilityGaps(id, 20),
-          getVisibilityPublished(id, { page: 1, page_size: 20 }),
+          getVisibilityPublished(id, {
+            page: 1,
+            page_size: 20,
+            ...(selectedRunId ? { run_id: selectedRunId } : {}),
+          }),
           getVisibilitySearchPerformance(id),
         ]);
 

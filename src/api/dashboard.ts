@@ -31,7 +31,7 @@ export async function getVisibilityOverview(
  */
 export async function getVisibilityPublished(
   website_id: string,
-  params?: PaginatedQuery,
+  params?: PaginatedQuery & { run_id?: string },
 ): Promise<VisibilityPublishedResponse> {
   const { data } = await apiClient.get<VisibilityPublishedResponse>(
     '/api/v1/dashboard/visibility/published',

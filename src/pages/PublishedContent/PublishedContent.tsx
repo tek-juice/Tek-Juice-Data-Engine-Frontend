@@ -5,6 +5,7 @@ import {
   getVisibilityPublished,
 } from '../../api/dashboard';
 import { listWebsites, type Website } from '../../api/websites';
+import { useIntelligenceRun } from '../../contexts/IntelligenceRunContext';
 import type { VisibilityPublishedItem } from '../../types';
 
 function SummaryCard({
@@ -23,6 +24,7 @@ function SummaryCard({
 }
 
 export default function PublishedContent() {
+  const { selectedRunId } = useIntelligenceRun();
   const [website, setWebsite] = useState<Website | null>(null);
   const [items, setItems] = useState<VisibilityPublishedItem[]>([]);
   const [total, setTotal] = useState(0);
@@ -57,6 +59,7 @@ export default function PublishedContent() {
         {
           page: 1,
           page_size: 100,
+          ...(selectedRunId ? { run_id: selectedRunId } : {}),
         },
       );
 
@@ -74,7 +77,7 @@ export default function PublishedContent() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [selectedRunId]);
 
   useEffect(() => {
     void load();
