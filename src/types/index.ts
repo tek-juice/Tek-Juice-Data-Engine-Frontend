@@ -147,6 +147,11 @@ export interface VisibilityContent {
   failed: number;
   published_this_week: number;
   published_today: number;
+  this_run?: {
+    executions_created: number;
+    strategies_already_covered: number;
+    regeneration_cooldown_days: number;
+  };
 }
 
 export interface VisibilityFeedback {

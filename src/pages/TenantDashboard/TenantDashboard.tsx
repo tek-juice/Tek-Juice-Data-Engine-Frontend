@@ -579,6 +579,16 @@ function ContentPanel({
         />
       </div>
 
+      {content.this_run && content.this_run.executions_created === 0 &&
+        content.this_run.strategies_already_covered > 0 && (
+        <p className="text-xs mb-4" style={{ color: 'var(--text-2)' }}>
+          The latest run created no new content: its{' '}
+          {formatNumber(content.this_run.strategies_already_covered)} topics are already covered by pages
+          published in the last {content.this_run.regeneration_cooldown_days} days, which are left for
+          search engines to assess before they are rewritten.
+        </p>
+      )}
+
       {published.length > 0 && (
         <div
           className="divide-y"
