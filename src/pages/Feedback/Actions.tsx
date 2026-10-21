@@ -36,6 +36,23 @@ export function outcomeText(action: OptimizationAction): string | null {
   return `Observed ${outcome.direction ?? ''}${changes.length ? `: ${changes.join(', ')}` : ''} (${outcome.label ?? 'observational'})`;
 }
 
+/** A proposed change to one of the site's records: each field, before and after. */
+export function ChangeList({ changes }: { changes: Record<string, { before: unknown; after: unknown }> }) {
+  const text = (value: unknown) => (value === null || value === undefined || value === ''
+    ? '(empty)' : String(value).replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim());
+  return (
+    <div style={{ fontSize: 12, marginTop: 6 }}>
+      {Object.entries(changes).map(([field, change]) => (
+        <div key={field} style={{ marginTop: 4 }}>
+          <strong>{field}</strong>
+          <div className="muted">{`Before: ${text(change.before).slice(0, 300)}`}</div>
+          <div>{`After: ${text(change.after).slice(0, 300)}`}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function Actions({ websiteId }: { websiteId: string }) {
   const [data, setData] = useState<Awaited<ReturnType<typeof getActions>> | null>(null);
   const [message, setMessage] = useState('');
@@ -83,6 +100,7 @@ export default function Actions({ websiteId }: { websiteId: string }) {
                     <strong>{a.title}</strong>
                     <div className="muted" style={{ fontSize: 12 }}>{a.rationale}</div>
                     {a.validation?.method && <div className="muted" style={{ fontSize: 12 }}>{`Verified by: ${a.validation.method}`}</div>}
+                    {a.evidence?.changes && <ChangeList changes={a.evidence.changes} />}
                   </td>
                   <td>{TIER_LABELS[a.tier]}</td>
                   <td>{STATUS_LABELS[a.status] ?? a.status}</td>
@@ -109,7 +127,7 @@ export default function Actions({ websiteId }: { websiteId: string }) {
             {done.map((a) => (
               <li key={a.id}>
                 <strong>{a.title}</strong> · {STATUS_LABELS[a.status] ?? a.status}
-                {['site_change', 'page_rename', 'performance_remediation'].includes(a.kind) && ['retained', 'revise'].includes(a.status) && (
+                {['site_change', 'page_rename', 'record_update', 'performance_remediation'].includes(a.kind) && ['retained', 'revise'].includes(a.status) && (
                   <>{' '}<button className="button secondary" onClick={() => void rollbackAction(websiteId, a.id)
                     .then(load).catch(() => setMessage('Rollback failed (admins only).'))}>Roll back</button></>
                 )}

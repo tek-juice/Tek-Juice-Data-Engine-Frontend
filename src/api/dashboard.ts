@@ -535,6 +535,8 @@ export interface OptimizationAction {
   outcome: { label?: string; direction?: string; changes?: Record<string, unknown>; note?: string } | null;
   executed_by: 'engine' | 'site_owner';
   updated_at: string | null;
+  /** record_update: the proposed change, field by field. */
+  evidence?: { changes?: Record<string, { before: unknown; after: unknown }> } & Record<string, unknown>;
 }
 
 export async function getActions(websiteId: string): Promise<{ policy: Record<string, string>; priority_formula: string;
